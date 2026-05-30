@@ -148,7 +148,7 @@ export default async function DashboardPage() {
               { label: 'Trust score', value: profile.trust_score || 50, color: 'blue' },
               { label: 'Fresh crews', value: profile.fresh_groups_count || 0, color: 'green' },
               { label: 'Chemistry score', value: profile.chemistry_score || 0, color: 'purple' },
-            ].map(({ label, value, color }) => (
+            ].map(({ label, value }) => (
               <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5">
                 <div className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">{value}</div>
                 <div className="text-xs text-gray-500 font-medium">{label}</div>
@@ -169,7 +169,7 @@ export default async function DashboardPage() {
                 </div>
                 {tickets && tickets.length > 0 ? (
                   <div className="space-y-3">
-                    {tickets.map((ticket: any) => (
+                    {tickets.map((ticket) => (
                       <div key={ticket.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                           {ticket.events?.title?.charAt(0) || 'E'}
@@ -204,7 +204,7 @@ export default async function DashboardPage() {
                 </div>
                 {groups && groups.length > 0 ? (
                   <div className="space-y-3">
-                    {groups.map((member: any) => (
+                    {groups.map((member) => (
                       <div key={member.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                           {member.groups?.name?.charAt(0) || 'G'}
