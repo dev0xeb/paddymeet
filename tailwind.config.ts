@@ -6,12 +6,6 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  safelist: [
-    'animate-float-slow',
-    'animate-float-medium', 
-    'animate-float-fast',
-    'animate-marquee',
-  ],
   theme: {
     extend: {
       animation: {
