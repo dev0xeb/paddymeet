@@ -1,5 +1,5 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
   "forwardPorts": [3000],
   "portsAttributes": {
     "3000": {
@@ -8,6 +8,6 @@
       "visibility": "public"
     }
   },
-  "postStartCommand": "cd /workspaces/paddymeet && npm run dev",
+  "postStartCommand": "cd /workspaces/paddymeet && npm install && npm run dev",
   "postCreateCommand": "npm install"
 }
