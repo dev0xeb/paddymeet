@@ -1,0 +1,312 @@
+import { createClient } from '@/lib/supabase-server'
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { Calendar, Users, Star, Link2, Bell, Settings, LogOut, Ticket, ChevronRight, TrendingUp } from 'lucide-react'
+
+export default async function DashboardPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  // Fetch user profile
+  const { data: profile } = await supabase
+    .from('users')
+    .select('*, user_interests(*)')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile) redirect('/login')
+
+  // Fetch upcoming tickets
+  const { data: tickets } = await supabase
+    .from('tickets')
+    .select('*, events(*)')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .order('purchased_at', { ascending: false })
+    .limit(3)
+
+  // Fetch user groups
+  const { data: groups } = await supabase
+    .from('group_members')
+    .select('*, groups(*, events(*))')
+    .eq('user_id', user.id)
+    .limit(3)
+
+  const tierColors: Record<string, string> = {
+    Newbie: 'bg-gray-100 text-gray-600',
+    Social: 'bg-green-50 text-green-600',
+    Crew: 'bg-blue-50 text-blue-600',
+    Elite: 'bg-purple-50 text-purple-600',
+    Legendary: 'bg-orange-50 text-orange-600',
+  }
+
+  const tierProgress: Record<string, number> = {
+    Newbie: 25, Social: 50, Crew: 68, Elite: 85, Legendary: 100
+  }
+
+  const tier = profile.tier || 'Newbie'
+  const progress = tierProgress[tier] || 25
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-8 bg-white border-b border-gray-100">
+        <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
+          paddy<span className="text-orange-500">meet</span>
+        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/events" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+            Browse Events
+          </Link>
+          <Link href="/notifications" className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 transition-colors relative">
+            <Bell className="w-4 h-4" />
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full text-white text-xs flex items-center justify-center font-bold">3</span>
+          </Link>
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
+            {profile.username?.charAt(1)?.toUpperCase() || 'U'}
+          </div>
+        </div>
+      </nav>
+
+      <div className="flex pt-16">
+
+        {/* Sidebar */}
+        <aside className="w-56 fixed top-16 left-0 bottom-0 bg-white border-r border-gray-100 flex flex-col py-6 px-3">
+          <div className="space-y-1 flex-1">
+            {[
+              { icon: TrendingUp, label: 'Overview', href: '/dashboard', active: true },
+              { icon: Calendar, label: 'My Events', href: '/dashboard/events' },
+              { icon: Users, label: 'My Groups', href: '/dashboard/groups' },
+              { icon: Ticket, label: 'Tickets', href: '/tickets' },
+              { icon: Star, label: 'Trust Score', href: '/dashboard/trust' },
+              { icon: Link2, label: 'Referrals', href: '/dashboard/referrals' },
+            ].map(({ icon: Icon, label, href, active }) => (
+              <Link
+                key={label}
+                href={href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  active
+                    ? 'bg-orange-50 text-orange-500'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${active ? 'text-orange-500' : ''}`} />
+                {label}
+              </Link>
+            ))}
+          </div>
+          <div className="space-y-1 border-t border-gray-100 pt-4">
+            <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
+              <Settings className="w-4 h-4" />Settings
+            </Link>
+            <form action="/auth/signout" method="POST">
+              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
+                <LogOut className="w-4 h-4" />Log Out
+              </button>
+            </form>
+          </div>
+          {/* User card */}
+          <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-xs">
+                {profile.username?.charAt(1)?.toUpperCase() || 'U'}
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-gray-900 truncate">{profile.username}</div>
+                <div className={`text-xs font-semibold px-1.5 py-0.5 rounded-full inline-block mt-0.5 ${tierColors[tier]}`}>{tier}</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main content */}
+        <main className="ml-56 flex-1 p-8">
+
+          {/* Header */}
+          <div className="flex items-start justify-between mb-8">
+            <div>
+              <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">
+                Good evening, {profile.full_name?.split(' ')[0]} 👋
+              </h1>
+              <p className="text-sm text-gray-500">Here is what is happening with your events and groups</p>
+            </div>
+            <Link
+              href="/events"
+              className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors"
+            >
+              Find Events <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-4 gap-4 mb-8">
+            {[
+              { label: 'Events attended', value: profile.events_attended || 0, color: 'orange' },
+              { label: 'Trust score', value: profile.trust_score || 50, color: 'blue' },
+              { label: 'Fresh crews', value: profile.fresh_groups_count || 0, color: 'green' },
+              { label: 'Chemistry score', value: profile.chemistry_score || 0, color: 'purple' },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5">
+                <div className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">{value}</div>
+                <div className="text-xs text-gray-500 font-medium">{label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 gap-6">
+
+            {/* Left column */}
+            <div className="col-span-2 space-y-6">
+
+              {/* Upcoming events */}
+              <div className="bg-white border border-gray-100 rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-base font-extrabold text-gray-900">Upcoming Events</h2>
+                  <Link href="/dashboard/events" className="text-xs font-bold text-orange-500 hover:underline">View all →</Link>
+                </div>
+                {tickets && tickets.length > 0 ? (
+                  <div className="space-y-3">
+                    {tickets.map((ticket: any) => (
+                      <div key={ticket.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                          {ticket.events?.title?.charAt(0) || 'E'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-gray-900 truncate">{ticket.events?.title}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{ticket.events?.city}</div>
+                        </div>
+                        <div className="text-xs font-bold text-orange-500 bg-orange-50 px-3 py-1.5 rounded-full">
+                          Active
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-gray-100">
+                      <Calendar className="w-6 h-6 text-gray-300" />
+                    </div>
+                    <p className="text-sm font-semibold text-gray-400 mb-1">No upcoming events</p>
+                    <p className="text-xs text-gray-400 mb-4">Discover events near you and get your tickets</p>
+                    <Link href="/events" className="text-xs font-bold text-orange-500 hover:underline">Browse events →</Link>
+                  </div>
+                )}
+              </div>
+
+              {/* My Groups */}
+              <div className="bg-white border border-gray-100 rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-base font-extrabold text-gray-900">My Groups</h2>
+                  <Link href="/dashboard/groups" className="text-xs font-bold text-orange-500 hover:underline">View all →</Link>
+                </div>
+                {groups && groups.length > 0 ? (
+                  <div className="space-y-3">
+                    {groups.map((member: any) => (
+                      <div key={member.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                          {member.groups?.name?.charAt(0) || 'G'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-gray-900 truncate">{member.groups?.name}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{member.groups?.events?.title}</div>
+                        </div>
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                          member.groups?.group_type === 'ticket'
+                            ? 'bg-green-50 text-green-600'
+                            : 'bg-blue-50 text-blue-600'
+                        }`}>
+                          {member.groups?.group_type === 'ticket' ? 'Ticket' : 'Social'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-gray-100">
+                      <Users className="w-6 h-6 text-gray-300" />
+                    </div>
+                    <p className="text-sm font-semibold text-gray-400 mb-1">No groups yet</p>
+                    <p className="text-xs text-gray-400 mb-4">Join a group at an event to start coordinating</p>
+                    <Link href="/events" className="text-xs font-bold text-orange-500 hover:underline">Find events →</Link>
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Right column */}
+            <div className="space-y-6">
+
+              {/* Profile card */}
+              <div className="bg-white border border-gray-100 rounded-2xl p-6">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-lg">
+                    {profile.username?.charAt(1)?.toUpperCase() || 'U'}
+                  </div>
+                  <div>
+                    <div className="text-sm font-extrabold text-gray-900">{profile.username}</div>
+                    <div className="text-xs text-gray-500">{profile.city}, {profile.state}</div>
+                  </div>
+                  <span className={`ml-auto text-xs font-bold px-2.5 py-1 rounded-full ${tierColors[tier]}`}>{tier}</span>
+                </div>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-gray-600">Trust Score</span>
+                  <span className="text-xs font-bold text-orange-500">{profile.trust_score} / 100</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
+                  <div
+                    className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <Link
+                  href={`/profile/${profile.username}`}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold rounded-xl hover:border-orange-300 hover:text-orange-500 transition-colors"
+                >
+                  View Profile <ChevronRight className="w-3 h-3" />
+                </Link>
+              </div>
+
+              {/* Wallet */}
+              <div className="bg-white border border-gray-100 rounded-2xl p-6">
+                <h2 className="text-sm font-extrabold text-gray-900 mb-4">Wallet & Rewards</h2>
+                <div className="text-center py-3 border-b border-gray-100 mb-4">
+                  <div className="text-xs text-gray-500 mb-1 uppercase font-semibold tracking-wider">Profile Balance</div>
+                  <div className="text-2xl font-extrabold text-gray-900">₦{(profile.profile_balance || 0).toLocaleString()}</div>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { label: 'Discount codes', value: '0 active' },
+                    { label: 'Airtime earned', value: '₦0' },
+                    { label: 'Referrals', value: '0 total' },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between py-2">
+                      <span className="text-xs text-gray-500">{label}</span>
+                      <span className="text-xs font-bold text-gray-700">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Referral */}
+              <div className="bg-orange-500 rounded-2xl p-5">
+                <h2 className="text-sm font-extrabold text-white mb-1">Invite friends</h2>
+                <p className="text-xs text-orange-100 mb-4 leading-relaxed">Earn points and rewards for every friend who joins Paddymeet.</p>
+                <div className="bg-white bg-opacity-20 rounded-xl px-3 py-2.5 flex items-center justify-between mb-3">
+                  <span className="text-xs font-mono text-white truncate">{profile.referral_code || 'LOADING...'}</span>
+                  <button className="text-xs font-bold text-white bg-white bg-opacity-20 px-2.5 py-1 rounded-lg ml-2 hover:bg-opacity-30 transition-colors flex-shrink-0">
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}

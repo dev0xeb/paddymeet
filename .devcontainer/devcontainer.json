@@ -1,0 +1,13 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "Paddymeet Dev",
+      "onAutoForward": "openBrowserOnce",
+      "visibility": "public"
+    }
+  },
+  "postStartCommand": "cd /workspaces/paddymeet && npm run dev",
+  "postCreateCommand": "npm install"
+}
