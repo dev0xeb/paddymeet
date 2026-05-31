@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useRef, useEffect, useTransition } from 'react'
 import { MapPin, Calendar, Users, Search, SlidersHorizontal, ChevronDown, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -16,13 +15,22 @@ interface FilterBarProps {
   }
 }
 
-function Dropdown({ label, icon: Icon, options, paramKey, currentValue, currentParams }: {
+function Dropdown({
+  label,
+  icon: Icon,
+  options,
+  paramKey,
+  currentValue,
+  currentParams,
+  onSelect,
+}: {
   label: string
   icon?: React.ElementType
-  options: { label: string, value: string }[]
+  options: { label: string; value: string }[]
   paramKey: string
   currentValue?: string
   currentParams: Record<string, string | undefined>
+  onSelect: (href: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -48,6 +56,7 @@ function Dropdown({ label, icon: Icon, options, paramKey, currentValue, currentP
   }
 
   const isActive = !!currentValue
+  const activeLabel = options.find(o => o.value === currentValue)?.label
 
   return (
     <div className="relative flex-shrink-0" ref={ref}>
@@ -60,19 +69,21 @@ function Dropdown({ label, icon: Icon, options, paramKey, currentValue, currentP
         }`}
       >
         {Icon && <Icon className="w-3.5 h-3.5" />}
-        {currentValue ? options.find(o => o.value === currentValue)?.label || label : label}
-        <ChevronDown className={`w-3 h-3 opacity-60 transition-transform ${open ? 'rotate-180' : ''}`} />
+        {activeLabel || label}
+        <ChevronDown className={`w-3 h-3 opacity-60 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-2xl p-3 shadow-xl z-[200] min-w-[200px]">
+        <div className="absolute top-[calc(100%+8px)] left-0 bg-white border border-gray-200 rounded-2xl p-3 shadow-2xl z-[999] min-w-[200px]">
           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{label}</div>
           <div className="flex flex-wrap gap-1.5">
             {options.map(opt => (
-              <Link
+              <button
                 key={opt.value}
-                href={buildHref(opt.value)}
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false)
+                  onSelect(buildHref(opt.value))
+                }}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                   currentValue === opt.value
                     ? 'bg-orange-50 border-orange-300 text-orange-600'
@@ -80,7 +91,7 @@ function Dropdown({ label, icon: Icon, options, paramKey, currentValue, currentP
                 }`}
               >
                 {opt.label}
-              </Link>
+              </button>
             ))}
           </div>
         </div>
@@ -89,13 +100,17 @@ function Dropdown({ label, icon: Icon, options, paramKey, currentValue, currentP
   )
 }
 
-function LocationDropdown({ currentCity, currentParams }: {
+function LocationDropdown({
+  currentCity,
+  currentParams,
+  onSelect,
+}: {
   currentCity?: string
   currentParams: Record<string, string | undefined>
+  onSelect: (href: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-
   const cities = ['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan']
 
   useEffect(() => {
@@ -117,6 +132,10 @@ function LocationDropdown({ currentCity, currentParams }: {
     return `/events?${params.toString()}`
   }
 
+  const displayCity = currentCity
+    ? currentCity.charAt(0).toUpperCase() + currentCity.slice(1)
+    : 'Lagos'
+
   return (
     <div className="relative flex-shrink-0" ref={ref}>
       <button
@@ -124,19 +143,23 @@ function LocationDropdown({ currentCity, currentParams }: {
         className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm font-semibold text-gray-700 hover:border-gray-300 transition-all"
       >
         <MapPin className="w-3.5 h-3.5 text-orange-500" />
-        {currentCity ? currentCity.charAt(0).toUpperCase() + currentCity.slice(1) : 'Lagos'}
-        <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+        {displayCity}
+        <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-2xl p-2 shadow-xl z-[200] min-w-[200px]">
-          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 py-1 mb-1">Change location</div>
+        <div className="absolute top-[calc(100%+8px)] left-0 bg-white border border-gray-200 rounded-2xl p-2 shadow-2xl z-[999] min-w-[200px]">
+          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 py-1 mb-1">
+            Change location
+          </div>
           {cities.map(city => (
-            <Link
+            <button
               key={city}
-              href={buildHref(city)}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+              onClick={() => {
+                setOpen(false)
+                onSelect(buildHref(city))
+              }}
+              className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
                 currentCity === city.toLowerCase()
                   ? 'bg-orange-50 text-orange-500'
                   : 'text-gray-700 hover:bg-gray-50'
@@ -147,7 +170,7 @@ function LocationDropdown({ currentCity, currentParams }: {
               {city === 'Lagos' && !currentCity && (
                 <span className="ml-auto text-xs text-orange-500 font-bold">Current</span>
               )}
-            </Link>
+            </button>
           ))}
         </div>
       )}
@@ -157,7 +180,14 @@ function LocationDropdown({ currentCity, currentParams }: {
 
 export default function EventsFilterBar({ currentParams }: FilterBarProps) {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [search, setSearch] = useState(currentParams.search || '')
+
+  const handleSelect = (href: string) => {
+    startTransition(() => {
+      router.push(href)
+    })
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -166,10 +196,20 @@ export default function EventsFilterBar({ currentParams }: FilterBarProps) {
       if (v && k !== 'search') params.set(k, v)
     })
     if (search) params.set('search', search)
-    router.push(`/events?${params.toString()}`)
+    startTransition(() => {
+      router.push(`/events?${params.toString()}`)
+    })
   }
 
-  const hasFilters = currentParams.city || currentParams.type || currentParams.vibe ||
+  const handleClear = () => {
+    setSearch('')
+    startTransition(() => {
+      router.push('/events')
+    })
+  }
+
+  const hasFilters =
+    currentParams.city || currentParams.type || currentParams.vibe ||
     currentParams.date || currentParams.capacity || currentParams.search
 
   return (
@@ -178,9 +218,18 @@ export default function EventsFilterBar({ currentParams }: FilterBarProps) {
 
         {/* Title and search */}
         <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Browse Events</h1>
-          <form onSubmit={handleSearch} className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full w-72 focus-within:border-orange-400 focus-within:bg-white transition-all">
-            <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
+            Browse Events
+          </h1>
+          <form
+            onSubmit={handleSearch}
+            className="relative flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full w-72 focus-within:border-orange-400 focus-within:bg-white transition-all"
+          >
+            {isPending ? (
+              <div className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+            ) : (
+              <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            )}
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -188,17 +237,25 @@ export default function EventsFilterBar({ currentParams }: FilterBarProps) {
               className="bg-transparent border-none outline-none text-sm text-gray-900 w-full placeholder:text-gray-400"
             />
             {search && (
-              <button type="button" onClick={() => setSearch('')}>
-                <X className="w-3.5 h-3.5 text-gray-400" />
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="flex-shrink-0"
+              >
+                <X className="w-3.5 h-3.5 text-gray-400 hover:text-gray-600" />
               </button>
             )}
           </form>
         </div>
 
         {/* Filter chips */}
-        <div className="flex items-center gap-2 pb-1 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
 
-          <LocationDropdown currentCity={currentParams.city} currentParams={currentParams} />
+          <LocationDropdown
+            currentCity={currentParams.city}
+            currentParams={currentParams}
+            onSelect={handleSelect}
+          />
 
           <div className="h-5 w-px bg-gray-200 flex-shrink-0" />
 
@@ -208,6 +265,7 @@ export default function EventsFilterBar({ currentParams }: FilterBarProps) {
             paramKey="date"
             currentValue={currentParams.date}
             currentParams={currentParams}
+            onSelect={handleSelect}
             options={[
               { label: 'This Weekend', value: 'this-weekend' },
               { label: 'This Week', value: 'this-week' },
@@ -224,6 +282,7 @@ export default function EventsFilterBar({ currentParams }: FilterBarProps) {
             paramKey="type"
             currentValue={currentParams.type}
             currentParams={currentParams}
+            onSelect={handleSelect}
             options={[
               { label: 'Concert', value: 'concert' },
               { label: 'Club Night', value: 'club-night' },
@@ -243,6 +302,7 @@ export default function EventsFilterBar({ currentParams }: FilterBarProps) {
             paramKey="vibe"
             currentValue={currentParams.vibe}
             currentParams={currentParams}
+            onSelect={handleSelect}
             options={[
               { label: 'Turnt', value: 'turnt' },
               { label: 'Chill', value: 'chill' },
@@ -262,6 +322,7 @@ export default function EventsFilterBar({ currentParams }: FilterBarProps) {
             paramKey="capacity"
             currentValue={currentParams.capacity}
             currentParams={currentParams}
+            onSelect={handleSelect}
             options={[
               { label: 'Intimate', value: 'intimate' },
               { label: 'Medium', value: 'medium' },
@@ -271,9 +332,12 @@ export default function EventsFilterBar({ currentParams }: FilterBarProps) {
           />
 
           {hasFilters && (
-            <Link href="/events" className="px-4 py-2 text-sm font-bold text-orange-500 hover:underline flex-shrink-0">
+            <button
+              onClick={handleClear}
+              className="px-4 py-2 text-sm font-bold text-orange-500 hover:underline flex-shrink-0"
+            >
               Clear all
-            </Link>
+            </button>
           )}
         </div>
       </div>
