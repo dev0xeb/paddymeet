@@ -196,7 +196,7 @@ export default function EventsFilterBar({ currentParams }: FilterBarProps) {
         </div>
 
         {/* Filter chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 flex-wrap">
+        <div className="flex items-center gap-2 pb-1 flex-wrap">
 
           <LocationDropdown currentCity={currentParams.city} currentParams={currentParams} />
 
