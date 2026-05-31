@@ -3,6 +3,18 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { MapPin, Calendar, Clock, Users, ArrowLeft, Share2 } from 'lucide-react'
 import BuyTicketButton from '@/components/tickets/BuyTicketButton'
+import TicketSelector from '@/components/tickets/TicketSelector'
+
+interface TicketType {
+  id: string
+  name: string
+  description: string
+  price: number
+  quantity: number
+  quantity_sold: number
+  is_group_ticket: boolean
+  group_size: number
+}
 
 export default async function EventDetailPage({
   params,
@@ -31,10 +43,8 @@ export default async function EventDetailPage({
   ]
   const gradient = gradients[id.charCodeAt(0) % gradients.length]
 
-  // Prepare user data for client components
   const userData = user ? { id: user.id, email: user.email || '' } : null
 
-  // Prepare event data for client components
   const eventData = {
     id: event.id,
     title: event.title,
@@ -69,19 +79,16 @@ export default async function EventDetailPage({
       {/* Hero */}
       <div className={`h-64 md:h-96 bg-gradient-to-br ${gradient} relative mt-16`}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-
         <div className="absolute top-4 left-4 md:top-6 md:left-6">
           <Link href="/events" className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs md:text-sm font-semibold text-white hover:bg-white/30 transition-colors">
             <ArrowLeft className="w-3.5 h-3.5" /> Back to events
           </Link>
         </div>
-
         <div className="absolute top-4 right-4 md:top-6 md:right-6">
           <button className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs md:text-sm font-semibold text-white hover:bg-white/30 transition-colors">
             <Share2 className="w-3.5 h-3.5" /> Share
           </button>
         </div>
-
         <div className="absolute bottom-16 left-4 md:bottom-24 md:left-6 flex items-center gap-2 flex-wrap">
           {event.event_type && (
             <span className="px-2.5 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs font-bold text-white uppercase tracking-wider">
@@ -99,7 +106,6 @@ export default async function EventDetailPage({
             </span>
           )}
         </div>
-
         <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
           <h1 className="text-2xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
             {event.title}
@@ -118,7 +124,6 @@ export default async function EventDetailPage({
             <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
               <h2 className="text-base font-extrabold text-gray-900 mb-4">Event Details</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
                   <Calendar className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
                   <div>
@@ -130,7 +135,6 @@ export default async function EventDetailPage({
                     </div>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
                   <Clock className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
                   <div>
@@ -141,7 +145,6 @@ export default async function EventDetailPage({
                     </div>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
                   <MapPin className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
                   <div>
@@ -152,7 +155,6 @@ export default async function EventDetailPage({
                     )}
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
                   <Users className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
                   <div>
@@ -162,7 +164,6 @@ export default async function EventDetailPage({
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
 
@@ -187,16 +188,7 @@ export default async function EventDetailPage({
               <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
                 <h2 className="text-base font-extrabold text-gray-900 mb-4">Tickets</h2>
                 <div className="space-y-3">
-                  {event.ticket_types.map((ticket: {
-                    id: string
-                    name: string
-                    description: string
-                    price: number
-                    quantity: number
-                    quantity_sold: number
-                    is_group_ticket: boolean
-                    group_size: number
-                  }) => {
+                  {event.ticket_types.map((ticket: TicketType) => {
                     const available = ticket.quantity - (ticket.quantity_sold || 0)
                     const soldOut = available <= 0
                     return (
@@ -269,22 +261,16 @@ export default async function EventDetailPage({
                   </button>
                 )}
               </div>
-
-              {/* Main event group */}
               <div className="border-2 border-orange-200 bg-orange-50 rounded-2xl p-4 mb-3">
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-sm font-extrabold text-gray-900">{event.title} — Everyone</span>
-                      <span className="px-2 py-0.5 bg-orange-100 text-orange-600 border border-orange-200 text-xs font-bold rounded-full">Main Group</span>
-                      <span className="px-2 py-0.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full">Open to all</span>
-                    </div>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      The main chat for everyone attending this event. Coordinate, meet people, discover groups.
-                    </p>
-                  </div>
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="text-sm font-extrabold text-gray-900">{event.title} — Everyone</span>
+                  <span className="px-2 py-0.5 bg-orange-100 text-orange-600 border border-orange-200 text-xs font-bold rounded-full">Main Group</span>
+                  <span className="px-2 py-0.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full">Open to all</span>
                 </div>
-                <div className="flex items-center justify-between mt-3">
+                <p className="text-xs text-gray-500 leading-relaxed mb-3">
+                  The main chat for everyone attending this event. Coordinate, meet people, discover groups.
+                </p>
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex">
                       {['bg-orange-400','bg-pink-500','bg-purple-500','bg-blue-500'].map((c, i) => (
@@ -304,8 +290,6 @@ export default async function EventDetailPage({
                   )}
                 </div>
               </div>
-
-              {/* No social groups yet */}
               <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-2xl">
                 <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                 <p className="text-sm font-semibold text-gray-400 mb-1">No social groups yet</p>
@@ -376,11 +360,12 @@ export default async function EventDetailPage({
               </div>
 
               {userData && event.ticket_types && event.ticket_types.length > 0 ? (
-                <BuyTicketButton
+                <TicketSelector
                   event={eventData}
-                  ticketType={event.ticket_types[0]}
+                  ticketTypes={event.ticket_types}
                   user={userData}
                   label={event.is_free ? 'Get Free Ticket' : 'Get Tickets'}
+                  fullWidth
                 />
               ) : !userData ? (
                 <div className="space-y-2">

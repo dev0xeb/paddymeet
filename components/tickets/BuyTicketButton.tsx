@@ -33,26 +33,36 @@ interface Props {
   ticketType: TicketType
   user: User
   label?: string
+  fullWidth?: boolean
+  autoOpen?: boolean
+  onClose?: () => void
 }
 
-export default function BuyTicketButton({ event, ticketType, user, label }: Props) {
-  const [open, setOpen] = useState(false)
+export default function BuyTicketButton({ event, ticketType, user, label, fullWidth, autoOpen, onClose }: Props) {
+  const [open, setOpen] = useState(autoOpen || false)
+
+  const handleClose = () => {
+    setOpen(false)
+    if (onClose) onClose()
+  }
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors"
-      >
-        {label || (event.is_free ? 'Get Free Ticket' : 'Buy Ticket')}
-      </button>
+      {!autoOpen && (
+        <button
+          onClick={() => setOpen(true)}
+          className={`${fullWidth ? 'w-full py-3.5 rounded-xl' : 'px-5 py-2 rounded-full'} bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors flex items-center justify-center`}
+        >
+          {label || (event.is_free ? 'Get Free Ticket' : 'Buy Ticket')}
+        </button>
+      )}
 
       {open && (
         <TicketPurchaseModal
           event={event}
           ticketType={ticketType}
           user={user}
-          onClose={() => setOpen(false)}
+          onClose={handleClose}
         />
       )}
     </>
