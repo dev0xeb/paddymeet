@@ -173,6 +173,79 @@ export default async function EventDetailPage({
               </div>
             )}
 
+            {/* Ticket types */}
+{event.ticket_types && event.ticket_types.length > 0 && (
+  <div className="bg-white rounded-2xl border border-gray-100 p-6">
+    <h2 className="text-base font-extrabold text-gray-900 mb-4">Tickets</h2>
+    <div className="space-y-3">
+      {event.ticket_types.map((ticket: {
+        id: string
+        name: string
+        description: string
+        price: number
+        quantity: number
+        quantity_sold: number
+        is_group_ticket: boolean
+        group_size: number
+      }) => {
+        const available = ticket.quantity - (ticket.quantity_sold || 0)
+        const soldOut = available <= 0
+        return (
+          <div key={ticket.id}
+            className={`border-2 rounded-2xl p-5 transition-all ${soldOut ? 'border-gray-100 bg-gray-50 opacity-60' : 'border-gray-200 hover:border-orange-300'}`}>
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-extrabold text-gray-900">{ticket.name}</span>
+                  {ticket.is_group_ticket && (
+                    <span className="px-2 py-0.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full">
+                      Group · {ticket.group_size} people
+                    </span>
+                  )}
+                  {soldOut && (
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">
+                      Sold Out
+                    </span>
+                  )}
+                </div>
+                {ticket.description && (
+                  <p className="text-xs text-gray-500 leading-relaxed">{ticket.description}</p>
+                )}
+              </div>
+              <div className="text-right flex-shrink-0">
+                <div className="text-lg font-extrabold text-gray-900">
+                  ₦{ticket.price.toLocaleString()}
+                </div>
+                {ticket.is_group_ticket && (
+                  <div className="text-xs text-gray-400">
+                    ≈ ₦{Math.round(ticket.price / ticket.group_size).toLocaleString()} per person
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-3">
+              <span className={`text-xs font-semibold ${available < 20 && !soldOut ? 'text-orange-500' : 'text-gray-400'}`}>
+                {soldOut ? 'No tickets left' : available < 20 ? `Only ${available} left` : `${available} available`}
+              </span>
+              {!soldOut && (
+                user ? (
+                  <button className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
+                    {event.is_free ? 'Get Free Ticket' : 'Buy Ticket'}
+                  </button>
+                ) : (
+                  <Link href="/signup" className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
+                    Sign up to buy
+                  </Link>
+                )
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  </div>
+)}
+
           </div>
 
           {/* Right — sticky sidebar */}
