@@ -12,7 +12,6 @@ export default async function EventDetailPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Fetch event
   const { data: event } = await supabase
     .from('events')
     .select('*, ticket_types(*), organisers(org_name, contact_name)')
@@ -35,7 +34,7 @@ export default async function EventDetailPage({
     <div className="min-h-screen bg-gray-50">
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-10 bg-white border-b border-gray-100">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 md:px-10 bg-white border-b border-gray-100">
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
           paddy<span className="text-orange-500">meet</span>
         </Link>
@@ -46,7 +45,7 @@ export default async function EventDetailPage({
             </Link>
           ) : (
             <>
-              <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">Log In</Link>
+              <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors hidden sm:block">Log In</Link>
               <Link href="/signup" className="px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-colors">Get Started</Link>
             </>
           )}
@@ -54,61 +53,57 @@ export default async function EventDetailPage({
       </nav>
 
       {/* Hero */}
-      <div className={`h-72 md:h-96 bg-gradient-to-br ${gradient} relative mt-16`}>
+      <div className={`h-64 md:h-96 bg-gradient-to-br ${gradient} relative mt-16`}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
 
-        {/* Back button */}
-        <div className="absolute top-6 left-6">
-          <Link href="/events" className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-sm font-semibold text-white hover:bg-white/30 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to events
+        <div className="absolute top-4 left-4 md:top-6 md:left-6">
+          <Link href="/events" className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs md:text-sm font-semibold text-white hover:bg-white/30 transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to events
           </Link>
         </div>
 
-        {/* Share button */}
-        <div className="absolute top-6 right-6">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-sm font-semibold text-white hover:bg-white/30 transition-colors">
-            <Share2 className="w-4 h-4" /> Share
+        <div className="absolute top-4 right-4 md:top-6 md:right-6">
+          <button className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs md:text-sm font-semibold text-white hover:bg-white/30 transition-colors">
+            <Share2 className="w-3.5 h-3.5" /> Share
           </button>
         </div>
 
-        {/* Event tags */}
-        <div className="absolute bottom-24 left-6 flex items-center gap-2 flex-wrap">
+        <div className="absolute bottom-16 left-4 md:bottom-24 md:left-6 flex items-center gap-2 flex-wrap">
           {event.event_type && (
-            <span className="px-3 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs font-bold text-white uppercase tracking-wider">
+            <span className="px-2.5 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs font-bold text-white uppercase tracking-wider">
               {event.event_type}
             </span>
           )}
           {event.vibe && (
-            <span className="px-3 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs font-bold text-white">
+            <span className="px-2.5 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs font-bold text-white">
               {event.vibe}
             </span>
           )}
           {event.age_restriction > 0 && (
-            <span className="px-3 py-1 bg-orange-500/80 rounded-full text-xs font-bold text-white">
+            <span className="px-2.5 py-1 bg-orange-500/80 rounded-full text-xs font-bold text-white">
               {event.age_restriction}+
             </span>
           )}
         </div>
 
-        {/* Title */}
-        <div className="absolute bottom-6 left-6 right-6">
-          <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
+        <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
+          <h1 className="text-2xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
             {event.title}
           </h1>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-6 md:px-10 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-6xl mx-auto px-4 md:px-10 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
 
           {/* Left — main info */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-5">
 
             {/* Key details */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
               <h2 className="text-base font-extrabold text-gray-900 mb-4">Event Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
                   <Calendar className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -159,7 +154,7 @@ export default async function EventDetailPage({
 
             {/* Description */}
             {event.description && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
                 <h2 className="text-base font-extrabold text-gray-900 mb-3">About This Event</h2>
                 <p className="text-sm text-gray-600 leading-relaxed">{event.description}</p>
               </div>
@@ -167,93 +162,173 @@ export default async function EventDetailPage({
 
             {/* Dress code */}
             {event.dress_code && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
                 <h2 className="text-base font-extrabold text-gray-900 mb-3">Dress Code</h2>
                 <p className="text-sm text-gray-600 leading-relaxed">{event.dress_code}</p>
               </div>
             )}
 
             {/* Ticket types */}
-{event.ticket_types && event.ticket_types.length > 0 && (
-  <div className="bg-white rounded-2xl border border-gray-100 p-6">
-    <h2 className="text-base font-extrabold text-gray-900 mb-4">Tickets</h2>
-    <div className="space-y-3">
-      {event.ticket_types.map((ticket: {
-        id: string
-        name: string
-        description: string
-        price: number
-        quantity: number
-        quantity_sold: number
-        is_group_ticket: boolean
-        group_size: number
-      }) => {
-        const available = ticket.quantity - (ticket.quantity_sold || 0)
-        const soldOut = available <= 0
-        return (
-          <div key={ticket.id}
-            className={`border-2 rounded-2xl p-5 transition-all ${soldOut ? 'border-gray-100 bg-gray-50 opacity-60' : 'border-gray-200 hover:border-orange-300'}`}>
-            <div className="flex items-start justify-between gap-4 mb-2">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-extrabold text-gray-900">{ticket.name}</span>
-                  {ticket.is_group_ticket && (
-                    <span className="px-2 py-0.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full">
-                      Group · {ticket.group_size} people
-                    </span>
-                  )}
-                  {soldOut && (
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">
-                      Sold Out
-                    </span>
-                  )}
+            {event.ticket_types && event.ticket_types.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
+                <h2 className="text-base font-extrabold text-gray-900 mb-4">Tickets</h2>
+                <div className="space-y-3">
+                  {event.ticket_types.map((ticket: {
+                    id: string
+                    name: string
+                    description: string
+                    price: number
+                    quantity: number
+                    quantity_sold: number
+                    is_group_ticket: boolean
+                    group_size: number
+                  }) => {
+                    const available = ticket.quantity - (ticket.quantity_sold || 0)
+                    const soldOut = available <= 0
+                    return (
+                      <div
+                        key={ticket.id}
+                        className={`border-2 rounded-2xl p-4 md:p-5 transition-all ${soldOut ? 'border-gray-100 bg-gray-50 opacity-60' : 'border-gray-200 hover:border-orange-300'}`}
+                      >
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <span className="text-sm font-extrabold text-gray-900">{ticket.name}</span>
+                              {ticket.is_group_ticket && (
+                                <span className="px-2 py-0.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full">
+                                  Group · {ticket.group_size} people
+                                </span>
+                              )}
+                              {soldOut && (
+                                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">
+                                  Sold Out
+                                </span>
+                              )}
+                            </div>
+                            {ticket.description && (
+                              <p className="text-xs text-gray-500 leading-relaxed">{ticket.description}</p>
+                            )}
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-lg font-extrabold text-gray-900">
+                              ₦{ticket.price.toLocaleString()}
+                            </div>
+                            {ticket.is_group_ticket && (
+                              <div className="text-xs text-gray-400">
+                                ≈ ₦{Math.round(ticket.price / ticket.group_size).toLocaleString()} per person
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-3">
+                          <span className={`text-xs font-semibold ${available < 20 && !soldOut ? 'text-orange-500' : 'text-gray-400'}`}>
+                            {soldOut ? 'No tickets left' : available < 20 ? `Only ${available} left` : `${available} available`}
+                          </span>
+                          {!soldOut && (
+                            user ? (
+                              <button className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
+                                {event.is_free ? 'Get Free Ticket' : 'Buy Ticket'}
+                              </button>
+                            ) : (
+                              <Link href="/signup" className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
+                                Sign up to buy
+                              </Link>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-                {ticket.description && (
-                  <p className="text-xs text-gray-500 leading-relaxed">{ticket.description}</p>
+              </div>
+            )}
+
+            {/* Groups section */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-extrabold text-gray-900">Groups</h2>
+                {user && (
+                  <button className="flex items-center gap-1.5 px-4 py-2 bg-orange-50 border border-orange-200 text-orange-500 text-xs font-bold rounded-full hover:bg-orange-100 transition-colors">
+                    <Users className="w-3.5 h-3.5" /> Create Group
+                  </button>
                 )}
               </div>
-              <div className="text-right flex-shrink-0">
-                <div className="text-lg font-extrabold text-gray-900">
-                  ₦{ticket.price.toLocaleString()}
-                </div>
-                {ticket.is_group_ticket && (
-                  <div className="text-xs text-gray-400">
-                    ≈ ₦{Math.round(ticket.price / ticket.group_size).toLocaleString()} per person
+
+              {/* Main event group */}
+              <div className="border-2 border-orange-200 bg-orange-50 rounded-2xl p-4 mb-3">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="text-sm font-extrabold text-gray-900">{event.title} — Everyone</span>
+                      <span className="px-2 py-0.5 bg-orange-100 text-orange-600 border border-orange-200 text-xs font-bold rounded-full">Main Group</span>
+                      <span className="px-2 py-0.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full">Open to all</span>
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      The main chat for everyone attending this event. Coordinate, meet people, discover groups.
+                    </p>
                   </div>
-                )}
+                </div>
+                <div className="flex items-center justify-between mt-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex">
+                      {['bg-orange-400','bg-pink-500','bg-purple-500','bg-blue-500'].map((c, i) => (
+                        <div key={i} className={`w-6 h-6 rounded-full ${c} border-2 border-white -ml-1.5 first:ml-0`} />
+                      ))}
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">Everyone attending</span>
+                  </div>
+                  {user ? (
+                    <button className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
+                      Open Chat
+                    </button>
+                  ) : (
+                    <Link href="/signup" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
+                      Sign up to join
+                    </Link>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="flex items-center justify-between mt-3">
-              <span className={`text-xs font-semibold ${available < 20 && !soldOut ? 'text-orange-500' : 'text-gray-400'}`}>
-                {soldOut ? 'No tickets left' : available < 20 ? `Only ${available} left` : `${available} available`}
-              </span>
-              {!soldOut && (
-                user ? (
+
+              {/* No social groups yet */}
+              <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-2xl">
+                <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-gray-400 mb-1">No social groups yet</p>
+                <p className="text-xs text-gray-400 mb-3">Be the first to create a group for this event</p>
+                {user ? (
                   <button className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
-                    {event.is_free ? 'Get Free Ticket' : 'Buy Ticket'}
+                    Create a Group
                   </button>
                 ) : (
                   <Link href="/signup" className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
-                    Sign up to buy
+                    Sign up to create a group
                   </Link>
-                )
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )
-      })}
-    </div>
-  </div>
-  
-)}
+
+            {/* House rules */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
+              <h2 className="text-base font-extrabold text-gray-900 mb-3">House Rules</h2>
+              <div className="space-y-2">
+                {[
+                  'Valid ID required at entry. Age restriction strictly enforced.',
+                  'No re-entry after exit. Keep your ticket or wristband on at all times.',
+                  'The organiser reserves the right to refuse entry.',
+                  'Paddymeet is not liable for lost or stolen items at the venue.',
+                ].map((rule, i) => (
+                  <div key={i} className="flex items-start gap-2.5 text-sm text-gray-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0 mt-1.5" />
+                    {rule}
+                  </div>
+                ))}
+              </div>
+            </div>
 
           </div>
 
           {/* Right — sticky sidebar */}
           <div className="space-y-4">
-
-            {/* Quick info card */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 sticky top-24">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 lg:sticky lg:top-24">
               <div className="text-center pb-4 border-b border-gray-100 mb-4">
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
                   {event.is_free ? 'Free Event' : 'Tickets Available'}
@@ -299,8 +374,8 @@ export default async function EventDetailPage({
                 </div>
               )}
             </div>
-
           </div>
+
         </div>
       </div>
     </div>
