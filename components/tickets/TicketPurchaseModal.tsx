@@ -68,6 +68,38 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const serviceFee = Math.round(ticketType.price * quantity * 0.05)
   const total = ticketType.price * quantity + serviceFee
 
+  const verifyPayment = async (reference: string) => {
+    setStep('processing')
+    try {
+      const res = await fetch('/api/tickets/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reference,
+          event_id: event.id,
+          ticket_type_id: ticketType.id,
+          quantity,
+          user_id: user.id,
+        }),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setError(`Payment confirmed but ticket creation failed: ${data.error}`)
+        setStep('summary')
+      } else if (!data.tickets) {
+        setError(`Unexpected response: ${JSON.stringify(data)}`)
+        setStep('summary')
+      } else {
+        setConfirmedTickets(data.tickets)
+        setStep('confirmed')
+      }
+    } catch (err) {
+      setError(`Network error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      setStep('summary')
+    }
+    setLoading(false)
+  }
+
   const handlePaystack = () => {
     setLoading(true)
     setError('')
@@ -96,33 +128,8 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
           quantity,
           user_id: user.id,
         },
-        onSuccess: async (transaction: { reference: string }) => {
-          setStep('processing')
-          try {
-            const res = await fetch('/api/tickets/verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                reference: transaction.reference,
-                event_id: event.id,
-                ticket_type_id: ticketType.id,
-                quantity,
-                user_id: user.id,
-              }),
-            })
-            const data = await res.json()
-            if (data.error) {
-              setError(data.error)
-              setStep('summary')
-            } else {
-              setConfirmedTickets(data.tickets)
-              setStep('confirmed')
-            }
-          } catch {
-            setError('Something went wrong confirming your ticket. Please contact support.')
-            setStep('summary')
-          }
-          setLoading(false)
+        onSuccess: (transaction: { reference: string }) => {
+          verifyPayment(transaction.reference)
         },
         onCancel: () => {
           setLoading(false)
@@ -157,8 +164,8 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
         setConfirmedTickets(data.tickets)
         setStep('confirmed')
       }
-    } catch {
-      setError('Something went wrong. Please try again.')
+    } catch (err) {
+      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`)
       setStep('summary')
     }
     setLoading(false)
@@ -167,10 +174,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   return (
     <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative w-full md:max-w-md bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden">
@@ -193,7 +197,6 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
         {/* Step — Select */}
         {step === 'select' && (
           <div className="p-6">
-            {/* Event info */}
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-5">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0">
                 {event.title.charAt(0)}
@@ -209,7 +212,6 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
               </div>
             </div>
 
-            {/* Ticket type */}
             <div className="border-2 border-orange-200 bg-orange-50 rounded-2xl p-4 mb-5">
               <div className="flex items-start justify-between">
                 <div>
@@ -229,7 +231,6 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
               </div>
             </div>
 
-            {/* Quantity */}
             {!ticketType.is_group_ticket && (
               <div className="flex items-center justify-between mb-6">
                 <span className="text-sm font-semibold text-gray-700">Quantity</span>
@@ -293,7 +294,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 mb-4">
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 mb-4 break-words">
                 {error}
               </div>
             )}
@@ -321,6 +322,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
           <div className="p-10 text-center">
             <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <div className="text-sm font-semibold text-gray-600">Confirming your ticket...</div>
+            <div className="text-xs text-gray-400 mt-2">Please do not close this window</div>
           </div>
         )}
 
@@ -334,7 +336,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
               You&apos;re <span className="text-orange-500">in!</span>
             </h3>
             <p className="text-sm text-gray-500 mb-5">
-              Your ticket has been confirmed and sent to your email.
+              Your ticket has been confirmed. See you at the event!
             </p>
 
             <div className="space-y-2 mb-5">
