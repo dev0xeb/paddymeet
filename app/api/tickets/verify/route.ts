@@ -6,7 +6,6 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { reference, event_id, ticket_type_id, quantity, user_id } = body
 
-  // Verify payment with Paystack
   const verifyResponse = await fetch(
     `https://api.paystack.co/transaction/verify/${reference}`,
     {
@@ -24,7 +23,6 @@ export async function POST(request: NextRequest) {
 
   const amountPaid = verifyData.data.amount / 100
 
-  // Create order — using exact column names from DB
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
@@ -32,9 +30,9 @@ export async function POST(request: NextRequest) {
       event_id,
       amount: amountPaid,
       service_fee: Math.round(amountPaid * 0.05),
-      tool_paid: amountPaid,
+      total_paid: amountPaid,
       payment_method: 'paystack',
-      payment_references: reference,
+      payment_reference: reference,
       payment_status: 'completed',
     })
     .select()
@@ -44,7 +42,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: orderError.message }, { status: 400 })
   }
 
-  // Create tickets
   const tickets = []
   for (let i = 0; i < quantity; i++) {
     tickets.push({
@@ -65,13 +62,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: ticketError.message }, { status: 400 })
   }
 
-  // Update quantity sold
   await supabase.rpc('increment_tickets_sold', {
     ticket_type_id,
     amount: quantity,
   })
 
-  // Create notification
   await supabase
     .from('notifications')
     .insert({
