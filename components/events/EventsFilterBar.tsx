@@ -65,7 +65,7 @@ function Dropdown({ label, icon: Icon, options, paramKey, currentValue, currentP
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-2xl p-3 shadow-xl z-50 min-w-[200px]">
+        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-2xl p-3 shadow-xl z-[200] min-w-[200px]">
           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{label}</div>
           <div className="flex flex-wrap gap-1.5">
             {options.map(opt => (
@@ -129,7 +129,7 @@ function LocationDropdown({ currentCity, currentParams }: {
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-2xl p-2 shadow-xl z-50 min-w-[200px]">
+        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-2xl p-2 shadow-xl z-[200] min-w-[200px]">
           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 py-1 mb-1">Change location</div>
           {cities.map(city => (
             <Link
