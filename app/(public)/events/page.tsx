@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase-server'
 import Link from 'next/link'
 import { Calendar, Grid3X3, List } from 'lucide-react'
 import EventsFilterBar from '@/components/events/EventsFilterBar'
-import { Suspense } from 'react'
+import {  } from 'react'
 
 export default async function EventsPage({
   searchParams,
@@ -60,9 +60,7 @@ export default async function EventsPage({
 
       {/* Filter bar — client component */}
       <div className="pt-16">
-        <Suspense fallback={<div className="h-32 bg-white border-b border-gray-100" />}>
-          <EventsFilterBar currentParams={params} />
-        </Suspense>
+        <EventsFilterBar currentParams={params} />
       </div>
 
       {/* Results */}
