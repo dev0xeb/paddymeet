@@ -20,7 +20,7 @@ export default function SignUpPage() {
       </nav>
 
       {!role && (
-        <div className="min-h-screen flex flex-col items-center justify-center px-6 pt-16">
+        <div className="min-h-screen flex flex-col items-center justify-center px-4 md:px-6 pt-16 pb-8">
           <div className="max-w-2xl w-full text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 border border-orange-100 rounded-full text-xs font-bold text-orange-500 uppercase tracking-wider mb-8">
               Create Account
@@ -29,10 +29,10 @@ export default function SignUpPage() {
               I am joining as a...
             </h1>
             <p className="text-gray-500 mb-12 text-base">Choose your account type to get started</p>
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div
                 onClick={() => setRole('explorer')}
-                className="group border-2 border-gray-200 rounded-2xl p-8 text-left cursor-pointer hover:border-orange-400 hover:shadow-lg hover:shadow-orange-50 transition-all duration-300"
+                className="group border-2 border-gray-200 rounded-2xl p-5 text-left cursor-pointer hover:border-orange-400 hover:shadow-lg hover:shadow-orange-50 transition-all duration-300"
               >
                 <div className="w-14 h-14 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center mb-5 group-hover:bg-orange-100 transition-colors">
                   <Users className="w-7 h-7 text-orange-500" />
@@ -53,7 +53,7 @@ export default function SignUpPage() {
               </div>
               <div
                 onClick={() => setRole('organiser')}
-                className="group border-2 border-gray-200 rounded-2xl p-8 text-left cursor-pointer hover:border-blue-400 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300"
+                className="group border-2 border-gray-200 rounded-2xl p-5 text-left cursor-pointer hover:border-blue-400 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300"
               >
                 <div className="w-14 h-14 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-5 group-hover:bg-blue-100 transition-colors">
                   <Mic className="w-7 h-7 text-blue-500" />
