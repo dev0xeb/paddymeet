@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { MapPin, Calendar, Clock, Users, ArrowLeft, Share2 } from 'lucide-react'
+import BuyTicketButton from '@/components/tickets/BuyTicketButton'
 
 export default async function EventDetailPage({
   params,
@@ -29,6 +30,19 @@ export default async function EventDetailPage({
     'from-blue-900 via-indigo-900 to-purple-900',
   ]
   const gradient = gradients[id.charCodeAt(0) % gradients.length]
+
+  // Prepare user data for client components
+  const userData = user ? { id: user.id, email: user.email || '' } : null
+
+  // Prepare event data for client components
+  const eventData = {
+    id: event.id,
+    title: event.title,
+    event_date: event.event_date,
+    start_time: event.start_time,
+    venue_name: event.venue_name,
+    is_free: event.is_free,
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -211,7 +225,7 @@ export default async function EventDetailPage({
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="text-lg font-extrabold text-gray-900">
-                              ₦{ticket.price.toLocaleString()}
+                              {event.is_free ? 'Free' : `₦${ticket.price.toLocaleString()}`}
                             </div>
                             {ticket.is_group_ticket && (
                               <div className="text-xs text-gray-400">
@@ -225,10 +239,12 @@ export default async function EventDetailPage({
                             {soldOut ? 'No tickets left' : available < 20 ? `Only ${available} left` : `${available} available`}
                           </span>
                           {!soldOut && (
-                            user ? (
-                              <button className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
-                                {event.is_free ? 'Get Free Ticket' : 'Buy Ticket'}
-                              </button>
+                            userData ? (
+                              <BuyTicketButton
+                                event={eventData}
+                                ticketType={ticket}
+                                user={userData}
+                              />
                             ) : (
                               <Link href="/signup" className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
                                 Sign up to buy
@@ -247,7 +263,7 @@ export default async function EventDetailPage({
             <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-extrabold text-gray-900">Groups</h2>
-                {user && (
+                {userData && (
                   <button className="flex items-center gap-1.5 px-4 py-2 bg-orange-50 border border-orange-200 text-orange-500 text-xs font-bold rounded-full hover:bg-orange-100 transition-colors">
                     <Users className="w-3.5 h-3.5" /> Create Group
                   </button>
@@ -277,7 +293,7 @@ export default async function EventDetailPage({
                     </div>
                     <span className="text-xs text-gray-500 font-medium">Everyone attending</span>
                   </div>
-                  {user ? (
+                  {userData ? (
                     <button className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
                       Open Chat
                     </button>
@@ -294,7 +310,7 @@ export default async function EventDetailPage({
                 <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                 <p className="text-sm font-semibold text-gray-400 mb-1">No social groups yet</p>
                 <p className="text-xs text-gray-400 mb-3">Be the first to create a group for this event</p>
-                {user ? (
+                {userData ? (
                   <button className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
                     Create a Group
                   </button>
@@ -359,11 +375,14 @@ export default async function EventDetailPage({
                 )}
               </div>
 
-              {user ? (
-                <button className="w-full py-3.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors">
-                  {event.is_free ? 'Get Free Ticket' : 'Get Tickets'}
-                </button>
-              ) : (
+              {userData && event.ticket_types && event.ticket_types.length > 0 ? (
+                <BuyTicketButton
+                  event={eventData}
+                  ticketType={event.ticket_types[0]}
+                  user={userData}
+                  label={event.is_free ? 'Get Free Ticket' : 'Get Tickets'}
+                />
+              ) : !userData ? (
                 <div className="space-y-2">
                   <Link href="/signup" className="w-full flex items-center justify-center py-3.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors">
                     Sign up to get tickets
@@ -372,7 +391,7 @@ export default async function EventDetailPage({
                     Already have an account? Log in
                   </Link>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
 
