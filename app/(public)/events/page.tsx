@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase-server'
 import Link from 'next/link'
-import { MapPin, Calendar, Users, Search, SlidersHorizontal, Grid3X3, List, ChevronDown } from 'lucide-react'
+import { Calendar, Grid3X3, List } from 'lucide-react'
+import EventsFilterBar from '@/components/events/EventsFilterBar'
+import { Suspense } from 'react'
 
 export default async function EventsPage({
   searchParams,
@@ -11,7 +13,6 @@ export default async function EventsPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Build query
   let query = supabase
     .from('events')
     .select('*, ticket_types(*), organisers(org_name)')
@@ -19,17 +20,12 @@ export default async function EventsPage({
     .eq('is_live', true)
     .order('event_date', { ascending: true })
 
-  // Apply filters
   if (params.city) query = query.eq('city', params.city)
   if (params.type) query = query.eq('event_type', params.type)
   if (params.vibe) query = query.eq('vibe', params.vibe)
   if (params.search) query = query.ilike('title', `%${params.search}%`)
 
   const { data: events } = await query.limit(24)
-
-  const eventTypes = ['Concert', 'Club Night', 'Festival', 'Day Party', 'Lounge', 'Comedy Show', 'Arts & Culture', 'Rave']
-  const vibes = ['Turnt', 'Chill', 'Exclusive', 'Wild', 'Social', 'Cultural', 'Classy']
-  const cities = ['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan']
 
   const gradients = [
     'from-purple-900 via-pink-900 to-orange-900',
@@ -62,141 +58,11 @@ export default async function EventsPage({
         </div>
       </nav>
 
-      {/* Hero bar */}
-      <div className="pt-16 bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 md:px-10 py-6">
-
-          {/* Title and search */}
-          <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
-            <div>
-              <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Browse Events</h1>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full w-72 focus-within:border-orange-400 focus-within:bg-white transition-all">
-              <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <form>
-                <input
-                  name="search"
-                  defaultValue={params.search || ''}
-                  placeholder="Search events, venues..."
-                  className="bg-transparent border-none outline-none text-sm text-gray-900 w-full placeholder:text-gray-400"
-                />
-              </form>
-            </div>
-          </div>
-
-          {/* Filter bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide flex-wrap">
-
-            {/* Location */}
-            <div className="relative group flex-shrink-0">
-              <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm font-semibold text-gray-700 cursor-pointer hover:border-gray-300 transition-all">
-                <MapPin className="w-3.5 h-3.5" />
-                {params.city || 'Lagos'}
-                <ChevronDown className="w-3 h-3 text-gray-400" />
-              </div>
-              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-2xl p-2 shadow-xl z-50 min-w-[180px] hidden group-hover:block">
-                {cities.map(city => (
-                  <Link key={city} href={`/events?city=${city.toLowerCase()}${params.type ? `&type=${params.type}` : ''}${params.vibe ? `&vibe=${params.vibe}` : ''}`}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${params.city === city.toLowerCase() ? 'bg-orange-50 text-orange-500' : 'text-gray-700 hover:bg-gray-50'}`}>
-                    <MapPin className="w-3.5 h-3.5" />
-                    {city}
-                    {city === 'Lagos' && !params.city && <span className="ml-auto text-xs text-orange-500 font-bold">Current</span>}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="h-5 w-px bg-gray-200 flex-shrink-0" />
-
-            {/* Date filter */}
-            <div className="relative group flex-shrink-0">
-              <div className={`flex items-center gap-2 px-4 py-2 border rounded-full text-sm font-semibold cursor-pointer transition-all ${params.date ? 'bg-orange-500 border-orange-500 text-white' : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'}`}>
-                <Calendar className="w-3.5 h-3.5" />
-                {params.date || 'Date'}
-                <ChevronDown className="w-3 h-3 opacity-60" />
-              </div>
-              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-2xl p-3 shadow-xl z-50 min-w-[200px] hidden group-hover:block">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Quick select</div>
-                {['This Weekend', 'This Week', 'This Month', 'Next Month'].map(d => (
-                  <Link key={d} href={`/events?date=${d.toLowerCase().replace(' ', '-')}${params.city ? `&city=${params.city}` : ''}${params.type ? `&type=${params.type}` : ''}`}
-                    className={`block px-3 py-2 rounded-xl text-sm font-medium transition-colors ${params.date === d.toLowerCase().replace(' ', '-') ? 'bg-orange-50 text-orange-500' : 'text-gray-700 hover:bg-gray-50'}`}>
-                    {d}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="h-5 w-px bg-gray-200 flex-shrink-0" />
-
-            {/* Event type */}
-            <div className="relative group flex-shrink-0">
-              <div className={`flex items-center gap-2 px-4 py-2 border rounded-full text-sm font-semibold cursor-pointer transition-all ${params.type ? 'bg-orange-500 border-orange-500 text-white' : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'}`}>
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                {params.type || 'Type'}
-                <ChevronDown className="w-3 h-3 opacity-60" />
-              </div>
-              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-2xl p-3 shadow-xl z-50 min-w-[200px] hidden group-hover:block">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Event type</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {eventTypes.map(type => (
-                    <Link key={type} href={`/events?type=${type.toLowerCase().replace(' ', '-')}${params.city ? `&city=${params.city}` : ''}${params.vibe ? `&vibe=${params.vibe}` : ''}`}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${params.type === type.toLowerCase().replace(' ', '-') ? 'bg-orange-50 border-orange-300 text-orange-600' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-                      {type}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="h-5 w-px bg-gray-200 flex-shrink-0" />
-
-            {/* Vibe */}
-            <div className="relative group flex-shrink-0">
-              <div className={`flex items-center gap-2 px-4 py-2 border rounded-full text-sm font-semibold cursor-pointer transition-all ${params.vibe ? 'bg-orange-500 border-orange-500 text-white' : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'}`}>
-                {params.vibe || 'Vibe'}
-                <ChevronDown className="w-3 h-3 opacity-60" />
-              </div>
-              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-2xl p-3 shadow-xl z-50 min-w-[200px] hidden group-hover:block">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Event vibe</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {vibes.map(vibe => (
-                    <Link key={vibe} href={`/events?vibe=${vibe.toLowerCase()}${params.city ? `&city=${params.city}` : ''}${params.type ? `&type=${params.type}` : ''}`}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${params.vibe === vibe.toLowerCase() ? 'bg-orange-50 border-orange-300 text-orange-600' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-                      {vibe}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="h-5 w-px bg-gray-200 flex-shrink-0" />
-
-            {/* Capacity */}
-            <div className="relative group flex-shrink-0">
-              <div className={`flex items-center gap-2 px-4 py-2 border rounded-full text-sm font-semibold cursor-pointer transition-all ${params.capacity ? 'bg-orange-500 border-orange-500 text-white' : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'}`}>
-                <Users className="w-3.5 h-3.5" />
-                {params.capacity || 'Capacity'}
-                <ChevronDown className="w-3 h-3 opacity-60" />
-              </div>
-              <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-2xl p-3 shadow-xl z-50 min-w-[180px] hidden group-hover:block">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Venue size</div>
-                {['Intimate', 'Medium', 'Large Venue', 'Full House'].map(c => (
-                  <Link key={c} href={`/events?capacity=${c.toLowerCase().replace(' ', '-')}${params.city ? `&city=${params.city}` : ''}${params.type ? `&type=${params.type}` : ''}`}
-                    className={`block px-3 py-2 rounded-xl text-sm font-medium transition-colors ${params.capacity === c.toLowerCase().replace(' ', '-') ? 'bg-orange-50 text-orange-500' : 'text-gray-700 hover:bg-gray-50'}`}>
-                    {c}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Clear filters */}
-            {(params.city || params.type || params.vibe || params.date || params.capacity || params.search) && (
-              <Link href="/events" className="px-4 py-2 text-sm font-bold text-orange-500 hover:underline flex-shrink-0">
-                Clear all
-              </Link>
-            )}
-          </div>
-        </div>
+      {/* Filter bar — client component */}
+      <div className="pt-16">
+        <Suspense fallback={<div className="h-32 bg-white border-b border-gray-100" />}>
+          <EventsFilterBar currentParams={params} />
+        </Suspense>
       </div>
 
       {/* Results */}
@@ -210,7 +76,7 @@ export default async function EventsPage({
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className="text-sm text-gray-500 font-medium">Sort by</span>
-              <select className="text-sm font-semibold text-gray-700 border border-gray-200 rounded-full px-3 py-1.5 bg-white outline-none appearance-none cursor-pointer">
+              <select className="text-sm font-semibold text-gray-700 border border-gray-200 rounded-full px-3 py-1.5 bg-white outline-none cursor-pointer">
                 <option>Most relevant</option>
                 <option>Date — soonest first</option>
                 <option>Most popular</option>
@@ -267,11 +133,11 @@ export default async function EventsPage({
                   <div className="text-xs text-gray-500 mb-4 flex items-center gap-3">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {event.event_date ? new Date(event.event_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : 'TBC'}
+                      {event.event_date
+                        ? new Date(event.event_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+                        : 'TBC'}
                     </span>
-                    {event.start_time && (
-                      <span>{event.start_time.slice(0, 5)}</span>
-                    )}
+                    {event.start_time && <span>{event.start_time.slice(0, 5)}</span>}
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -318,21 +184,13 @@ export default async function EventsPage({
         {/* Pagination */}
         {events && events.length >= 24 && (
           <div className="flex items-center justify-center gap-2 mt-12">
-            <button className="w-10 h-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:border-gray-300 transition-colors text-lg">
-              ‹
-            </button>
+            <button className="w-10 h-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:border-gray-300 transition-colors text-lg">‹</button>
             {[1,2,3].map(n => (
-              <button key={n} className={`w-10 h-10 rounded-xl border text-sm font-bold transition-colors ${n === 1 ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}>
-                {n}
-              </button>
+              <button key={n} className={`w-10 h-10 rounded-xl border text-sm font-bold transition-colors ${n === 1 ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}>{n}</button>
             ))}
             <span className="text-gray-400 px-1">...</span>
-            <button className="w-10 h-10 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 hover:border-gray-300 transition-colors">
-              8
-            </button>
-            <button className="w-10 h-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:border-gray-300 transition-colors text-lg">
-              ›
-            </button>
+            <button className="w-10 h-10 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-600 hover:border-gray-300 transition-colors">8</button>
+            <button className="w-10 h-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:border-gray-300 transition-colors text-lg">›</button>
           </div>
         )}
       </div>
@@ -340,9 +198,7 @@ export default async function EventsPage({
       {/* Footer */}
       <footer className="border-t border-gray-100 bg-white py-8 px-10 mt-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-4">
-          <Link href="/" className="text-lg font-bold text-gray-900">
-            paddy<span className="text-orange-500">meet</span>
-          </Link>
+          <Link href="/" className="text-lg font-bold text-gray-900">paddy<span className="text-orange-500">meet</span></Link>
           <div className="flex gap-6">
             {['About','How It Works','For Organisers','Contact'].map(l => (
               <Link key={l} href="/signup" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">{l}</Link>
