@@ -22,9 +22,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
   }
 
-  const amountPaid = verifyData.data.amount / 100 // Paystack returns amount in kobo
+  const amountPaid = verifyData.data.amount / 100
 
-  // Create order
+  // Create order — using exact column names from DB
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
@@ -32,9 +32,9 @@ export async function POST(request: NextRequest) {
       event_id,
       amount: amountPaid,
       service_fee: Math.round(amountPaid * 0.05),
-      total_paid: amountPaid,
+      tool_paid: amountPaid,
       payment_method: 'paystack',
-      payment_reference: reference,
+      payment_references: reference,
       payment_status: 'completed',
     })
     .select()
@@ -71,13 +71,13 @@ export async function POST(request: NextRequest) {
     amount: quantity,
   })
 
-  // Create notification for user
+  // Create notification
   await supabase
     .from('notifications')
     .insert({
       user_id,
       title: 'Ticket confirmed!',
-      message: `Your ticket has been confirmed. Check your dashboard to view it.`,
+      message: 'Your ticket has been confirmed. Check your dashboard to view it.',
       type: 'ticket',
       is_read: false,
     })
