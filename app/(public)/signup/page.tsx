@@ -218,7 +218,7 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
   return (
     <div className="min-h-screen flex pt-16">
       {/* Left panel */}
-      <div className="w-96 flex-shrink-0 bg-orange-50 border-r border-orange-100 sticky top-16 h-[calc(100vh-64px)] flex flex-col justify-between p-10 overflow-hidden">
+      <div className="hidden lg:flex w-96 flex-shrink-0 bg-orange-50 border-r border-orange-100 sticky top-16 h-[calc(100vh-64px)] flex-col justify-between p-10 overflow-hidden">
         <div className="relative z-10">
           <button onClick={onBack} className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-orange-500 transition-colors mb-8">← Back</button>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-100 border border-orange-200 rounded-full text-xs font-bold text-orange-600 uppercase tracking-wider mb-5">Explorer Sign Up</div>
@@ -254,7 +254,7 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
 
       {/* Right — form */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-lg mx-auto px-12 py-16">
+        <div className="max-w-lg mx-auto px-6 md:px-12 py-10 md:py-16">
 
           {/* Step 1 */}
           {step === 1 && (
