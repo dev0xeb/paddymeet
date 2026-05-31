@@ -244,6 +244,7 @@ export default async function EventDetailPage({
       })}
     </div>
   </div>
+  
 )}
 
           </div>
