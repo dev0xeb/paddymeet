@@ -1,5 +1,6 @@
 'use client'
 
+import SupportChat from '@/components/SupportChat'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Save, User, CreditCard, Building2, Check, Eye, EyeOff, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
@@ -389,6 +390,7 @@ export default function OrganiserSettingsPage() {
           </>
         )}
       </div>
+      <SupportChat accountType="organiser" />
     </div>
   )
 }

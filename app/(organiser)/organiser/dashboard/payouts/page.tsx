@@ -1,3 +1,4 @@
+import SupportChat from '@/components/SupportChat'
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -232,6 +233,7 @@ export default async function OrganiserPayoutsPage() {
                   For disputes or delayed payouts contact support@paddymeet.com.
                 </div>
               </div>
+              <SupportChat accountType="organiser" />
             </div>
 
           </div>
