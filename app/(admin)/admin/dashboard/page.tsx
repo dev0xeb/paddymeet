@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
   Users, Calendar, Ticket, DollarSign, Shield, Bell,
-  Settings, LogOut, BarChart2, Flag, CheckCircle, XCircle, AlertCircle, TrendingUp, Eye, ChevronRight,
+  Settings, LogOut, BarChart2, Flag, CheckCircle, XCircle,
+  AlertCircle, TrendingUp, Eye, ChevronRight,
   Megaphone, Search, UserCheck, Database
 } from 'lucide-react'
 
@@ -13,7 +14,6 @@ export default async function AdminDashboardPage() {
 
   if (!user) redirect('/login')
 
-  // Check if user is an admin
   const { data: admin } = await supabase
     .from('admin_team')
     .select('*')
@@ -22,7 +22,6 @@ export default async function AdminDashboardPage() {
 
   if (!admin) redirect('/')
 
-  // Fetch stats
   const [
     { count: totalUsers },
     { count: totalOrganisers },
@@ -44,25 +43,24 @@ export default async function AdminDashboardPage() {
   ])
 
   const totalRevenue = recentOrders?.reduce((sum, o) => sum + (o.total_paid || 0), 0) || 0
-
-  const isSuperAdmin = admin.role === 'super_admin'
+  const isSuperAdmin = admin.department === 'super_admin'
 
   const navItems = [
-    { icon: BarChart2, label: 'Overview', href: '/admin/dashboard', active: true, roles: ['super_admin', 'support', 'finance', 'marketing', 'operations'] },
-    { icon: Users, label: 'Users', href: '/admin/dashboard/users', roles: ['super_admin', 'support', 'operations'] },
-    { icon: UserCheck, label: 'Organisers', href: '/admin/dashboard/organisers', roles: ['super_admin', 'support', 'operations'] },
-    { icon: Calendar, label: 'Events', href: '/admin/dashboard/events', roles: ['super_admin', 'support', 'marketing', 'operations'] },
-    { icon: Ticket, label: 'Tickets', href: '/admin/dashboard/tickets', roles: ['super_admin', 'support', 'operations'] },
-    { icon: DollarSign, label: 'Payments', href: '/admin/dashboard/payments', roles: ['super_admin', 'finance'] },
-    { icon: TrendingUp, label: 'Revenue', href: '/admin/dashboard/revenue', roles: ['super_admin', 'finance'] },
-    { icon: Megaphone, label: 'Announcements', href: '/admin/dashboard/announcements', roles: ['super_admin', 'marketing'] },
-    { icon: Search, label: 'AI Scanner', href: '/admin/dashboard/scanner', roles: ['super_admin', 'marketing'] },
-    { icon: Flag, label: 'Reports', href: '/admin/dashboard/reports', roles: ['super_admin', 'support'] },
-    { icon: Shield, label: 'Trust Scores', href: '/admin/dashboard/trust', roles: ['super_admin', 'support'] },
-    { icon: Database, label: 'Support Tickets', href: '/admin/dashboard/support', roles: ['super_admin', 'support'] },
+    { icon: BarChart2, label: 'Overview', href: '/admin/dashboard', active: true, depts: ['super_admin', 'support', 'finance', 'marketing', 'operations'] },
+    { icon: Users, label: 'Users', href: '/admin/dashboard/users', depts: ['super_admin', 'support', 'operations'] },
+    { icon: UserCheck, label: 'Organisers', href: '/admin/dashboard/organisers', depts: ['super_admin', 'support', 'operations'] },
+    { icon: Calendar, label: 'Events', href: '/admin/dashboard/events', depts: ['super_admin', 'support', 'marketing', 'operations'] },
+    { icon: Ticket, label: 'Tickets', href: '/admin/dashboard/tickets', depts: ['super_admin', 'support', 'operations'] },
+    { icon: DollarSign, label: 'Payments', href: '/admin/dashboard/payments', depts: ['super_admin', 'finance'] },
+    { icon: TrendingUp, label: 'Revenue', href: '/admin/dashboard/revenue', depts: ['super_admin', 'finance'] },
+    { icon: Megaphone, label: 'Announcements', href: '/admin/dashboard/announcements', depts: ['super_admin', 'marketing'] },
+    { icon: Search, label: 'AI Scanner', href: '/admin/dashboard/scanner', depts: ['super_admin', 'marketing'] },
+    { icon: Flag, label: 'Reports', href: '/admin/dashboard/reports', depts: ['super_admin', 'support'] },
+    { icon: Shield, label: 'Trust Scores', href: '/admin/dashboard/trust', depts: ['super_admin', 'support'] },
+    { icon: Database, label: 'Support Tickets', href: '/admin/dashboard/support', depts: ['super_admin', 'support'] },
   ]
 
-  const visibleNavItems = navItems.filter(item => item.roles.includes(admin.role))
+  const visibleNavItems = navItems.filter(item => item.depts.includes(admin.department))
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -89,11 +87,11 @@ export default async function AdminDashboardPage() {
           </button>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-full">
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
-              {admin.name?.charAt(0) || 'A'}
+              {admin.full_name?.charAt(0) || 'A'}
             </div>
             <div>
-              <span className="text-sm font-semibold text-white">{admin.name || 'Admin'}</span>
-              <span className="ml-2 text-xs text-gray-400">{admin.role?.replace('_', ' ')}</span>
+              <span className="text-sm font-semibold text-white">{admin.full_name || 'Admin'}</span>
+              <span className="ml-2 text-xs text-gray-400 capitalize">{admin.department?.replace('_', ' ')}</span>
             </div>
           </div>
         </div>
@@ -131,11 +129,10 @@ export default async function AdminDashboardPage() {
             </form>
           </div>
 
-          {/* Admin badge */}
           <div className="mt-4 p-3 bg-gray-800 rounded-xl border border-gray-700">
-            <div className="text-xs font-bold text-gray-300 truncate">{admin.name || 'Admin User'}</div>
+            <div className="text-xs font-bold text-gray-300 truncate">{admin.full_name || 'Admin User'}</div>
             <div className="text-xs text-orange-400 font-semibold mt-0.5 capitalize">
-              {admin.role?.replace('_', ' ') || 'Admin'}
+              {admin.department?.replace('_', ' ') || 'Admin'}
             </div>
           </div>
         </aside>
@@ -146,30 +143,26 @@ export default async function AdminDashboardPage() {
           {/* Header */}
           <div className="flex items-start justify-between mb-7">
             <div>
-              <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">
-                Command Centre
-              </h1>
-              <p className="text-sm text-gray-500">Welcome back, {admin.name?.split(' ')[0] || 'Admin'}</p>
+              <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">Command Centre</h1>
+              <p className="text-sm text-gray-500">Welcome back, {admin.full_name?.split(' ')[0] || 'Admin'}</p>
             </div>
-            <div className="flex items-center gap-3">
-              {(pendingEvents ?? 0) > 0 && (
-                <Link href="/admin/dashboard/events"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-orange-50 border border-orange-200 text-orange-600 text-sm font-bold rounded-xl hover:bg-orange-100 transition-colors">
-                  <AlertCircle className="w-4 h-4" />
-                  {pendingEvents} events pending review
-                </Link>
-              )}
-            </div>
+            {(pendingEvents ?? 0) > 0 && (
+              <Link href="/admin/dashboard/events"
+                className="flex items-center gap-2 px-4 py-2.5 bg-orange-50 border border-orange-200 text-orange-600 text-sm font-bold rounded-xl hover:bg-orange-100 transition-colors">
+                <AlertCircle className="w-4 h-4" />
+                {pendingEvents} events pending review
+              </Link>
+            )}
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
             {[
-              { label: 'Total users', value: (totalUsers ?? 0).toLocaleString(), icon: Users, color: 'blue', change: 'All time' },
-              { label: 'Organisers', value: (totalOrganisers ?? 0).toLocaleString(), icon: UserCheck, color: 'purple', change: 'Registered' },
-              { label: 'Live events', value: (totalEvents ?? 0).toLocaleString(), icon: Calendar, color: 'green', change: 'Approved' },
-              { label: 'Tickets sold', value: (totalTickets ?? 0).toLocaleString(), icon: Ticket, color: 'orange', change: 'All time' },
-            ].map(({ label, value, icon: Icon, color, change }) => (
+              { label: 'Total users', value: (totalUsers ?? 0).toLocaleString(), icon: Users, color: 'blue' },
+              { label: 'Organisers', value: (totalOrganisers ?? 0).toLocaleString(), icon: UserCheck, color: 'purple' },
+              { label: 'Live events', value: (totalEvents ?? 0).toLocaleString(), icon: Calendar, color: 'green' },
+              { label: 'Tickets sold', value: (totalTickets ?? 0).toLocaleString(), icon: Ticket, color: 'orange' },
+            ].map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-sm transition-all">
                 <div className="flex items-start justify-between mb-3">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
@@ -183,7 +176,6 @@ export default async function AdminDashboardPage() {
                       color === 'orange' ? 'text-orange-500' : 'text-purple-500'
                     }`} />
                   </div>
-                  <span className="text-xs text-gray-400">{change}</span>
                 </div>
                 <div className="text-2xl font-extrabold text-gray-900 tracking-tight mb-0.5">{value}</div>
                 <div className="text-xs text-gray-500 font-medium">{label}</div>
@@ -193,10 +185,9 @@ export default async function AdminDashboardPage() {
 
           <div className="grid grid-cols-3 gap-6">
 
-            {/* Left — 2 cols */}
             <div className="col-span-2 space-y-5">
 
-              {/* Pending events review */}
+              {/* Pending events */}
               <div className="bg-white border border-gray-100 rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-2">
@@ -228,7 +219,16 @@ export default async function AdminDashboardPage() {
                             className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg hover:bg-gray-200 transition-colors">
                             <Eye className="w-3 h-3" /> Review
                           </Link>
-                          <ApproveRejectButtons eventId={event.id} />
+                          <form action={`/api/admin/events/${event.id}/approve`} method="POST" className="inline">
+                            <button type="submit" className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-lg hover:bg-green-100 transition-colors">
+                              <CheckCircle className="w-3 h-3" /> Approve
+                            </button>
+                          </form>
+                          <form action={`/api/admin/events/${event.id}/reject`} method="POST" className="inline">
+                            <button type="submit" className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-500 border border-red-200 text-xs font-bold rounded-lg hover:bg-red-100 transition-colors">
+                              <XCircle className="w-3 h-3" /> Reject
+                            </button>
+                          </form>
                         </div>
                       </div>
                     ))}
@@ -308,7 +308,6 @@ export default async function AdminDashboardPage() {
             {/* Right column */}
             <div className="space-y-5">
 
-              {/* Quick actions */}
               <div className="bg-white border border-gray-100 rounded-2xl p-5">
                 <h2 className="text-sm font-extrabold text-gray-900 mb-3">Quick Actions</h2>
                 <div className="space-y-1">
@@ -319,10 +318,7 @@ export default async function AdminDashboardPage() {
                     { icon: Megaphone, label: 'Send announcement', href: '/admin/dashboard/announcements' },
                     { icon: Shield, label: 'Trust scores', href: '/admin/dashboard/trust' },
                     { icon: Search, label: 'AI event scanner', href: '/admin/dashboard/scanner' },
-                  ].filter(item => {
-                    if (!isSuperAdmin && item.href.includes('announcements')) return false
-                    return true
-                  }).map(({ icon: Icon, label, href, badge }) => (
+                  ].map(({ icon: Icon, label, href, badge }) => (
                     <Link key={label} href={href}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-gray-50">
                       <div className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
@@ -339,19 +335,18 @@ export default async function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Platform health */}
               <div className="bg-white border border-gray-100 rounded-2xl p-5">
                 <h2 className="text-sm font-extrabold text-gray-900 mb-4">Platform Health</h2>
                 <div className="space-y-3">
                   {[
-                    { label: 'Events pending', value: pendingEvents ?? 0, status: (pendingEvents ?? 0) > 5 ? 'warn' : 'good' },
-                    { label: 'Live events', value: totalEvents ?? 0, status: 'good' },
-                    { label: 'Total users', value: totalUsers ?? 0, status: 'good' },
-                    { label: 'Tickets issued', value: totalTickets ?? 0, status: 'good' },
-                  ].map(({ label, value, status }) => (
+                    { label: 'Events pending', value: pendingEvents ?? 0, warn: (pendingEvents ?? 0) > 5 },
+                    { label: 'Live events', value: totalEvents ?? 0, warn: false },
+                    { label: 'Total users', value: totalUsers ?? 0, warn: false },
+                    { label: 'Tickets issued', value: totalTickets ?? 0, warn: false },
+                  ].map(({ label, value, warn }) => (
                     <div key={label} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${status === 'warn' ? 'bg-orange-400' : 'bg-green-400'}`} />
+                        <div className={`w-2 h-2 rounded-full ${warn ? 'bg-orange-400' : 'bg-green-400'}`} />
                         <span className="text-xs text-gray-600">{label}</span>
                       </div>
                       <span className="text-xs font-bold text-gray-900">{value}</span>
@@ -360,7 +355,6 @@ export default async function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Super admin only — team management link */}
               {isSuperAdmin && (
                 <Link href="/admin/dashboard/settings"
                   className="block bg-gray-900 rounded-2xl p-5 hover:bg-gray-800 transition-colors">
@@ -378,30 +372,6 @@ export default async function AdminDashboardPage() {
           </div>
         </main>
       </div>
-    </div>
-  )
-}
-
-// Client component for approve/reject buttons
-function ApproveRejectButtons({ eventId }: { eventId: string }) {
-  return (
-    <div className="flex gap-1.5">
-      <form action={`/api/admin/events/${eventId}/approve`} method="POST">
-        <button
-          type="submit"
-          className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-lg hover:bg-green-100 transition-colors"
-        >
-          <CheckCircle className="w-3 h-3" /> Approve
-        </button>
-      </form>
-      <form action={`/api/admin/events/${eventId}/reject`} method="POST">
-        <button
-          type="submit"
-          className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-500 border border-red-200 text-xs font-bold rounded-lg hover:bg-red-100 transition-colors"
-        >
-          <XCircle className="w-3 h-3" /> Reject
-        </button>
-      </form>
     </div>
   )
 }
