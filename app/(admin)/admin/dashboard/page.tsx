@@ -1,13 +1,13 @@
 import { createClient } from '@/lib/supabase-server'
-import { createAdminClient } from '@/lib/supabase-admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
   Users, Calendar, Ticket, DollarSign, Shield, Bell,
-  Settings, LogOut, BarChart2, Flag, CheckCircle, XCircle,
+  Settings, BarChart2, Flag, CheckCircle, XCircle,
   AlertCircle, TrendingUp, Eye, ChevronRight,
   Megaphone, Search, UserCheck, Database
 } from 'lucide-react'
+import LogoutButton from '@/components/LogoutButton'
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
@@ -15,14 +15,13 @@ export default async function AdminDashboardPage() {
 
   if (!user) redirect('/login')
 
-  const adminClient = createAdminClient()
-  const { data: admin } = await adminClient
+  const { data: admin } = await supabase
     .from('admin_team')
     .select('*')
     .eq('id', user.id)
     .single()
 
-  if (!admin) redirect('/login')
+  if (!admin) redirect('/')
 
   const [
     { count: totalUsers },
@@ -124,11 +123,7 @@ export default async function AdminDashboardPage() {
                 <Settings className="w-4 h-4" /> Settings & Team
               </Link>
             )}
-            <form action="/auth/signout" method="POST">
-              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-400 hover:bg-gray-800 hover:text-white transition-all">
-                <LogOut className="w-4 h-4" /> Log Out
-              </button>
-            </form>
+            <LogoutButton redirectTo="/admin-login" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-400 hover:bg-gray-800 hover:text-white transition-all" />
           </div>
 
           <div className="mt-4 p-3 bg-gray-800 rounded-xl border border-gray-700">

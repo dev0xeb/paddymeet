@@ -1,13 +1,13 @@
-import LogoutButton from '@/components/LogoutButton'
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
   LayoutDashboard, Calendar, Ticket, Users, DollarSign,
-  CreditCard, BarChart2, Settings, HelpCircle, LogOut,
+  CreditCard, BarChart2, Settings, HelpCircle,
   Bell, Plus, Clock, CheckCircle, XCircle, Eye, TrendingUp,
   ArrowUpRight
 } from 'lucide-react'
+import LogoutButton from '@/components/LogoutButton'
 
 export default async function OrganiserDashboardPage() {
   const supabase = await createClient()
@@ -135,12 +135,7 @@ export default async function OrganiserDashboardPage() {
                 {label}
               </Link>
             ))}
-            <form action="/auth/signout" method="POST">
-              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
-                <LogOut className="w-4 h-4" />
-                Log Out
-              </button>
-            </form>
+            <LogoutButton redirectTo="/" />
           </div>
 
           {/* Org card */}
