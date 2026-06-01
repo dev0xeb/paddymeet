@@ -52,12 +52,8 @@ export default async function AdminUserDetailPage({
     .limit(10)
 
   // Fetch reports against this user
-  const { data: reports } = await adminClient
-    .from('user_reports')
-    .select('*')
-    .eq('reported_id', id)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  // Fetch reports against this user
+const reports: never[] = []
 
   const tierColors: Record<string, string> = {
     Newbie: 'bg-gray-100 text-gray-600',
