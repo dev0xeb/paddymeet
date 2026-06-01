@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
@@ -11,20 +12,22 @@ export async function POST(
 
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: admin } = await supabase
+  const adminClient = createAdminClient()
+
+  const { data: admin } = await adminClient
     .from('admin_team')
-    .select('role')
+    .select('department')
     .eq('id', user.id)
     .single()
 
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { error } = await supabase
+  const { error } = await adminClient
     .from('events')
     .update({ is_approved: false, is_live: false })
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
-  return NextResponse.redirect(new URL('/admin/dashboard', request.url))
+  return NextResponse.redirect(new URL('/admin/dashboard/events', request.url))
 }
