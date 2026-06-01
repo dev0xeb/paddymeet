@@ -128,7 +128,6 @@ export default async function OrganiserDashboardPage() {
           <div className="border-t border-gray-100 pt-3 space-y-0.5">
             {[
               { icon: Settings, label: 'Settings', href: '/organiser/dashboard/settings' },
-              { icon: HelpCircle, label: 'Support', href: '/organiser/dashboard/support' },
             ].map(({ icon: Icon, label, href }) => (
               <Link key={label} href={href}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
