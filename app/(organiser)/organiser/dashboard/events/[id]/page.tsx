@@ -85,7 +85,18 @@ export default async function OrganiserManageEventPage({
             <Eye className="w-4 h-4" /> View Live
           </Link>
         )}
-        {!event.is_approved && <div className="w-24" />}
+        {!event.is_approved && (
+          <Link href={`/organiser/dashboard/events/${id}/edit`}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-600 text-sm font-bold rounded-xl hover:bg-blue-100 transition-colors">
+            <Edit className="w-4 h-4" /> Edit Event
+          </Link>
+        )}
+        {event.is_approved && event.is_live && (
+          <Link href={`/organiser/dashboard/events/${id}/edit`}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:border-gray-300 transition-colors ml-2">
+            <Edit className="w-4 h-4" /> Edit
+          </Link>
+        )}
       </nav>
 
       <div className="pt-16 max-w-5xl mx-auto px-6 py-8">
