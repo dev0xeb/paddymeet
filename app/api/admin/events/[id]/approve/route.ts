@@ -13,7 +13,6 @@ export async function POST(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const adminClient = createAdminClient()
-
   const { data: admin } = await adminClient
     .from('admin_team')
     .select('department')
@@ -22,12 +21,82 @@ export async function POST(
 
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Approve the event
   const { error } = await adminClient
     .from('events')
     .update({ is_approved: true, is_live: true })
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+  // Fetch the event details for the notification
+  const { data: event } = await adminClient
+    .from('events')
+    .select('title, city, state, event_date, event_type, vibe')
+    .eq('id', id)
+    .single()
+
+  if (event) {
+    // Find users in the same city
+    const { data: cityUsers } = await adminClient
+      .from('users')
+      .select('id')
+      .ilike('city', `%${event.city}%`)
+      .eq('is_suspended', false)
+
+    if (cityUsers && cityUsers.length > 0) {
+      const eventDate = event.event_date
+        ? new Date(event.event_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+        : 'Coming soon'
+
+      const notifications = cityUsers.map(u => ({
+        user_id: u.id,
+        title: `New event near you 🎉`,
+        message: `${event.title} — ${event.event_type} in ${event.city} on ${eventDate}. Tap to see details and get your tickets.`,
+        type: 'new_event',
+        is_read: false,
+        event_id: id,
+      }))
+
+      // Insert in batches of 100
+      for (let i = 0; i < notifications.length; i += 100) {
+        await adminClient
+          .from('notifications')
+          .insert(notifications.slice(i, i + 100))
+      }
+    }
+
+    // Also notify users whose interests match the event vibe or type
+    if (event.event_type) {
+      const { data: interestedUsers } = await adminClient
+        .from('user_interests')
+        .select('user_id')
+        .ilike('interest', `%${event.event_type}%`)
+
+      if (interestedUsers && interestedUsers.length > 0) {
+        // Filter out users already notified (same city)
+        const cityUserIds = new Set(cityUsers?.map(u => u.id) || [])
+        const newUsers = interestedUsers.filter(u => !cityUserIds.has(u.user_id))
+
+        if (newUsers.length > 0) {
+          const interestNotifications = newUsers.map(u => ({
+            user_id: u.user_id,
+            title: `${event.event_type} event you might like 🎶`,
+            message: `${event.title} is happening in ${event.city}. Based on your interests, you might love this one.`,
+            type: 'new_event',
+            is_read: false,
+            event_id: id,
+          }))
+
+          for (let i = 0; i < interestNotifications.length; i += 100) {
+            await adminClient
+              .from('notifications')
+              .insert(interestNotifications.slice(i, i + 100))
+          }
+        }
+      }
+    }
+  }
 
   return NextResponse.redirect(new URL('/admin/dashboard/events', request.url))
 }
