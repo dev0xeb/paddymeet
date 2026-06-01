@@ -10,9 +10,13 @@ export async function POST(request: NextRequest) {
 
   // If logging out from admin pages redirect to admin login
   if (referer.includes('/admin')) {
-    return NextResponse.redirect(new URL('/admin-login', origin))
+    const response = NextResponse.redirect(new URL('/admin-login', origin))
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
+    return response
   }
 
   // Everyone else goes to homepage
-  return NextResponse.redirect(new URL('/', origin))
+  const response = NextResponse.redirect(new URL('/', origin))
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
+  return response
 }
