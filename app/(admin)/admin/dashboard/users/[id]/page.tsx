@@ -26,7 +26,6 @@ export default async function AdminUserDetailPage({
     .single()
   if (!admin) redirect('/admin-login')
 
-  // Fetch user profile
   const { data: profile } = await adminClient
     .from('users')
     .select('*, user_interests(*)')
@@ -35,8 +34,13 @@ export default async function AdminUserDetailPage({
 
   if (!profile) notFound()
 
-  // Disabled queries — will enable once confirmed working
-  const tickets: never[] = []
+  const { data: tickets } = await adminClient
+    .from('tickets')
+    .select('*, ticket_types(name, price), events(title, event_date, city)')
+    .eq('user_id', id)
+    .order('purchased_at', { ascending: false })
+    .limit(10)
+
   const trustHistory: never[] = []
   const reports: never[] = []
 
@@ -73,7 +77,6 @@ export default async function AdminUserDetailPage({
           {/* Left — profile */}
           <div className="space-y-5">
 
-            {/* Profile card */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-extrabold text-xl">
@@ -132,7 +135,6 @@ export default async function AdminUserDetailPage({
                 ))}
               </div>
 
-              {/* Interests */}
               {profile.user_interests && profile.user_interests.length > 0 && (
                 <div className="mb-5">
                   <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Interests</div>
@@ -146,7 +148,6 @@ export default async function AdminUserDetailPage({
                 </div>
               )}
 
-              {/* Actions */}
               <div className="space-y-2 border-t border-gray-100 pt-4">
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Account Actions</div>
 
@@ -211,12 +212,23 @@ export default async function AdminUserDetailPage({
               <div className="flex items-center gap-2 mb-4">
                 <Ticket className="w-4 h-4 text-orange-500" />
                 <h2 className="text-sm font-extrabold text-gray-900">Tickets</h2>
+                <span className="text-xs text-gray-400">({tickets?.length || 0} total)</span>
               </div>
-              {tickets.length > 0 ? (
+              {tickets && tickets.length > 0 ? (
                 <div className="space-y-2">
-                  {tickets.map((ticket: never) => (
-                    <div key={(ticket as { id: string }).id} className="p-3 bg-gray-50 rounded-xl">
-                      <div className="text-xs text-gray-500">Ticket</div>
+                  {tickets.map((ticket) => (
+                    <div key={ticket.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${ticket.status === 'active' ? 'bg-green-400' : 'bg-gray-300'}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-bold text-gray-900 truncate">{ticket.events?.title}</div>
+                        <div className="text-xs text-gray-500">
+                          {ticket.ticket_types?.name} · {ticket.events?.event_date ? new Date(ticket.events.event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}
+                        </div>
+                      </div>
+                      <div className="text-xs font-mono text-gray-400 flex-shrink-0">{ticket.ticket_code}</div>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${ticket.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                        {ticket.status}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -238,7 +250,7 @@ export default async function AdminUserDetailPage({
                 <div className="space-y-2">
                   {trustHistory.map((item: never) => (
                     <div key={(item as { id: string }).id} className="p-3 bg-gray-50 rounded-xl">
-                      <div className="text-xs text-gray-500">Trust history</div>
+                      <div className="text-xs text-gray-500">Trust history item</div>
                     </div>
                   ))}
                 </div>
