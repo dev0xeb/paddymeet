@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -14,7 +15,8 @@ export default async function AdminDashboardPage() {
 
   if (!user) redirect('/login')
 
-  const { data: admin } = await supabase
+  const adminClient = createAdminClient()
+  const { data: admin } = await adminClient
     .from('admin_team')
     .select('*')
     .eq('id', user.id)
