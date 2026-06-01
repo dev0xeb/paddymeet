@@ -1,4 +1,5 @@
 import SupportChat from '@/components/SupportChat'
+import OpenGroupButton from '@/components/OpenGroupButton'
 import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -34,6 +35,33 @@ export default async function EventDetailPage({
     .single()
 
   if (!event) notFound()
+
+  // Fetch the main group for this event
+  const { data: mainGroup } = await supabase
+    .from('groups')
+    .select('id, name')
+    .eq('event_id', id)
+    .eq('group_type', 'main')
+    .single()
+
+  // Check if user has a ticket for this event
+  let userHasTicket = false
+  if (user) {
+    const { data: ticket } = await supabase
+      .from('tickets')
+      .select('id')
+      .eq('event_id', id)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .single()
+    userHasTicket = !!ticket
+  }
+
+  // Get group member count
+  const { count: memberCount } = await supabase
+    .from('group_members')
+    .select('*', { count: 'exact', head: true })
+    .eq('group_id', mainGroup?.id || '')
 
   const gradients = [
     'from-purple-900 via-pink-900 to-orange-900',
@@ -256,12 +284,8 @@ export default async function EventDetailPage({
             <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-extrabold text-gray-900">Groups</h2>
-                {userData && (
-                  <button className="flex items-center gap-1.5 px-4 py-2 bg-orange-50 border border-orange-200 text-orange-500 text-xs font-bold rounded-full hover:bg-orange-100 transition-colors">
-                    <Users className="w-3.5 h-3.5" /> Create Group
-                  </button>
-                )}
               </div>
+
               <div className="border-2 border-orange-200 bg-orange-50 rounded-2xl p-4 mb-3">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <span className="text-sm font-extrabold text-gray-900">{event.title} — Everyone</span>
@@ -274,16 +298,23 @@ export default async function EventDetailPage({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex">
-                      {['bg-orange-400','bg-pink-500','bg-purple-500','bg-blue-500'].map((c, i) => (
+                      {['bg-orange-400', 'bg-pink-500', 'bg-purple-500', 'bg-blue-500'].map((c, i) => (
                         <div key={i} className={`w-6 h-6 rounded-full ${c} border-2 border-white -ml-1.5 first:ml-0`} />
                       ))}
                     </div>
-                    <span className="text-xs text-gray-500 font-medium">Everyone attending</span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      {memberCount ? `${memberCount} member${memberCount === 1 ? '' : 's'}` : 'Be the first to join'}
+                    </span>
                   </div>
-                  {userData ? (
-                    <button className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
-                      Open Chat
-                    </button>
+
+                  {userData && userHasTicket && mainGroup ? (
+                    <OpenGroupButton
+                      groupId={mainGroup.id}
+                      groupName={mainGroup.name}
+                      eventTitle={event.title}
+                    />
+                  ) : userData && !userHasTicket ? (
+                    <span className="text-xs text-gray-400 font-semibold">Buy a ticket to join the group</span>
                   ) : (
                     <Link href="/signup" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
                       Sign up to join
@@ -291,19 +322,11 @@ export default async function EventDetailPage({
                   )}
                 </div>
               </div>
+
               <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-2xl">
                 <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                 <p className="text-sm font-semibold text-gray-400 mb-1">No social groups yet</p>
-                <p className="text-xs text-gray-400 mb-3">Be the first to create a group for this event</p>
-                {userData ? (
-                  <button className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
-                    Create a Group
-                  </button>
-                ) : (
-                  <Link href="/signup" className="px-5 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
-                    Sign up to create a group
-                  </Link>
-                )}
+                <p className="text-xs text-gray-400 mb-3">Social groups coming soon</p>
               </div>
             </div>
 
