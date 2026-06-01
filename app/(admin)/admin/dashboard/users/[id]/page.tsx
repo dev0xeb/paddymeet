@@ -55,7 +55,7 @@ export default async function AdminUserDetailPage({
   const { data: reports } = await adminClient
     .from('user_reports')
     .select('*')
-    .eq('reported_user_id', id)
+    .eq('reported_id', id)
     .order('created_at', { ascending: false })
     .limit(5)
 
