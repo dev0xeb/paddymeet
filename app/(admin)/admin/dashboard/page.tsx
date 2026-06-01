@@ -16,13 +16,13 @@ export default async function AdminDashboardPage() {
   if (!user) redirect('/login')
 
   const adminClient = createAdminClient()
-  const { data: admin, error: adminError } = await adminClient
+  const { data: admin } = await adminClient
     .from('admin_team')
     .select('*')
     .eq('id', user.id)
     .single()
 
-  if (!admin) redirect(`/login?error=${adminError?.message || 'no-record'}&uid=${user.id}`)
+  if (!admin) redirect('/login')
 
   const [
     { count: totalUsers },
