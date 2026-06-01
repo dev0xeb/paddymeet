@@ -150,7 +150,6 @@ export default async function OrganiserEventsPage({
             {events.map((event, index) => {
               const status = getStatus(event)
               const StatusIcon = status.icon
-              const totalTickets = event.ticket_types?.reduce((sum: number, t: { quantity: number }) => sum + t.quantity, 0) || 0
 
               return (
                 <div key={event.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all">
