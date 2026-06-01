@@ -1,3 +1,4 @@
+import SupportChat from '@/components/SupportChat'
 import Link from 'next/link'
 import { ArrowRight, MapPin, Users, Star, Shield } from 'lucide-react'
 
@@ -458,6 +459,7 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+          <SupportChat accountType="explorer" />
         </div>
       </footer>
 
