@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Calendar, Ticket, Users, DollarSign,
   CreditCard, BarChart2, Settings, HelpCircle, LogOut,
   Bell, Plus, Clock, CheckCircle, XCircle, Eye, TrendingUp,
-  ArrowUpRight, AlertCircle
+  ArrowUpRight
 } from 'lucide-react'
 
 export default async function OrganiserDashboardPage() {
@@ -14,7 +14,6 @@ export default async function OrganiserDashboardPage() {
 
   if (!user) redirect('/login')
 
-  // Check if user is an organiser
   const { data: organiser } = await supabase
     .from('organisers')
     .select('*')
@@ -23,14 +22,12 @@ export default async function OrganiserDashboardPage() {
 
   if (!organiser) redirect('/login')
 
-  // Fetch organiser events
   const { data: events } = await supabase
     .from('events')
     .select('*, ticket_types(*)')
     .eq('organiser_id', user.id)
     .order('created_at', { ascending: false })
 
-  // Fetch recent orders for this organiser's events
   const eventIds = events?.map(e => e.id) || []
   const { data: orders } = await supabase
     .from('orders')
@@ -39,7 +36,6 @@ export default async function OrganiserDashboardPage() {
     .order('created_at', { ascending: false })
     .limit(5)
 
-  // Calculate stats
   const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_paid || 0), 0) || 0
   const totalTickets = orders?.length || 0
   const liveEvents = events?.filter(e => e.is_live && e.is_approved).length || 0
@@ -157,29 +153,14 @@ export default async function OrganiserDashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className={`w-1.5 h-1.5 rounded-full ${organiser.is_verified ? 'bg-green-500' : 'bg-orange-400'}`} />
-              <span className={`text-xs font-semibold ${organiser.is_verified ? 'text-green-600' : 'text-orange-500'}`}>
-                {organiser.is_verified ? 'Verified Organiser' : 'Pending Verification'}
-              </span>
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              <span className="text-xs font-semibold text-green-600">Active Organiser</span>
             </div>
           </div>
         </aside>
 
         {/* Main */}
         <main className="ml-56 flex-1 p-8">
-
-          {/* Pending verification banner */}
-          {!organiser.is_verified && (
-            <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-200 rounded-2xl mb-6">
-              <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="text-sm font-bold text-orange-700 mb-0.5">Account pending verification</div>
-                <div className="text-sm text-orange-600">
-                  Your account is under review. Our team will contact you within 24–48 hours to complete verification. You will not be able to submit events until your account is approved.
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Page header */}
           <div className="flex items-start justify-between mb-7">
@@ -189,16 +170,12 @@ export default async function OrganiserDashboardPage() {
               </h1>
               <p className="text-sm text-gray-500">Here is how your events are performing</p>
             </div>
-            {organiser.is_verified ? (
-              <Link href="/organiser/dashboard/events/new"
-                className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition-all hover:shadow-lg hover:shadow-blue-100">
-                <Plus className="w-4 h-4" /> Submit New Event
-              </Link>
-            ) : (
-              <div className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-400 text-sm font-bold rounded-xl cursor-not-allowed">
-                <Plus className="w-4 h-4" /> Submit New Event
-              </div>
-            )}
+            <Link
+              href="/organiser/dashboard/events/new"
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition-all hover:shadow-lg hover:shadow-blue-100"
+            >
+              <Plus className="w-4 h-4" /> Submit New Event
+            </Link>
           </div>
 
           {/* Stats */}
@@ -232,9 +209,8 @@ export default async function OrganiserDashboardPage() {
 
           <div className="grid grid-cols-3 gap-6">
 
-            {/* Events table — spans 2 cols */}
+            {/* Events table */}
             <div className="col-span-2 space-y-5">
-
               <div className="bg-white border border-gray-100 rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-extrabold text-gray-900">My Events</h2>
@@ -243,13 +219,11 @@ export default async function OrganiserDashboardPage() {
 
                 {events && events.length > 0 ? (
                   <div className="space-y-1">
-                    {/* Table header */}
                     <div className="grid grid-cols-5 gap-3 px-3 py-2 bg-gray-50 rounded-xl mb-2">
                       {['Event','Date','Tickets sold','Revenue','Status'].map(h => (
                         <div key={h} className="text-xs font-bold text-gray-400 uppercase tracking-wider">{h}</div>
                       ))}
                     </div>
-
                     {events.slice(0, 5).map((event) => {
                       const status = getEventStatus(event)
                       const StatusIcon = statusConfig[status]?.icon || Clock
@@ -285,12 +259,10 @@ export default async function OrganiserDashboardPage() {
                     </div>
                     <p className="text-sm font-semibold text-gray-400 mb-1">No events yet</p>
                     <p className="text-xs text-gray-400 mb-4">Submit your first event to get started</p>
-                    {organiser.is_verified && (
-                      <Link href="/organiser/dashboard/events/new"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-colors">
-                        <Plus className="w-3 h-3" /> Submit Event
-                      </Link>
-                    )}
+                    <Link href="/organiser/dashboard/events/new"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-colors">
+                      <Plus className="w-3 h-3" /> Submit Event
+                    </Link>
                   </div>
                 )}
               </div>
@@ -395,14 +367,14 @@ export default async function OrganiserDashboardPage() {
                 <h2 className="text-sm font-extrabold text-gray-900 mb-3">Quick Actions</h2>
                 <div className="space-y-1">
                   {[
-                    { icon: Plus, label: 'Submit a new event', href: '/organiser/dashboard/events/new', locked: !organiser.is_verified },
+                    { icon: Plus, label: 'Submit a new event', href: '/organiser/dashboard/events/new' },
                     { icon: BarChart2, label: 'Download sales report', href: '/organiser/dashboard/reports' },
                     { icon: Users, label: 'View attendee list', href: '/organiser/dashboard/attendees' },
                     { icon: CreditCard, label: 'Update bank details', href: '/organiser/dashboard/settings' },
                     { icon: HelpCircle, label: 'Contact support', href: '/organiser/dashboard/support' },
-                  ].map(({ icon: Icon, label, href, locked }) => (
-                    <Link key={label} href={locked ? '#' : href}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${locked ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50'}`}>
+                  ].map(({ icon: Icon, label, href }) => (
+                    <Link key={label} href={href}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-gray-50">
                       <div className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
                         <Icon className="w-3.5 h-3.5 text-gray-500" />
                       </div>

@@ -9,10 +9,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Check organiser is verified
   const { data: organiser } = await supabase
     .from('organisers')
-    .select('id, is_verified')
+    .select('id')
     .eq('id', user.id)
     .single()
 
@@ -20,14 +19,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Organiser account not found' }, { status: 404 })
   }
 
-  if (!organiser.is_verified) {
-    return NextResponse.json({ error: 'Your account must be verified before submitting events' }, { status: 403 })
-  }
-
   const body = await request.json()
   const { eventData, ticketTypes } = body
 
-  // Insert event
   const { data: event, error: eventError } = await supabase
     .from('events')
     .insert({
@@ -37,7 +31,7 @@ export async function POST(request: NextRequest) {
       vibe: eventData.vibe,
       description: eventData.description,
       age_restriction: eventData.age_restriction || 0,
-      dress_code: eventData.dress_code,
+      dress_code: eventData.dress_code || null,
       capacity: eventData.capacity || null,
       event_date: eventData.event_date,
       start_time: eventData.start_time,
@@ -61,7 +55,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: eventError.message }, { status: 400 })
   }
 
-  // Insert ticket types if not a free event
   if (!eventData.is_free && ticketTypes && ticketTypes.length > 0) {
     const { error: ticketError } = await supabase
       .from('ticket_types')
