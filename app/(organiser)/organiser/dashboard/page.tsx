@@ -115,7 +115,6 @@ export default async function OrganiserDashboardPage() {
             {[
               { icon: DollarSign, label: 'Revenue', href: '/organiser/dashboard/revenue' },
               { icon: CreditCard, label: 'Payouts', href: '/organiser/dashboard/payouts' },
-              { icon: BarChart2, label: 'Reports', href: '/organiser/dashboard/reports' },
             ].map(({ icon: Icon, label, href }) => (
               <Link key={label} href={href}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
