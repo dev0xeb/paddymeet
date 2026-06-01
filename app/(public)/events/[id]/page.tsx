@@ -1,5 +1,6 @@
 import SupportChat from '@/components/SupportChat'
 import OpenGroupButton from '@/components/OpenGroupButton'
+import CreateGroupModal from '@/components/CreateGroupModal'
 import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -62,6 +63,15 @@ export default async function EventDetailPage({
     .from('group_members')
     .select('*', { count: 'exact', head: true })
     .eq('group_id', mainGroup?.id || '')
+
+  // Fetch social and ticket groups
+  const { data: socialGroups } = await supabase
+    .from('groups')
+    .select('*, group_members(count)')
+    .eq('event_id', id)
+    .in('group_type', ['social', 'ticket'])
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
 
   const gradients = [
     'from-purple-900 via-pink-900 to-orange-900',
@@ -284,6 +294,9 @@ export default async function EventDetailPage({
             <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-extrabold text-gray-900">Groups</h2>
+                {socialGroups && socialGroups.length > 0 && (
+                  <span className="text-xs text-gray-400">{socialGroups.length} group{socialGroups.length !== 1 ? 's' : ''}</span>
+                )}
               </div>
 
               <div className="border-2 border-orange-200 bg-orange-50 rounded-2xl p-4 mb-3">
@@ -323,11 +336,69 @@ export default async function EventDetailPage({
                 </div>
               </div>
 
-              <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-2xl">
-                <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-gray-400 mb-1">No social groups yet</p>
-                <p className="text-xs text-gray-400 mb-3">Social groups coming soon</p>
-              </div>
+              {/* Social and ticket groups */}
+              {socialGroups && socialGroups.length > 0 ? (
+                <div className="space-y-3 mb-3">
+                  {socialGroups.map((group: { id: string, name: string, description: string, vibe: string, group_type: string, max_members: number, gender_preference: string, min_trust_score: number, member_count: number }) => (
+                    <div key={group.id} className="border-2 border-gray-200 rounded-2xl p-4">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="text-sm font-extrabold text-gray-900">{group.name}</span>
+                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full border ${
+                          group.group_type === 'ticket'
+                            ? 'bg-blue-50 text-blue-600 border-blue-200'
+                            : 'bg-purple-50 text-purple-600 border-purple-200'
+                        }`}>
+                          {group.group_type === 'ticket' ? 'Ticket Group' : 'Social Group'}
+                        </span>
+                        {group.vibe && (
+                          <span className="px-2 py-0.5 bg-orange-50 text-orange-500 border border-orange-200 text-xs font-bold rounded-full">{group.vibe}</span>
+                        )}
+                      </div>
+                      {group.description && (
+                        <p className="text-xs text-gray-500 leading-relaxed mb-2">{group.description}</p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <span className="flex items-center gap-1"><Users className="w-3 h-3" />{group.member_count || 0}/{group.max_members}</span>
+                          {group.gender_preference !== 'any' && <span className="capitalize">{group.gender_preference}</span>}
+                          {group.min_trust_score > 0 && <span>Trust ≥ {group.min_trust_score}</span>}
+                        </div>
+                        {userData && userHasTicket ? (
+                          <OpenGroupButton groupId={group.id} groupName={group.name} eventTitle={event.title} />
+                        ) : (
+                          <span className="text-xs text-gray-400">Ticket required</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {/* Create group or empty state */}
+              {userData && userHasTicket ? (
+                <div className="flex items-center justify-between p-4 border-2 border-dashed border-gray-200 rounded-2xl">
+                  <div>
+                    <div className="text-sm font-bold text-gray-700 mb-0.5">Create your own group</div>
+                    <div className="text-xs text-gray-400">Social or ticket-based groups for this event</div>
+                  </div>
+                  <CreateGroupModal
+                    eventId={event.id}
+                    eventTitle={event.title}
+                    ticketTypes={event.ticket_types || []}
+                  />
+                </div>
+              ) : userData && !userHasTicket ? (
+                <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-2xl">
+                  <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-gray-400 mb-1">Get a ticket to create or join groups</p>
+                </div>
+              ) : (
+                <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-2xl">
+                  <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-gray-400 mb-1">Sign up to create or join groups</p>
+                  <Link href="/signup" className="text-xs font-bold text-orange-500 hover:underline">Create an account</Link>
+                </div>
+              )}
             </div>
 
             {/* House rules */}
