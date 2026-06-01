@@ -20,7 +20,7 @@ export default async function AdminDashboardPage() {
     .eq('id', user.id)
     .single()
 
-  if (!admin) redirect('/')
+  if (!admin) redirect('/login?error=not-admin')
 
   const [
     { count: totalUsers },
