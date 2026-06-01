@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, Users, Star, Link2, Bell, Settings, LogOut, Ticket, ChevronRight, TrendingUp } from 'lucide-react'
+import { Calendar, Users, Star, Link2, Bell, Settings, Ticket, ChevronRight, TrendingUp } from 'lucide-react'
+import LogoutButton from '@/components/LogoutButton'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -9,7 +10,6 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/login')
 
-  // Fetch user profile
   const { data: profile } = await supabase
     .from('users')
     .select('*, user_interests(*)')
@@ -18,7 +18,6 @@ export default async function DashboardPage() {
 
   if (!profile) redirect('/login')
 
-  // Fetch upcoming tickets
   const { data: tickets } = await supabase
     .from('tickets')
     .select('*, events(*)')
@@ -27,7 +26,6 @@ export default async function DashboardPage() {
     .order('purchased_at', { ascending: false })
     .limit(3)
 
-  // Fetch user groups
   const { data: groups } = await supabase
     .from('group_members')
     .select('*, groups(*, events(*))')
@@ -66,7 +64,7 @@ export default async function DashboardPage() {
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full text-white text-xs flex items-center justify-center font-bold">3</span>
           </Link>
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
-            {profile.username?.charAt(1)?.toUpperCase() || 'U'}
+            {profile.username?.charAt(0)?.toUpperCase() || 'U'}
           </div>
         </div>
       </nav>
@@ -84,15 +82,10 @@ export default async function DashboardPage() {
               { icon: Star, label: 'Trust Score', href: '/dashboard/trust' },
               { icon: Link2, label: 'Referrals', href: '/dashboard/referrals' },
             ].map(({ icon: Icon, label, href, active }) => (
-              <Link
-                key={label}
-                href={href}
+              <Link key={label} href={href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  active
-                    ? 'bg-orange-50 text-orange-500'
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
+                  active ? 'bg-orange-50 text-orange-500' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}>
                 <Icon className={`w-4 h-4 ${active ? 'text-orange-500' : ''}`} />
                 {label}
               </Link>
@@ -102,17 +95,14 @@ export default async function DashboardPage() {
             <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
               <Settings className="w-4 h-4" />Settings
             </Link>
-            <form action="/auth/signout" method="POST">
-              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
-                <LogOut className="w-4 h-4" />Log Out
-              </button>
-            </form>
+            <LogoutButton redirectTo="/" />
           </div>
+
           {/* User card */}
           <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-xs">
-                {profile.username?.charAt(1)?.toUpperCase() || 'U'}
+                {profile.username?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-bold text-gray-900 truncate">{profile.username}</div>
@@ -133,10 +123,8 @@ export default async function DashboardPage() {
               </h1>
               <p className="text-sm text-gray-500">Here is what is happening with your events and groups</p>
             </div>
-            <Link
-              href="/events"
-              className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors"
-            >
+            <Link href="/events"
+              className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors">
               Find Events <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
@@ -144,10 +132,10 @@ export default async function DashboardPage() {
           {/* Stats */}
           <div className="grid grid-cols-4 gap-4 mb-8">
             {[
-              { label: 'Events attended', value: profile.events_attended || 0, color: 'orange' },
-              { label: 'Trust score', value: profile.trust_score || 50, color: 'blue' },
-              { label: 'Fresh crews', value: profile.fresh_groups_count || 0, color: 'green' },
-              { label: 'Chemistry score', value: profile.chemistry_score || 0, color: 'purple' },
+              { label: 'Events attended', value: profile.events_attended || 0 },
+              { label: 'Trust score', value: profile.trust_score || 50 },
+              { label: 'Fresh crews', value: profile.fresh_groups_count || 0 },
+              { label: 'Chemistry score', value: profile.chemistry_score || 0 },
             ].map(({ label, value }) => (
               <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5">
                 <div className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">{value}</div>
@@ -165,7 +153,7 @@ export default async function DashboardPage() {
               <div className="bg-white border border-gray-100 rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-extrabold text-gray-900">Upcoming Events</h2>
-                  <Link href="/dashboard/events" className="text-xs font-bold text-orange-500 hover:underline">View all →</Link>
+                  <Link href="/tickets" className="text-xs font-bold text-orange-500 hover:underline">View all →</Link>
                 </div>
                 {tickets && tickets.length > 0 ? (
                   <div className="space-y-3">
@@ -178,9 +166,7 @@ export default async function DashboardPage() {
                           <div className="text-sm font-bold text-gray-900 truncate">{ticket.events?.title}</div>
                           <div className="text-xs text-gray-500 mt-0.5">{ticket.events?.city}</div>
                         </div>
-                        <div className="text-xs font-bold text-orange-500 bg-orange-50 px-3 py-1.5 rounded-full">
-                          Active
-                        </div>
+                        <div className="text-xs font-bold text-orange-500 bg-orange-50 px-3 py-1.5 rounded-full">Active</div>
                       </div>
                     ))}
                   </div>
@@ -214,9 +200,7 @@ export default async function DashboardPage() {
                           <div className="text-xs text-gray-500 mt-0.5">{member.groups?.events?.title}</div>
                         </div>
                         <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                          member.groups?.group_type === 'ticket'
-                            ? 'bg-green-50 text-green-600'
-                            : 'bg-blue-50 text-blue-600'
+                          member.groups?.group_type === 'ticket' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'
                         }`}>
                           {member.groups?.group_type === 'ticket' ? 'Ticket' : 'Social'}
                         </span>
@@ -244,7 +228,7 @@ export default async function DashboardPage() {
               <div className="bg-white border border-gray-100 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-lg">
-                    {profile.username?.charAt(1)?.toUpperCase() || 'U'}
+                    {profile.username?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
                   <div>
                     <div className="text-sm font-extrabold text-gray-900">{profile.username}</div>
@@ -257,15 +241,10 @@ export default async function DashboardPage() {
                   <span className="text-xs font-bold text-orange-500">{profile.trust_score} / 100</span>
                 </div>
                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
-                  <div
-                    className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all"
-                    style={{ width: `${progress}%` }}
-                  />
+                  <div className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all" style={{ width: `${progress}%` }} />
                 </div>
-                <Link
-                  href={`/profile/${profile.username}`}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold rounded-xl hover:border-orange-300 hover:text-orange-500 transition-colors"
-                >
+                <Link href={`/profile/${profile.username}`}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold rounded-xl hover:border-orange-300 hover:text-orange-500 transition-colors">
                   View Profile <ChevronRight className="w-3 h-3" />
                 </Link>
               </div>
