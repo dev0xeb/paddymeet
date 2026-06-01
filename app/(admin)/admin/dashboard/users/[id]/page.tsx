@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Shield, MapPin, Calendar, Ticket,
   UserX, UserCheck, Trash2, Star, Users,
-  Clock, CheckCircle, XCircle, Flag
+  Clock, CheckCircle, Flag
 } from 'lucide-react'
 
 export default async function AdminUserDetailPage({
@@ -24,7 +24,7 @@ export default async function AdminUserDetailPage({
     .select('department')
     .eq('id', user.id)
     .single()
-  if (!admin) redirect('/admin/login')
+  if (!admin) redirect('/admin-login')
 
   // Fetch user profile
   const { data: profile } = await adminClient
@@ -35,25 +35,10 @@ export default async function AdminUserDetailPage({
 
   if (!profile) notFound()
 
-  // Fetch user tickets
-  const { data: tickets } = await adminClient
-    .from('tickets')
-    .select('*, events(title, event_date, city), ticket_types(name, price)')
-    .eq('user_id', id)
-    .order('created_at', { ascending: false })
-    .limit(10)
-
-  // Fetch trust history
-  const { data: trustHistory } = await adminClient
-    .from('trust_score_history')
-    .select('*')
-    .eq('user_id', id)
-    .order('created_at', { ascending: false })
-    .limit(10)
-
-  // Fetch reports against this user
-  // Fetch reports against this user
-const reports: never[] = []
+  // Disabled queries — will enable once confirmed working
+  const tickets: never[] = []
+  const trustHistory: never[] = []
+  const reports: never[] = []
 
   const tierColors: Record<string, string> = {
     Newbie: 'bg-gray-100 text-gray-600',
@@ -83,7 +68,6 @@ const reports: never[] = []
       </nav>
 
       <div className="pt-16 max-w-5xl mx-auto px-6 py-8">
-
         <div className="grid grid-cols-3 gap-6">
 
           {/* Left — profile */}
@@ -98,7 +82,7 @@ const reports: never[] = []
                 <div>
                   <div className="font-extrabold text-gray-900">{profile.username}</div>
                   <div className="text-xs text-gray-500">{profile.email}</div>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${tierColors[profile.tier] || tierColors.Newbie}`}>
                       {profile.tier || 'Newbie'}
                     </span>
@@ -185,8 +169,7 @@ const reports: never[] = []
                 )}
 
                 {!profile.is_deleted && (
-                  <form action={`/api/admin/users/${id}/delete`} method="POST"
-                    onSubmit={() => confirm('Are you sure you want to delete this account? This cannot be undone.')}>
+                  <form action={`/api/admin/users/${id}/delete`} method="POST">
                     <button type="submit"
                       className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 border border-red-200 text-red-500 text-xs font-bold rounded-xl hover:bg-red-100 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" /> Delete Account
@@ -201,20 +184,12 @@ const reports: never[] = []
               <div className="flex items-center gap-2 mb-4">
                 <Flag className="w-4 h-4 text-red-400" />
                 <h2 className="text-sm font-extrabold text-gray-900">Reports</h2>
-                {reports && reports.length > 0 && (
-                  <span className="px-2 py-0.5 bg-red-50 text-red-500 border border-red-200 text-xs font-bold rounded-full">
-                    {reports.length}
-                  </span>
-                )}
               </div>
-              {reports && reports.length > 0 ? (
+              {reports.length > 0 ? (
                 <div className="space-y-2">
-                  {reports.map((report: { id: string, reason: string, created_at: string }) => (
-                    <div key={report.id} className="p-3 bg-red-50 border border-red-100 rounded-xl">
-                      <div className="text-xs font-semibold text-gray-700 mb-1">{report.reason}</div>
-                      <div className="text-xs text-gray-400">
-                        {new Date(report.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </div>
+                  {reports.map((report: never) => (
+                    <div key={(report as { id: string }).id} className="p-3 bg-red-50 border border-red-100 rounded-xl">
+                      <div className="text-xs text-gray-400">Report</div>
                     </div>
                   ))}
                 </div>
@@ -236,30 +211,12 @@ const reports: never[] = []
               <div className="flex items-center gap-2 mb-4">
                 <Ticket className="w-4 h-4 text-orange-500" />
                 <h2 className="text-sm font-extrabold text-gray-900">Tickets</h2>
-                <span className="text-xs text-gray-400">({tickets?.length || 0} total)</span>
               </div>
-              {tickets && tickets.length > 0 ? (
+              {tickets.length > 0 ? (
                 <div className="space-y-2">
-                  {tickets.map((ticket: {
-                    id: string
-                    ticket_code: string
-                    status: string
-                    created_at: string
-                    events: { title: string, event_date: string, city: string }
-                    ticket_types: { name: string, price: number }
-                  }) => (
-                    <div key={ticket.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${ticket.status === 'active' ? 'bg-green-400' : 'bg-gray-300'}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-bold text-gray-900 truncate">{ticket.events?.title}</div>
-                        <div className="text-xs text-gray-500">
-                          {ticket.ticket_types?.name} · {ticket.events?.event_date ? new Date(ticket.events.event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}
-                        </div>
-                      </div>
-                      <div className="text-xs font-mono text-gray-400 flex-shrink-0">{ticket.ticket_code}</div>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                        ticket.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'
-                      }`}>{ticket.status}</span>
+                  {tickets.map((ticket: never) => (
+                    <div key={(ticket as { id: string }).id} className="p-3 bg-gray-50 rounded-xl">
+                      <div className="text-xs text-gray-500">Ticket</div>
                     </div>
                   ))}
                 </div>
@@ -277,34 +234,11 @@ const reports: never[] = []
                 <Shield className="w-4 h-4 text-orange-500" />
                 <h2 className="text-sm font-extrabold text-gray-900">Trust Score History</h2>
               </div>
-              {trustHistory && trustHistory.length > 0 ? (
+              {trustHistory.length > 0 ? (
                 <div className="space-y-2">
-                  {trustHistory.map((item: {
-                    id: string
-                    reason: string
-                    points: number
-                    created_at: string
-                  }) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        item.points > 0 ? 'bg-green-50' : 'bg-red-50'
-                      }`}>
-                        {item.points > 0
-                          ? <CheckCircle className="w-4 h-4 text-green-500" />
-                          : <XCircle className="w-4 h-4 text-red-400" />
-                        }
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-gray-700">{item.reason}</div>
-                        <div className="text-xs text-gray-400">
-                          {new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </div>
-                      </div>
-                      <span className={`text-sm font-extrabold flex-shrink-0 ${
-                        item.points > 0 ? 'text-green-600' : 'text-red-500'
-                      }`}>
-                        {item.points > 0 ? '+' : ''}{item.points}
-                      </span>
+                  {trustHistory.map((item: never) => (
+                    <div key={(item as { id: string }).id} className="p-3 bg-gray-50 rounded-xl">
+                      <div className="text-xs text-gray-500">Trust history</div>
                     </div>
                   ))}
                 </div>
