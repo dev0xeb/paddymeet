@@ -33,14 +33,29 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const pathname = request.nextUrl.pathname
+
+  // Redirect unauthenticated users trying to access protected user/organiser routes
   if (
     !user &&
-    (request.nextUrl.pathname.startsWith('/dashboard') ||
-      request.nextUrl.pathname.startsWith('/organiser') ||
-      request.nextUrl.pathname.startsWith('/admin'))
+    (pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/organiser') ||
+      pathname.startsWith('/tickets'))
   ) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  // Redirect unauthenticated users trying to access admin routes
+  // but allow /admin-login through
+  if (
+    !user &&
+    pathname.startsWith('/admin') &&
+    !pathname.startsWith('/admin-login')
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/admin-login'
     return NextResponse.redirect(url)
   }
 
