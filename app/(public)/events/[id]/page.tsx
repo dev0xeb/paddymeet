@@ -1,3 +1,4 @@
+import UserAvatarMenu from '@/components/UserAvatarMenu'
 import SupportChat from '@/components/SupportChat'
 import OpenGroupButton from '@/components/OpenGroupButton'
 import CreateGroupModal from '@/components/CreateGroupModal'
@@ -27,6 +28,11 @@ export default async function EventDetailPage({
   const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user ? await supabase
+  .from('users')
+  .select('username, tier')
+  .eq('id', user.id)
+  .single() : { data: null }
 
   const { data: event } = await supabase
     .from('events')
@@ -102,11 +108,9 @@ export default async function EventDetailPage({
           paddy<span className="text-orange-500">meet</span>
         </Link>
         <div className="flex items-center gap-3">
-          {user ? (
-            <Link href="/dashboard" className="px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-colors">
-              My Dashboard
-            </Link>
-          ) : (
+          {user && profile ? (
+  <UserAvatarMenu username={profile.username} tier={profile.tier || 'Newbie'} />
+) : (
             <>
               <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors hidden sm:block">Log In</Link>
               <Link href="/signup" className="px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-colors">Get Started</Link>
