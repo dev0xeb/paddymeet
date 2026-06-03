@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase'
 interface Message {
   id: string
   message: string
-  sender_id: string
+  user_id: string
   created_at: string
   sender_username?: string
 }
@@ -40,14 +40,14 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
       // Load messages first
       const { data: msgs } = await supabase
         .from('group_messages')
-        .select('id, message, sender_id, created_at')
+        .select('id, message, user_id, created_at')
         .eq('group_id', groupId)
         .order('created_at', { ascending: true })
         .limit(50)
 
       if (msgs && msgs.length > 0) {
         // Fetch all sender usernames in one query
-        const senderIds = [...new Set(msgs.map(m => m.sender_id))]
+        const senderIds = [...new Set(msgs.map(m => m.user_id))]
         const { data: users } = await supabase
           .from('users')
           .select('id, username')
@@ -58,7 +58,7 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
 
         setMessages(msgs.map(m => ({
           ...m,
-          sender_username: usernameMap[m.sender_id] || 'Unknown'
+          sender_username: usernameMap[m.user_id] || 'Unknown'
         })))
       }
 
@@ -85,7 +85,7 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
         const { data: userData } = await supabase
           .from('users')
           .select('username')
-          .eq('id', newMsg.sender_id)
+          .eq('id', newMsg.user_id)
           .single()
 
         setMessages(prev => [...prev, {
@@ -117,7 +117,7 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
 
     await supabase.from('group_messages').insert({
       group_id: groupId,
-      sender_id: user.id,
+      user_id: user.id,
       message: input.trim(),
     })
     setInput('')
@@ -125,7 +125,7 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
 
   return (
     <div className="flex flex-col bg-white border border-gray-200 rounded-t-xl shadow-lg overflow-hidden"
-      style={{ width: '280px' }}>
+      style={{ width: '360px' }}>
 
       {/* Header */}
       <div
@@ -174,14 +174,14 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50" style={{ height: '280px' }}>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50" style={{ height: '420px' }}>
             {messages.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-xs text-gray-400">No messages yet. Say hello!</p>
               </div>
             ) : (
               messages.map(msg => {
-                const isMe = msg.sender_id === currentUserId
+                const isMe = msg.user_id === currentUserId
                 return (
                   <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                     {!isMe && (
