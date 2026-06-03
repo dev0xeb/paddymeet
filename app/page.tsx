@@ -1,8 +1,23 @@
 import SupportChat from '@/components/SupportChat'
 import Link from 'next/link'
 import { ArrowRight, MapPin, Users, Star, Shield } from 'lucide-react'
+import { createClient } from '@/lib/supabase-server'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // Check account type
+  let dashboardUrl = '/dashboard'
+  if (user) {
+    const { data: organiser } = await supabase
+      .from('organisers')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+    if (organiser) dashboardUrl = '/organiser/dashboard'
+  }
+
   const events = [
     { id: 1, title: 'Lagos Music Festival 2025', category: 'Festival', location: 'Eko Hotel Grounds, VI', date: 'Sat 14 Jun', vibe: 'Turnt', going: 94, groups: true, gradient: 'from-purple-900 via-pink-900 to-orange-900' },
     { id: 2, title: 'Sunday Sip & Vibe', category: 'Day Party', location: 'Landmark Beach, VI', date: 'Sun 15 Jun', vibe: 'Chill', going: 28, groups: true, gradient: 'from-green-900 via-teal-900 to-blue-900' },
@@ -28,19 +43,25 @@ export default function HomePage() {
           <Link href="/signup" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">About</Link>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
-            Log In
-          </Link>
-          <Link href="/signup" className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-lg hover:shadow-orange-200">
-            Get Started
-          </Link>
+          {user ? (
+            <Link href={dashboardUrl} className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-lg hover:shadow-orange-200">
+              My Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+                Log In
+              </Link>
+              <Link href="/signup" className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-lg hover:shadow-orange-200">
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
       {/* HERO */}
       <section className="min-h-screen pt-16 relative overflow-hidden bg-gradient-to-br from-white via-orange-50/30 to-white">
-
-        {/* Background blobs */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-gradient-radial from-orange-100/40 to-transparent -translate-y-1/4 translate-x-1/4 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-gradient-radial from-orange-50/60 to-transparent translate-y-1/4 -translate-x-1/4 pointer-events-none" />
 
@@ -65,12 +86,25 @@ export default function HomePage() {
               </p>
 
               <div className="flex items-center gap-4 mb-12 flex-wrap">
-                <Link href="/signup" className="flex items-center gap-2 px-8 py-4 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-xl hover:shadow-orange-200 hover:-translate-y-0.5">
-                  Find Events Near Me <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link href="/signup" className="px-8 py-4 border-2 border-gray-200 text-gray-700 font-semibold rounded-full hover:border-orange-300 hover:text-orange-500 transition-all">
-                  How it works
-                </Link>
+                {user ? (
+                  <>
+                    <Link href="/events" className="flex items-center gap-2 px-8 py-4 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-xl hover:shadow-orange-200 hover:-translate-y-0.5">
+                      Browse Events <ArrowRight className="w-4 h-4" />
+                    </Link>
+                    <Link href={dashboardUrl} className="px-8 py-4 border-2 border-gray-200 text-gray-700 font-semibold rounded-full hover:border-orange-300 hover:text-orange-500 transition-all">
+                      My Dashboard
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/signup" className="flex items-center gap-2 px-8 py-4 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-xl hover:shadow-orange-200 hover:-translate-y-0.5">
+                      Find Events Near Me <ArrowRight className="w-4 h-4" />
+                    </Link>
+                    <Link href="/events" className="px-8 py-4 border-2 border-gray-200 text-gray-700 font-semibold rounded-full hover:border-orange-300 hover:text-orange-500 transition-all">
+                      Browse Events
+                    </Link>
+                  </>
+                )}
               </div>
 
               {/* Social proof */}
@@ -91,8 +125,6 @@ export default function HomePage() {
 
             {/* Right — floating cards */}
             <div className="relative h-[540px] hidden lg:block">
-
-              {/* Trust chip */}
               <div className="absolute top-4 right-8 bg-white rounded-2xl p-3 shadow-xl border border-gray-100 flex items-center gap-3 z-20 animate-float-slow">
                 <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
                   <Shield className="w-5 h-5 text-orange-500" />
@@ -103,18 +135,13 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Main card */}
               <div className="absolute top-16 left-1/2 -translate-x-1/2 w-72 bg-white rounded-2xl shadow-2xl overflow-hidden z-10 animate-float-medium">
                 <div className={`h-40 bg-gradient-to-br ${events[0].gradient} relative flex items-end p-4`}>
-                  <span className="relative z-10 px-3 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs font-bold text-white uppercase tracking-wider">
-                    Trending
-                  </span>
+                  <span className="relative z-10 px-3 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs font-bold text-white uppercase tracking-wider">Trending</span>
                 </div>
                 <div className="p-4">
                   <div className="font-bold text-gray-900 mb-1">{events[0].title}</div>
-                  <div className="text-xs text-gray-500 mb-3 flex items-center gap-1">
-                    <MapPin className="w-3 h-3" /> {events[0].location}
-                  </div>
+                  <div className="text-xs text-gray-500 mb-3 flex items-center gap-1"><MapPin className="w-3 h-3" /> {events[0].location}</div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="flex">
@@ -124,14 +151,13 @@ export default function HomePage() {
                       </div>
                       <span className="text-xs text-gray-500">+{events[0].going}</span>
                     </div>
-                    <Link href="/signup" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
+                    <Link href="/events" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
                       Get Tickets
                     </Link>
                   </div>
                 </div>
               </div>
 
-              {/* Small card 1 */}
               <div className="absolute top-12 left-0 w-52 bg-white rounded-2xl shadow-lg border border-gray-100 p-4 z-20 animate-float-fast">
                 <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">Day Party</div>
                 <div className="text-sm font-bold text-gray-900 mb-1">Sunday Sip & Vibe</div>
@@ -142,14 +168,12 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Small card 2 */}
               <div className="absolute top-48 right-0 w-52 bg-white rounded-2xl shadow-lg border border-gray-100 p-4 z-20 animate-float-slow">
                 <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">Comedy</div>
                 <div className="text-sm font-bold text-gray-900 mb-1">Lagos Laughs Out Loud</div>
                 <div className="text-xs text-gray-500 flex items-center gap-1"><MapPin className="w-3 h-3" /> Federal Palace</div>
               </div>
 
-              {/* Small card 3 */}
               <div className="absolute bottom-24 left-4 w-52 bg-white rounded-2xl shadow-lg border border-gray-100 p-4 z-20 animate-float-medium">
                 <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">Exclusive</div>
                 <div className="text-sm font-bold text-gray-900 mb-1">VIP Rooftop VI</div>
@@ -159,7 +183,6 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Groups forming chip */}
               <div className="absolute bottom-32 right-4 bg-white rounded-2xl shadow-lg border border-gray-100 p-3 flex items-center gap-3 z-20 animate-float-fast">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
                   <Users className="w-4 h-4 text-white" />
@@ -169,7 +192,6 @@ export default function HomePage() {
                   <div className="text-xs text-gray-500">for this weekend</div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -196,10 +218,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Mosaic grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-            {/* Big featured card */}
             <div className="md:col-span-1 md:row-span-2 group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-50 transition-all duration-300 cursor-pointer">
               <div className={`h-64 bg-gradient-to-br ${events[0].gradient} relative`}>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -224,14 +243,13 @@ export default function HomePage() {
                     </div>
                     <span className="text-xs text-gray-500">+{events[0].going} going</span>
                   </div>
-                  <Link href="/signup" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
+                  <Link href="/events" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
                     Get Tickets
                   </Link>
                 </div>
               </div>
             </div>
 
-            {/* Smaller cards */}
             {events.slice(1, 5).map((event) => (
               <div key={event.id} className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-50 transition-all duration-300 cursor-pointer">
                 <div className={`h-36 bg-gradient-to-br ${event.gradient} relative`}>
@@ -253,19 +271,14 @@ export default function HomePage() {
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500">+{event.going} going</span>
                     {event.free ? (
-                      <Link href="/signup" className="px-3 py-1.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full hover:bg-green-100 transition-colors">
-                        Free
-                      </Link>
+                      <Link href="/events" className="px-3 py-1.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full hover:bg-green-100 transition-colors">Free</Link>
                     ) : (
-                      <Link href="/signup" className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
-                        Get Tickets
-                      </Link>
+                      <Link href="/events" className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">Get Tickets</Link>
                     )}
                   </div>
                 </div>
               </div>
             ))}
-
           </div>
 
           <div className="text-center mt-8">
@@ -345,12 +358,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Profile card */}
           <div className="relative">
             <div className="absolute inset-0 bg-orange-100 rounded-3xl transform rotate-2" />
             <div className="relative bg-white rounded-3xl p-7 shadow-xl border border-gray-100">
-
-              {/* Reward chip */}
               <div className="absolute -top-4 -right-4 bg-white rounded-2xl px-4 py-2.5 shadow-lg border border-gray-100 flex items-center gap-2">
                 <span className="text-xl">🎁</span>
                 <div>
@@ -358,7 +368,6 @@ export default function HomePage() {
                   <div className="text-xs text-gray-500">Fresh Crew milestone</div>
                 </div>
               </div>
-
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-lg">K</div>
                 <div>
@@ -367,7 +376,6 @@ export default function HomePage() {
                 </div>
                 <div className="ml-auto px-3 py-1 bg-orange-50 border border-orange-200 rounded-full text-xs font-bold text-orange-500">Crew</div>
               </div>
-
               <div className="flex justify-between text-xs text-gray-500 mb-2">
                 <span className="font-semibold text-gray-700">Trust Score</span>
                 <span className="font-bold text-orange-500">68 / 100</span>
@@ -375,13 +383,11 @@ export default function HomePage() {
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-5">
                 <div className="h-full w-[68%] bg-gradient-to-r from-orange-400 to-orange-500 rounded-full" />
               </div>
-
               <div className="flex flex-wrap gap-2 mb-5">
                 {['Afrobeats','House Music','Comedy','Day Parties','Rave'].map(tag => (
                   <span key={tag} className="px-3 py-1 bg-gray-50 border border-gray-200 rounded-full text-xs font-medium text-gray-600">{tag}</span>
                 ))}
               </div>
-
               <div className="grid grid-cols-3 border-t border-gray-100 pt-4 text-center">
                 {[{ v: '14', l: 'Events' },{ v: '7', l: 'Crews' },{ v: '4.8', l: 'Chemistry' }].map(({ v, l }) => (
                   <div key={l}>
@@ -408,12 +414,25 @@ export default function HomePage() {
             Thousands of people in Lagos are already finding their crew on Paddymeet. Sign up in 2 minutes and find your first event today.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap mb-10">
-            <Link href="/signup" className="flex items-center gap-2 px-10 py-4 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-xl hover:shadow-orange-200 hover:-translate-y-0.5 text-base">
-              Create Your Free Account <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link href="/events" className="px-10 py-4 border-2 border-gray-200 text-gray-700 font-semibold rounded-full hover:border-orange-300 hover:text-orange-500 transition-all text-base">
-              Browse Events First
-            </Link>
+            {user ? (
+              <>
+                <Link href="/events" className="flex items-center gap-2 px-10 py-4 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-xl hover:shadow-orange-200 hover:-translate-y-0.5 text-base">
+                  Browse Events <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href={dashboardUrl} className="px-10 py-4 border-2 border-gray-200 text-gray-700 font-semibold rounded-full hover:border-orange-300 hover:text-orange-500 transition-all text-base">
+                  Go to Dashboard
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/signup" className="flex items-center gap-2 px-10 py-4 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-xl hover:shadow-orange-200 hover:-translate-y-0.5 text-base">
+                  Create Your Free Account <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href="/events" className="px-10 py-4 border-2 border-gray-200 text-gray-700 font-semibold rounded-full hover:border-orange-300 hover:text-orange-500 transition-all text-base">
+                  Browse Events First
+                </Link>
+              </>
+            )}
           </div>
           <div className="flex items-center justify-center gap-8 flex-wrap text-sm text-gray-400">
             <div className="flex items-center gap-2"><span className="text-green-500">✓</span> Free to sign up</div>
