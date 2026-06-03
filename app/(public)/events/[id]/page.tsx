@@ -53,7 +53,11 @@ export default async function EventDetailPage({
 
   // Check if user has a ticket for this event
   let userHasTicket = false
-  if (user) {
+if (user) {
+  // Free events — all logged in users can access groups
+  if (event.is_free) {
+    userHasTicket = true
+  } else {
     const { data: ticket } = await supabase
       .from('tickets')
       .select('id')
@@ -63,6 +67,7 @@ export default async function EventDetailPage({
       .single()
     userHasTicket = !!ticket
   }
+}
 
   // Get group member count
   const { count: memberCount } = await supabase
