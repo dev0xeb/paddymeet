@@ -2,6 +2,7 @@ import SupportChat from '@/components/SupportChat'
 import Link from 'next/link'
 import { ArrowRight, MapPin, Users, Star, Shield } from 'lucide-react'
 import { createClient } from '@/lib/supabase-server'
+import UserAvatarMenu from '@/components/UserAvatarMenu'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -17,6 +18,12 @@ export default async function HomePage() {
       .single()
     if (organiser) dashboardUrl = '/organiser/dashboard'
   }
+
+  const { data: profile } = user ? await supabase
+    .from('users')
+    .select('username, tier')
+    .eq('id', user.id)
+    .single() : { data: null }
 
   const events = [
     { id: 1, title: 'Lagos Music Festival 2025', category: 'Festival', location: 'Eko Hotel Grounds, VI', date: 'Sat 14 Jun', vibe: 'Turnt', going: 94, groups: true, gradient: 'from-purple-900 via-pink-900 to-orange-900' },
@@ -43,10 +50,8 @@ export default async function HomePage() {
           <Link href="/signup" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">About</Link>
         </div>
         <div className="flex items-center gap-3">
-          {user ? (
-            <Link href={dashboardUrl} className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-lg hover:shadow-orange-200">
-              My Dashboard
-            </Link>
+          {user && profile ? (
+            <UserAvatarMenu username={profile.username} tier={profile.tier || 'Newbie'} />
           ) : (
             <>
               <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
