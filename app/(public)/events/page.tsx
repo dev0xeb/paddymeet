@@ -1,9 +1,9 @@
-import SupportChat from '@/components/SupportChat'
 import { createClient } from '@/lib/supabase-server'
 import Link from 'next/link'
 import { Calendar, Grid3X3, List } from 'lucide-react'
 import EventsFilterBar from '@/components/events/EventsFilterBar'
-import {  } from 'react'
+import { Suspense } from 'react'
+import UserAvatarMenu from '@/components/UserAvatarMenu'
 
 export default async function EventsPage({
   searchParams,
@@ -13,6 +13,12 @@ export default async function EventsPage({
   const params = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  const { data: profile } = user ? await supabase
+    .from('users')
+    .select('username, tier')
+    .eq('id', user.id)
+    .single() : { data: null }
 
   let query = supabase
     .from('events')
@@ -46,10 +52,8 @@ export default async function EventsPage({
           paddy<span className="text-orange-500">meet</span>
         </Link>
         <div className="flex items-center gap-3">
-          {user ? (
-            <Link href="/dashboard" className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-colors">
-              My Dashboard
-            </Link>
+          {user && profile ? (
+            <UserAvatarMenu username={profile.username} tier={profile.tier || 'Newbie'} />
           ) : (
             <>
               <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">Log In</Link>
@@ -61,7 +65,9 @@ export default async function EventsPage({
 
       {/* Filter bar — client component */}
       <div className="pt-16">
-        <EventsFilterBar currentParams={params} />
+        <Suspense fallback={<div className="h-32 bg-white border-b border-gray-100" />}>
+          <EventsFilterBar currentParams={params} />
+        </Suspense>
       </div>
 
       {/* Results */}
@@ -203,7 +209,6 @@ export default async function EventsPage({
               <Link key={l} href="/signup" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">{l}</Link>
             ))}
           </div>
-          <SupportChat accountType="explorer" />
           <div className="text-xs text-gray-400">© 2025 Paddymeet</div>
         </div>
       </footer>
