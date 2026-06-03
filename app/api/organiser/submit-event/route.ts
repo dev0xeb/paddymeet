@@ -55,6 +55,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: eventError.message }, { status: 400 })
   }
 
+  // Auto-create free ticket type for free events
+  if (eventData.is_free) {
+    await supabase.from('ticket_types').insert({
+      event_id: event.id,
+      name: 'Free Entry',
+      description: 'Free admission to this event',
+      price: 0,
+      quantity: eventData.capacity || 1000,
+      quantity_sold: 0,
+      is_group_ticket: false,
+      group_size: 1,
+    })
+  }
+
   if (!eventData.is_free && ticketTypes && ticketTypes.length > 0) {
     const { error: ticketError } = await supabase
       .from('ticket_types')
