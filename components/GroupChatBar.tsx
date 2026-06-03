@@ -37,18 +37,28 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
       const { data: { user } } = await supabase.auth.getUser()
       if (user) setCurrentUserId(user.id)
 
-      // Load messages with sender usernames
+      // Load messages first
       const { data: msgs } = await supabase
         .from('group_messages')
-        .select('*, users(username)')
+        .select('id, message, sender_id, created_at')
         .eq('group_id', groupId)
         .order('created_at', { ascending: true })
         .limit(50)
 
-      if (msgs) {
+      if (msgs && msgs.length > 0) {
+        // Fetch all sender usernames in one query
+        const senderIds = [...new Set(msgs.map(m => m.sender_id))]
+        const { data: users } = await supabase
+          .from('users')
+          .select('id, username')
+          .in('id', senderIds)
+
+        const usernameMap: Record<string, string> = {}
+        users?.forEach(u => { usernameMap[u.id] = u.username })
+
         setMessages(msgs.map(m => ({
           ...m,
-          sender_username: m.users?.username || 'Unknown'
+          sender_username: usernameMap[m.sender_id] || 'Unknown'
         })))
       }
 
@@ -72,7 +82,6 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
         filter: `group_id=eq.${groupId}`,
       }, async (payload) => {
         const newMsg = payload.new as Message
-        // Fetch sender username
         const { data: userData } = await supabase
           .from('users')
           .select('username')
