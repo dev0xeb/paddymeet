@@ -8,6 +8,7 @@ interface TicketType {
   id: string
   name: string
   price: number
+  is_group_ticket: boolean
 }
 
 interface Props {

@@ -1,6 +1,7 @@
 import SupportChat from '@/components/SupportChat'
 import OpenGroupButton from '@/components/OpenGroupButton'
 import CreateGroupModal from '@/components/CreateGroupModal'
+import UserAvatarMenu from '@/components/UserAvatarMenu'
 import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -37,6 +38,12 @@ export default async function EventDetailPage({
 
   if (!event) notFound()
 
+  const { data: profile } = user ? await supabase
+    .from('users')
+    .select('username, tier')
+    .eq('id', user.id)
+    .single() : { data: null }
+
   // Fetch the main group for this event
   const { data: mainGroup } = await supabase
     .from('groups')
@@ -44,6 +51,7 @@ export default async function EventDetailPage({
     .eq('event_id', id)
     .eq('group_type', 'main')
     .single()
+
 
   // Get group member count
   const { count: memberCount } = await supabase
@@ -89,10 +97,8 @@ export default async function EventDetailPage({
           paddy<span className="text-orange-500">meet</span>
         </Link>
         <div className="flex items-center gap-3">
-          {user ? (
-            <Link href="/dashboard" className="px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-colors">
-              My Dashboard
-            </Link>
+          {user && profile ? (
+            <UserAvatarMenu username={profile.username} tier={profile.tier || 'Newbie'} />
           ) : (
             <>
               <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors hidden sm:block">Log In</Link>
