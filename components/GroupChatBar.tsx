@@ -174,7 +174,7 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50" style={{ height: '420px' }}>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50" style={{ minHeight: '420px', maxHeight: '60vh' }}>
             {messages.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-xs text-gray-400">No messages yet. Say hello!</p>

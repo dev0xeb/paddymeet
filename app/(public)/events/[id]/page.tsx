@@ -1,4 +1,3 @@
-import UserAvatarMenu from '@/components/UserAvatarMenu'
 import SupportChat from '@/components/SupportChat'
 import OpenGroupButton from '@/components/OpenGroupButton'
 import CreateGroupModal from '@/components/CreateGroupModal'
@@ -28,11 +27,6 @@ export default async function EventDetailPage({
   const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = user ? await supabase
-  .from('users')
-  .select('username, tier')
-  .eq('id', user.id)
-  .single() : { data: null }
 
   const { data: event } = await supabase
     .from('events')
@@ -50,24 +44,6 @@ export default async function EventDetailPage({
     .eq('event_id', id)
     .eq('group_type', 'main')
     .single()
-
-  // Check if user has a ticket for this event
-  let userHasTicket = false
-if (user) {
-  // Free events — all logged in users can access groups
-  if (event.is_free) {
-    userHasTicket = true
-  } else {
-    const { data: ticket } = await supabase
-      .from('tickets')
-      .select('id')
-      .eq('event_id', id)
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .single()
-    userHasTicket = !!ticket
-  }
-}
 
   // Get group member count
   const { count: memberCount } = await supabase
@@ -113,9 +89,11 @@ if (user) {
           paddy<span className="text-orange-500">meet</span>
         </Link>
         <div className="flex items-center gap-3">
-          {user && profile ? (
-  <UserAvatarMenu username={profile.username} tier={profile.tier || 'Newbie'} />
-) : (
+          {user ? (
+            <Link href="/dashboard" className="px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-colors">
+              My Dashboard
+            </Link>
+          ) : (
             <>
               <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors hidden sm:block">Log In</Link>
               <Link href="/signup" className="px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-colors">Get Started</Link>
@@ -329,19 +307,17 @@ if (user) {
                     </span>
                   </div>
 
-                  {userData && userHasTicket && mainGroup ? (
+                  {userData && mainGroup ? (
                     <OpenGroupButton
                       groupId={mainGroup.id}
                       groupName={mainGroup.name}
                       eventTitle={event.title}
                     />
-                  ) : userData && !userHasTicket ? (
-                    <span className="text-xs text-gray-400 font-semibold">Buy a ticket to join the group</span>
-                  ) : (
-                    <Link href="/signup" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
-                      Sign up to join
+                  ) : !userData ? (
+                    <Link href="/login" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
+                      Log in to chat
                     </Link>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
@@ -372,10 +348,10 @@ if (user) {
                           {group.gender_preference !== 'any' && <span className="capitalize">{group.gender_preference}</span>}
                           {group.min_trust_score > 0 && <span>Trust ≥ {group.min_trust_score}</span>}
                         </div>
-                        {userData && userHasTicket ? (
+                        {userData ? (
                           <OpenGroupButton groupId={group.id} groupName={group.name} eventTitle={event.title} />
                         ) : (
-                          <span className="text-xs text-gray-400">Ticket required</span>
+                          <Link href="/login" className="text-xs font-bold text-orange-500 hover:underline">Log in to chat</Link>
                         )}
                       </div>
                     </div>
@@ -384,7 +360,7 @@ if (user) {
               ) : null}
 
               {/* Create group or empty state */}
-              {userData && userHasTicket ? (
+              {userData ? (
                 <div className="flex items-center justify-between p-4 border-2 border-dashed border-gray-200 rounded-2xl">
                   <div>
                     <div className="text-sm font-bold text-gray-700 mb-0.5">Create your own group</div>
@@ -396,16 +372,11 @@ if (user) {
                     ticketTypes={event.ticket_types || []}
                   />
                 </div>
-              ) : userData && !userHasTicket ? (
-                <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-2xl">
-                  <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-400 mb-1">Get a ticket to create or join groups</p>
-                </div>
               ) : (
                 <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-2xl">
                   <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-400 mb-1">Sign up to create or join groups</p>
-                  <Link href="/signup" className="text-xs font-bold text-orange-500 hover:underline">Create an account</Link>
+                  <p className="text-sm font-semibold text-gray-400 mb-1">Log in to create or join groups</p>
+                  <Link href="/login" className="text-xs font-bold text-orange-500 hover:underline">Log in</Link>
                 </div>
               )}
             </div>
