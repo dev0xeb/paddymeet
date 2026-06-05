@@ -167,9 +167,9 @@ export default function UserSettingsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 md:px-10 bg-white border-b border-gray-100">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 md:px-10 bg-white border-b border-gray-100">
         <Link href="/dashboard" className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Dashboard
+          <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Dashboard</span>
         </Link>
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
           paddy<span className="text-orange-500">meet</span>
@@ -177,16 +177,17 @@ export default function UserSettingsPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-60"
+          className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-60"
         >
           {saving ? 'Saving...' : saved ? <><Check className="w-4 h-4" /> Saved</> : <><Save className="w-4 h-4" /> Save Changes</>}
         </button>
+        <div className="md:hidden w-8" />
       </nav>
 
-      <div className="pt-16 max-w-3xl mx-auto px-4 md:px-6 py-8">
+      <div className="pt-16 max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
 
-        <div className="mb-6">
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">Settings</h1>
+        <div className="mb-5 pt-2">
+          <h1 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight mb-1">Settings</h1>
           <p className="text-sm text-gray-500">Manage your profile, avatar and preferences</p>
         </div>
 
@@ -387,9 +388,9 @@ export default function UserSettingsPage() {
 
         {/* Save button */}
         {activeTab !== 'security' && (
-          <div className="mt-6 flex justify-end">
+          <div className="mt-6">
             <button onClick={handleSave} disabled={saving}
-              className="flex items-center gap-2 px-8 py-3.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-60">
+              className="w-full md:w-auto md:float-right flex items-center justify-center gap-2 px-8 py-4 md:py-3.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-60">
               {saving ? 'Saving...' : saved ? <><Check className="w-4 h-4" /> Saved!</> : <><Save className="w-4 h-4" /> Save Changes</>}
             </button>
           </div>
