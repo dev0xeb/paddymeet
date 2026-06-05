@@ -40,7 +40,7 @@ export default async function HomePage() {
     <div className="min-h-screen bg-white">
 
       {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-10 bg-white/90 backdrop-blur-xl border-b border-gray-100">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 md:px-10 bg-white/90 backdrop-blur-xl border-b border-gray-100">
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
           paddy<span className="text-orange-500">meet</span>
         </Link>
@@ -57,7 +57,7 @@ export default async function HomePage() {
               <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
                 Log In
               </Link>
-              <Link href="/signup" className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-lg hover:shadow-orange-200">
+              <Link href="/signup" className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-all hover:shadow-lg hover:shadow-orange-200">
                 Get Started
               </Link>
             </>

@@ -30,6 +30,8 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
   const [currentUsername, setCurrentUsername] = useState('')
   const [memberCount, setMemberCount] = useState(0)
   const [unread, setUnread] = useState(0)
+  const [isMember, setIsMember] = useState(false)
+  const [joining, setJoining] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const supabaseRef = useRef(createClient())
 
@@ -83,6 +85,17 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
         .select('*', { count: 'exact', head: true })
         .eq('group_id', groupId)
       setMemberCount(count || 0)
+
+      // Check membership
+      if (user) {
+        const { data: membership } = await supabase
+          .from('group_members')
+          .select('id')
+          .eq('group_id', groupId)
+          .eq('user_id', user.id)
+          .single()
+        setIsMember(!!membership)
+      }
     }
 
     init()
@@ -126,6 +139,25 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
       setUnread(0)
     }
   }, [messages, minimized])
+
+  const handleJoin = async () => {
+    setJoining(true)
+    const supabase = supabaseRef.current
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { window.location.href = '/login'; return }
+
+    const { error } = await supabase.from('group_members').insert({
+      group_id: groupId,
+      user_id: user.id,
+      role: 'member',
+    })
+
+    if (!error) {
+      setIsMember(true)
+      setMemberCount(prev => prev + 1)
+    }
+    setJoining(false)
+  }
 
   const handleSend = async () => {
     if (!input.trim() || sending) return
@@ -255,27 +287,40 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div className="flex items-center gap-2 p-3 bg-white border-t border-gray-100">
-            <div className={`w-7 h-7 rounded-full ${getColor(currentUserId)} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
-              {getInitial(currentUsername)}
+          {/* Input or Join */}
+          {isMember ? (
+            <div className="flex items-center gap-2 p-3 bg-white border-t border-gray-100">
+              <div className={`w-7 h-7 rounded-full ${getColor(currentUserId)} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
+                {getInitial(currentUsername)}
+              </div>
+              <input
+                type="text"
+                placeholder="Type a message..."
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSend()}
+                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-full text-base md:text-xs text-gray-900 outline-none focus:border-orange-400 transition-all"
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || sending}
+                className="w-8 h-8 bg-orange-500 hover:bg-orange-600 rounded-full flex items-center justify-center disabled:opacity-40 transition-colors flex-shrink-0"
+              >
+                <Send className="w-3.5 h-3.5 text-white" />
+              </button>
             </div>
-            <input
-              type="text"
-              placeholder="Type a message..."
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSend()}
-              className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-full text-xs text-gray-900 outline-none focus:border-orange-400 transition-all"
-            />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || sending}
-              className="w-8 h-8 bg-orange-500 hover:bg-orange-600 rounded-full flex items-center justify-center disabled:opacity-40 transition-colors flex-shrink-0"
-            >
-              <Send className="w-3.5 h-3.5 text-white" />
-            </button>
-          </div>
+          ) : (
+            <div className="p-3 bg-white border-t border-gray-100 text-center">
+              <p className="text-xs text-gray-500 mb-2">Join this group to send messages</p>
+              <button
+                onClick={handleJoin}
+                disabled={joining}
+                className="w-full py-2 bg-orange-500 text-white text-xs font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-60"
+              >
+                {joining ? 'Joining...' : 'Join Group'}
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>

@@ -51,12 +51,12 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-8 bg-white border-b border-gray-100">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 md:px-8 bg-white border-b border-gray-100">
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
           paddy<span className="text-orange-500">meet</span>
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/events" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+          <Link href="/events" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors hidden md:block">
             Browse Events
           </Link>
           <button className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 transition-colors relative">
@@ -66,10 +66,10 @@ export default async function DashboardPage() {
         </div>
       </nav>
 
-      <div className="pt-16 max-w-6xl mx-auto px-8 py-8">
+      <div className="pt-16 max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8">
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 md:mb-8">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">
               Good evening, {profile.full_name?.split(' ')[0] || profile.username} 👋
@@ -82,24 +82,24 @@ export default async function DashboardPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
           {[
-            { label: 'Events attended', value: profile.events_attended || 0 },
-            { label: 'Trust score', value: profile.trust_score || 50 },
-            { label: 'Fresh crews', value: profile.fresh_groups_count || 0 },
-            { label: 'Chemistry score', value: profile.chemistry_score || 0 },
+            { label: 'Events attended', value: profile.events_attended || 0, color: 'orange' },
+            { label: 'Trust score', value: profile.trust_score || 50, color: 'blue' },
+            { label: 'Fresh crews', value: profile.fresh_groups_count || 0, color: 'green' },
+            { label: 'Chemistry score', value: profile.chemistry_score || 0, color: 'purple' },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5">
+            <div key={label} className="bg-white border border-gray-100 rounded-2xl p-4 md:p-5">
               <div className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">{value}</div>
               <div className="text-xs text-gray-500 font-medium">{label}</div>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
 
           {/* Left column — spans 2 */}
-          <div className="col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-5 md:space-y-6">
 
             {/* Upcoming events */}
             <div className="bg-white border border-gray-100 rounded-2xl p-6">
