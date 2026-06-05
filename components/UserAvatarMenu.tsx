@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
-import { 
-  LayoutDashboard, Ticket, Users, Star, 
+import { useRouter } from 'next/navigation'
+import {
+  LayoutDashboard, Ticket, Users, Star,
   Gift, Settings, LogOut, ChevronDown
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
@@ -21,9 +21,18 @@ const tierColors: Record<string, string> = {
   Legendary: 'from-orange-400 to-orange-500',
 }
 
+const tierBadge: Record<string, string> = {
+  Newbie: 'bg-gray-100 text-gray-500',
+  Social: 'bg-green-50 text-green-500',
+  Crew: 'bg-blue-50 text-blue-500',
+  Elite: 'bg-purple-50 text-purple-500',
+  Legendary: 'bg-orange-50 text-orange-500',
+}
+
 export default function UserAvatarMenu({ username, tier = 'Newbie' }: Props) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -35,7 +44,13 @@ export default function UserAvatarMenu({ username, tier = 'Newbie' }: Props) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const handleNav = (href: string) => {
+    setOpen(false)
+    router.push(href)
+  }
+
   const handleLogout = async () => {
+    setOpen(false)
     const supabase = createClient()
     await supabase.auth.signOut()
     window.location.href = '/'
@@ -69,7 +84,7 @@ export default function UserAvatarMenu({ username, tier = 'Newbie' }: Props) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden z-50">
+        <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-gray-100 shadow-2xl overflow-hidden z-[100]">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
             <div className="flex items-center gap-2">
@@ -78,13 +93,9 @@ export default function UserAvatarMenu({ username, tier = 'Newbie' }: Props) {
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-bold text-gray-900 truncate">{username}</div>
-                <div className={`text-xs font-semibold px-2 py-0.5 rounded-full inline-block mt-0.5 ${
-                  tier === 'Legendary' ? 'bg-orange-50 text-orange-500' :
-                  tier === 'Elite' ? 'bg-purple-50 text-purple-500' :
-                  tier === 'Crew' ? 'bg-blue-50 text-blue-500' :
-                  tier === 'Social' ? 'bg-green-50 text-green-500' :
-                  'bg-gray-100 text-gray-500'
-                }`}>{tier}</div>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full inline-block mt-0.5 ${tierBadge[tier]}`}>
+                  {tier}
+                </span>
               </div>
             </div>
           </div>
@@ -92,15 +103,14 @@ export default function UserAvatarMenu({ username, tier = 'Newbie' }: Props) {
           {/* Menu items */}
           <div className="py-1">
             {menuItems.map(({ icon: Icon, label, href }) => (
-              <Link
+              <button
                 key={label}
-                href={href}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-500 transition-colors"
+                onClick={() => handleNav(href)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-500 transition-colors text-left"
               >
                 <Icon className="w-4 h-4 flex-shrink-0" />
                 {label}
-              </Link>
+              </button>
             ))}
           </div>
 

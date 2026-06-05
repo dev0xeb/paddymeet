@@ -66,10 +66,10 @@ export default async function DashboardPage() {
         </div>
       </nav>
 
-      <div className="pt-16 max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8">
+      <div className="pt-16 max-w-6xl mx-auto px-4 md:px-8">
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pt-8 pb-6 md:pt-10 md:pb-8">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">
               Good evening, {profile.full_name?.split(' ')[0] || profile.username} 👋
@@ -145,13 +145,15 @@ export default async function DashboardPage() {
                     const group = Array.isArray(member.groups) ? member.groups[0] : member.groups
                     const eventTitle = Array.isArray(group?.events) ? group?.events[0]?.title : group?.events?.title
                     return (
-                      <div key={member.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                          {group?.name?.charAt(0) || 'G'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-bold text-gray-900 truncate">{group?.name}</div>
-                          <div className="text-xs text-gray-500 mt-0.5 truncate">{eventTitle || '—'}</div>
+                      <div key={member.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                            {group?.name?.charAt(0) || 'G'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-bold text-gray-900 truncate">{group?.name}</div>
+                            <div className="text-xs text-gray-500 mt-0.5 truncate">{eventTitle || '—'}</div>
+                          </div>
                         </div>
                         {group && (
                           <OpenGroupButton
