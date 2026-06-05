@@ -93,7 +93,7 @@ function GroupWindow({ groupId, groupName, eventTitle, minimized, onClose, onTog
           .select('id')
           .eq('group_id', groupId)
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
         setIsMember(!!membership)
       }
     }
