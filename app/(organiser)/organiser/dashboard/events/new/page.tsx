@@ -1,9 +1,11 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, Check, Plus, Trash2, Info } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Plus, Trash2, Info, Upload, X, ImageIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
 type Step = 1 | 2 | 3 | 4
 
@@ -21,6 +23,9 @@ export default function SubmitEventPage() {
   const [step, setStep] = useState<Step>(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>('')
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const [eventData, setEventData] = useState({
     title: '',
@@ -42,6 +47,7 @@ export default function SubmitEventPage() {
     house_rules: '',
     website: '',
     social_link: '',
+    cover_image_url: '',
   })
 
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([
@@ -66,16 +72,39 @@ export default function SubmitEventPage() {
     setTicketTypes(prev => prev.filter((_, i) => i !== index))
   }
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be under 5MB')
+      return
+    }
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const uploadImage = async (): Promise<string> => {
+    if (!imageFile) return ''
+    setUploadingImage(true)
+    const supabase = createClient()
+    const ext = imageFile.name.split('.').pop()
+    const filename = `event-${Date.now()}.${ext}`
+    const { data, error } = await supabase.storage
+      .from('event-images')
+      .upload(filename, imageFile, { cacheControl: '3600', upsert: false })
+    setUploadingImage(false)
+    if (error) { setError('Image upload failed: ' + error.message); return '' }
+    const { data: urlData } = supabase.storage.from('event-images').getPublicUrl(data.path)
+    return urlData.publicUrl
+  }
+
   // Validation
   const step1Valid = !!(eventData.title && eventData.event_type && eventData.vibe && eventData.description)
   const step2Valid = !!(eventData.event_date && eventData.start_time && eventData.venue_name && eventData.city && eventData.state)
   const step3Valid = eventData.is_free || ticketTypes.every(t => t.name && t.price > 0 && t.quantity > 0)
 
   const nextStep = (current: Step, valid: boolean) => {
-    if (!valid) {
-      setError('Please fill in all required fields before continuing.')
-      return
-    }
+    if (!valid) { setError('Please fill in all required fields before continuing.'); return }
     setError('')
     setStep((current + 1) as Step)
   }
@@ -84,10 +113,20 @@ export default function SubmitEventPage() {
     setLoading(true)
     setError('')
     try {
+      // Upload image first if selected
+      let coverImageUrl = eventData.cover_image_url
+      if (imageFile) {
+        coverImageUrl = await uploadImage()
+        if (!coverImageUrl) { setLoading(false); return }
+      }
+
       const res = await fetch('/api/organiser/submit-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventData, ticketTypes }),
+        body: JSON.stringify({
+          eventData: { ...eventData, cover_image_url: coverImageUrl },
+          ticketTypes
+        }),
       })
       const data = await res.json()
       if (data.error) {
@@ -127,12 +166,12 @@ export default function SubmitEventPage() {
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 md:px-10 bg-white border-b border-gray-100">
         <Link href="/organiser/dashboard" className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+          <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Back to Dashboard</span>
         </Link>
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
           paddy<span className="text-orange-500">meet</span>
         </Link>
-        <div className="w-32" />
+        <div className="w-8 sm:w-32" />
       </nav>
 
       <div className="max-w-2xl mx-auto px-4 md:px-6 pt-24 pb-12">
@@ -168,6 +207,39 @@ export default function SubmitEventPage() {
         {/* Step 1 — Event Info */}
         {step === 1 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+
+            {/* Cover image upload */}
+            <div>
+              <label className={labelClass}>Cover image</label>
+              {imagePreview ? (
+                <div className="relative rounded-2xl overflow-hidden h-48">
+                  <Image src={imagePreview} alt="Cover preview" fill className="object-cover" />
+                  <button
+                    onClick={() => { setImageFile(null); setImagePreview('') }}
+                    className="absolute top-3 right-3 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="absolute bottom-3 left-3 px-2.5 py-1 bg-black/50 rounded-full text-xs text-white font-medium">
+                    Cover image selected
+                  </div>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-orange-300 hover:bg-orange-50/50 transition-all">
+                  <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">
+                    <ImageIcon className="w-5 h-5 text-gray-400" />
+                  </div>
+                  <div className="text-sm font-bold text-gray-600 mb-1">Upload cover image</div>
+                  <div className="text-xs text-gray-400">JPG, PNG or WEBP · Max 5MB</div>
+                  <div className="mt-3 px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center gap-1.5">
+                    <Upload className="w-3.5 h-3.5" /> Choose Image
+                  </div>
+                  <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+                </label>
+              )}
+              <p className="text-xs text-gray-400 mt-1.5">This image will appear on your event listing. Recommended size: 1200×630px.</p>
+            </div>
+
             <div>
               <label className={labelClass}>Event title <span className="text-red-400">*</span></label>
               <input type="text" placeholder="e.g. Afrobeats All Night Vol. 3" value={eventData.title} onChange={e => update('title', e.target.value)} className={inputClass} />
@@ -233,7 +305,7 @@ export default function SubmitEventPage() {
         {/* Step 2 — Date & Venue */}
         {step === 2 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Event date <span className="text-red-400">*</span></label>
                 <input type="date" value={eventData.event_date} onChange={e => update('event_date', e.target.value)} className={inputClass} />
@@ -263,11 +335,7 @@ export default function SubmitEventPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>State <span className="text-red-400">*</span></label>
-                <select
-                  value={eventData.state}
-                  onChange={e => { update('state', e.target.value); update('city', '') }}
-                  className={inputClass + ' appearance-none'}
-                >
+                <select value={eventData.state} onChange={e => { update('state', e.target.value); update('city', '') }} className={inputClass + ' appearance-none'}>
                   <option value="" disabled>Select state</option>
                   <option value="lagos">Lagos</option>
                   <option value="abuja">Abuja (FCT)</option>
@@ -282,12 +350,7 @@ export default function SubmitEventPage() {
               </div>
               <div>
                 <label className={labelClass}>City <span className="text-red-400">*</span></label>
-                <select
-                  value={eventData.city}
-                  onChange={e => update('city', e.target.value)}
-                  disabled={!eventData.state}
-                  className={inputClass + ' appearance-none'}
-                >
+                <select value={eventData.city} onChange={e => update('city', e.target.value)} disabled={!eventData.state} className={inputClass + ' appearance-none'}>
                   <option value="" disabled>{eventData.state ? 'Select city' : 'Select state first'}</option>
                   {(cities[eventData.state] || []).map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -308,22 +371,17 @@ export default function SubmitEventPage() {
         {/* Step 3 — Tickets */}
         {step === 3 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
-
-            {/* Free event toggle */}
-            <div
-              onClick={() => update('is_free', !eventData.is_free)}
-              className={`flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all ${eventData.is_free ? 'border-green-300 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
-            >
+            <div onClick={() => update('is_free', !eventData.is_free)}
+              className={`flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all ${eventData.is_free ? 'border-green-300 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
               <div>
                 <div className="text-sm font-bold text-gray-900">This is a free event</div>
                 <div className="text-xs text-gray-500">No ticket price — attendees claim a free ticket</div>
               </div>
-              <div className={`w-12 h-6 rounded-full transition-all ${eventData.is_free ? 'bg-green-500' : 'bg-gray-200'} relative`}>
+              <div className={`w-12 h-6 rounded-full transition-all ${eventData.is_free ? 'bg-green-500' : 'bg-gray-200'} relative flex-shrink-0`}>
                 <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${eventData.is_free ? 'left-7' : 'left-1'}`} />
               </div>
             </div>
 
-            {/* Ticket types */}
             {!eventData.is_free && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -403,7 +461,7 @@ export default function SubmitEventPage() {
             <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-100 rounded-xl">
               <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-blue-600 leading-relaxed">
-                These fields are optional but help attendees know what to expect. The more detail you provide the better your event listing will look.
+                These fields are optional but help attendees know what to expect.
               </p>
             </div>
 
@@ -432,7 +490,7 @@ export default function SubmitEventPage() {
               <ul className="space-y-1">
                 {[
                   'Paddymeet will review your event within 24 to 48 hours',
-                  'You will be notified by email once approved or if changes are needed',
+                  'You will be notified once approved or if changes are needed',
                   'Events must comply with Paddymeet community guidelines',
                   'Ticket sales only begin after approval',
                 ].map((item, i) => (
@@ -448,13 +506,10 @@ export default function SubmitEventPage() {
 
             <div className="flex gap-3">
               <button onClick={() => { setError(''); setStep(3) }} className="flex-1 py-3.5 border-2 border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:border-gray-300 transition-colors">Back</button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="flex-1 py-3.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? 'Submitting...' : 'Submit for Review'}
-                {!loading && <Check className="w-4 h-4" />}
+              <button onClick={handleSubmit} disabled={loading || uploadingImage}
+                className="flex-1 py-3.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                {loading || uploadingImage ? 'Submitting...' : 'Submit for Review'}
+                {!loading && !uploadingImage && <Check className="w-4 h-4" />}
               </button>
             </div>
           </div>
