@@ -1,19 +1,18 @@
-import SupportChat from '@/components/SupportChat'
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
-  LayoutDashboard, Calendar, Ticket, Users, DollarSign,
-  CreditCard, BarChart2, Settings, HelpCircle,
+  Calendar, Ticket,
+  CreditCard, BarChart2, Settings,
   Bell, Plus, Clock, CheckCircle, XCircle, Eye, TrendingUp,
-  ArrowUpRight
+  ArrowUpRight, Users, LayoutDashboard
 } from 'lucide-react'
 import LogoutButton from '@/components/LogoutButton'
+import SupportChat from '@/components/SupportChat'
 
 export default async function OrganiserDashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
   if (!user) redirect('/login')
 
   const { data: organiser } = await supabase
@@ -21,7 +20,6 @@ export default async function OrganiserDashboardPage() {
     .select('*')
     .eq('id', user.id)
     .single()
-
   if (!organiser) redirect('/login')
 
   const { data: events } = await supabase
@@ -34,7 +32,7 @@ export default async function OrganiserDashboardPage() {
   const { data: orders } = await supabase
     .from('orders')
     .select('*')
-    .in('event_id', eventIds)
+    .in('event_id', eventIds.length > 0 ? eventIds : ['00000000-0000-0000-0000-000000000000'])
     .order('created_at', { ascending: false })
     .limit(5)
 
@@ -57,22 +55,36 @@ export default async function OrganiserDashboardPage() {
     return 'ended'
   }
 
+  const navLinks = [
+    { icon: LayoutDashboard, label: 'Overview', href: '/organiser/dashboard' },
+    { icon: Calendar, label: 'My Events', href: '/organiser/dashboard/events' },
+    { icon: Ticket, label: 'Ticket Sales', href: '/organiser/dashboard/tickets' },
+    { icon: Users, label: 'Attendees', href: '/organiser/dashboard/attendees' },
+    { icon: TrendingUp, label: 'Revenue', href: '/organiser/dashboard/revenue' },
+    { icon: CreditCard, label: 'Payouts', href: '/organiser/dashboard/payouts' },
+    { icon: Settings, label: 'Settings', href: '/organiser/dashboard/settings' },
+  ]
+
   return (
     <div className="min-h-screen bg-gray-50">
 
       {/* Top Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-white border-b border-gray-100">
-        <div className="flex items-center gap-4">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 md:px-6 bg-white border-b border-gray-100">
+        <div className="flex items-center gap-3">
           <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
             paddy<span className="text-orange-500">meet</span>
           </Link>
-          <div className="h-5 w-px bg-gray-200" />
-          <span className="text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-            Organiser Portal
+          <span className="hidden sm:block text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+            Organiser
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 transition-colors relative">
+
+        <div className="flex items-center gap-2">
+          <Link href="/organiser/dashboard/events/new"
+            className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-blue-500 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-colors">
+            <Plus className="w-3.5 h-3.5" /> New Event
+          </Link>
+          <button className="relative w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 transition-colors">
             <Bell className="w-4 h-4" />
             {pendingEvents > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full text-white text-xs flex items-center justify-center font-bold border-2 border-white">
@@ -80,64 +92,67 @@ export default async function OrganiserDashboardPage() {
               </span>
             )}
           </button>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
+          <div className="flex items-center gap-2 px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-full">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
               {organiser.org_name?.charAt(0) || 'O'}
             </div>
-            <span className="text-sm font-semibold text-gray-700 max-w-[120px] truncate">
+            <span className="text-xs font-semibold text-gray-700 max-w-[80px] truncate hidden sm:block">
               {organiser.org_name}
             </span>
           </div>
+          <LogoutButton redirectTo="/" />
         </div>
       </nav>
 
+      {/* Mobile nav links - horizontal scroll */}
+      <div className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-100 md:hidden">
+        <div className="flex gap-1 px-3 py-2 overflow-x-auto scrollbar-hide">
+          {navLinks.map(({ icon: Icon, label, href }) => (
+            <Link key={label} href={href}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-full text-xs font-semibold text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex-shrink-0">
+              <Icon className="w-3 h-3" />
+              {label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
       <div className="flex pt-16">
 
-        {/* Sidebar */}
-        <aside className="w-56 fixed top-16 left-0 bottom-0 bg-white border-r border-gray-100 flex flex-col py-5 px-3">
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:flex w-56 fixed top-16 left-0 bottom-0 bg-white border-r border-gray-100 flex-col py-5 px-3">
           <div className="space-y-0.5 flex-1">
-            {[
-              { icon: LayoutDashboard, label: 'Overview', href: '/organiser/dashboard', active: true },
-              { icon: Calendar, label: 'My Events', href: '/organiser/dashboard/events' },
-              { icon: Ticket, label: 'Ticket Sales', href: '/organiser/dashboard/tickets' },
-              { icon: Users, label: 'Attendees', href: '/organiser/dashboard/attendees' },
-            ].map(({ icon: Icon, label, href, active }) => (
+            {navLinks.slice(0, 4).map(({ icon: Icon, label, href }) => (
               <Link key={label} href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${active ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
                 <Icon className="w-4 h-4 flex-shrink-0" />
                 {label}
               </Link>
             ))}
           </div>
-
           <div className="border-t border-gray-100 pt-3 space-y-0.5">
             <div className="px-3 py-1 text-xs font-bold text-gray-400 uppercase tracking-wider">Finance</div>
-            {[
-              { icon: DollarSign, label: 'Revenue', href: '/organiser/dashboard/revenue' },
-              { icon: CreditCard, label: 'Payouts', href: '/organiser/dashboard/payouts' },
-            ].map(({ icon: Icon, label, href }) => (
+            {navLinks.slice(4, 6).map(({ icon: Icon, label, href }) => (
               <Link key={label} href={href}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
                 <Icon className="w-4 h-4 flex-shrink-0" />
                 {label}
               </Link>
             ))}
+            <Link href="/organiser/dashboard/reports"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
+              <BarChart2 className="w-4 h-4 flex-shrink-0" />
+              Reports
+            </Link>
           </div>
-
           <div className="border-t border-gray-100 pt-3 space-y-0.5">
-            {[
-              { icon: Settings, label: 'Settings', href: '/organiser/dashboard/settings' },
-            ].map(({ icon: Icon, label, href }) => (
-              <Link key={label} href={href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                {label}
-              </Link>
-            ))}
+            <Link href="/organiser/dashboard/settings"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
+              <Settings className="w-4 h-4 flex-shrink-0" />
+              Settings
+            </Link>
             <LogoutButton redirectTo="/" />
           </div>
-
-          {/* Org card */}
           <div className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
@@ -154,101 +169,87 @@ export default async function OrganiserDashboardPage() {
           </div>
         </aside>
 
-        {/* Main */}
-        <main className="ml-56 flex-1 p-8">
+        {/* Main content */}
+        <main className="w-full md:ml-56 flex-1 p-4 md:p-8 mt-12 md:mt-0">
 
           {/* Page header */}
-          <div className="flex items-start justify-between mb-7">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
             <div>
-              <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">
+              <h1 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight mb-1">
                 Good morning, {organiser.contact_name?.split(' ')[0]}
               </h1>
               <p className="text-sm text-gray-500">Here is how your events are performing</p>
             </div>
-            <Link
-              href="/organiser/dashboard/events/new"
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition-all hover:shadow-lg hover:shadow-blue-100"
-            >
+            <Link href="/organiser/dashboard/events/new"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition-all sm:w-auto w-full">
               <Plus className="w-4 h-4" /> Submit New Event
             </Link>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-4 gap-4 mb-7">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
             {[
-              { label: 'Tickets sold', value: totalTickets.toLocaleString(), icon: Ticket, color: 'blue', change: '+12%' },
-              { label: 'Total revenue', value: `₦${(totalRevenue/1000).toFixed(0)}k`, icon: TrendingUp, color: 'green', change: '+8%' },
-              { label: 'Live events', value: liveEvents.toString(), icon: Calendar, color: 'orange', change: `${liveEvents} active` },
-              { label: 'Pending approval', value: pendingEvents.toString(), icon: Clock, color: 'purple', change: 'Awaiting review' },
-            ].map(({ label, value, icon: Icon, color, change }) => (
-              <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5 hover:border-gray-200 hover:shadow-sm transition-all">
-                <div className="flex items-start justify-between mb-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                    color === 'blue' ? 'bg-blue-50' :
-                    color === 'green' ? 'bg-green-50' :
-                    color === 'orange' ? 'bg-orange-50' : 'bg-purple-50'
-                  }`}>
-                    <Icon className={`w-4 h-4 ${
-                      color === 'blue' ? 'text-blue-500' :
-                      color === 'green' ? 'text-green-500' :
-                      color === 'orange' ? 'text-orange-500' : 'text-purple-500'
-                    }`} />
-                  </div>
-                  <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">{change}</span>
+              { label: 'Tickets sold', value: totalTickets.toLocaleString(), icon: Ticket, color: 'blue' },
+              { label: 'Total revenue', value: `₦${(totalRevenue/1000).toFixed(0)}k`, icon: TrendingUp, color: 'green' },
+              { label: 'Live events', value: liveEvents.toString(), icon: Calendar, color: 'orange' },
+              { label: 'Pending approval', value: pendingEvents.toString(), icon: Clock, color: 'purple' },
+            ].map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="bg-white border border-gray-100 rounded-2xl p-4 md:p-5">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${
+                  color === 'blue' ? 'bg-blue-50' :
+                  color === 'green' ? 'bg-green-50' :
+                  color === 'orange' ? 'bg-orange-50' : 'bg-purple-50'
+                }`}>
+                  <Icon className={`w-4 h-4 ${
+                    color === 'blue' ? 'text-blue-500' :
+                    color === 'green' ? 'text-green-500' :
+                    color === 'orange' ? 'text-orange-500' : 'text-purple-500'
+                  }`} />
                 </div>
-                <div className="text-2xl font-extrabold text-gray-900 tracking-tight mb-0.5">{value}</div>
+                <div className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight mb-0.5">{value}</div>
                 <div className="text-xs text-gray-500 font-medium">{label}</div>
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
 
             {/* Events table */}
-            <div className="col-span-2 space-y-5">
-              <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <div className="lg:col-span-2 space-y-5">
+              <div className="bg-white border border-gray-100 rounded-2xl p-5 md:p-6">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-extrabold text-gray-900">My Events</h2>
                   <Link href="/organiser/dashboard/events" className="text-xs font-bold text-blue-500 hover:underline">View all →</Link>
                 </div>
 
                 {events && events.length > 0 ? (
-                  <div className="space-y-1">
-                    <div className="grid grid-cols-5 gap-3 px-3 py-2 bg-gray-50 rounded-xl mb-2">
-                      {['Event','Date','Tickets sold','Revenue','Status'].map(h => (
-                        <div key={h} className="text-xs font-bold text-gray-400 uppercase tracking-wider">{h}</div>
-                      ))}
-                    </div>
+                  <div className="space-y-2">
                     {events.slice(0, 5).map((event) => {
                       const status = getEventStatus(event)
                       const StatusIcon = statusConfig[status]?.icon || Clock
                       return (
-                        <div key={event.id} className="grid grid-cols-5 gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors items-center cursor-pointer">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">
-                              {event.title?.charAt(0)}
+                        <Link key={event.id} href={`/organiser/dashboard/events/${event.id}`}
+                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex-shrink-0 flex items-center justify-center text-white text-sm font-bold">
+                            {event.title?.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-bold text-gray-900 truncate">{event.title}</div>
+                            <div className="text-xs text-gray-500">
+                              {event.event_date ? new Date(event.event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                             </div>
-                            <div className="min-w-0">
-                              <div className="text-xs font-bold text-gray-900 truncate">{event.title}</div>
-                            </div>
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {event.event_date ? new Date(event.event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
-                          </div>
-                          <div className="text-xs font-semibold text-gray-700">—</div>
-                          <div className="text-xs font-bold text-gray-900">—</div>
-                          <div>
-                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border ${statusConfig[status]?.color}`}>
-                              <StatusIcon className="w-3 h-3" />
-                              {statusConfig[status]?.label}
-                            </span>
-                          </div>
-                        </div>
+                          <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border flex-shrink-0 ${statusConfig[status]?.color}`}>
+                            <StatusIcon className="w-3 h-3" />
+                            {statusConfig[status]?.label}
+                          </span>
+                          <ArrowUpRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                        </Link>
                       )
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
+                  <div className="text-center py-10">
                     <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-gray-100">
                       <Calendar className="w-6 h-6 text-gray-300" />
                     </div>
@@ -263,7 +264,7 @@ export default async function OrganiserDashboardPage() {
               </div>
 
               {/* Recent transactions */}
-              <div className="bg-white border border-gray-100 rounded-2xl p-6">
+              <div className="bg-white border border-gray-100 rounded-2xl p-5 md:p-6">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-extrabold text-gray-900">Recent Transactions</h2>
                   <Link href="/organiser/dashboard/revenue" className="text-xs font-bold text-blue-500 hover:underline">View all →</Link>
@@ -279,7 +280,7 @@ export default async function OrganiserDashboardPage() {
                           <div className="text-xs font-bold text-gray-900">Ticket purchase</div>
                           <div className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString()}</div>
                         </div>
-                        <div className="text-sm font-bold text-green-600">+₦{order.total_paid?.toLocaleString()}</div>
+                        <div className="text-sm font-bold text-green-600 flex-shrink-0">+₦{order.total_paid?.toLocaleString()}</div>
                       </div>
                     ))}
                   </div>
@@ -304,7 +305,6 @@ export default async function OrganiserDashboardPage() {
                     </span>
                   )}
                 </div>
-
                 {(events?.filter(e => !e.is_approved)?.length ?? 0) > 0 ? (
                   <div className="space-y-3">
                     {events?.filter(e => !e.is_approved).slice(0, 3).map((event) => (
@@ -320,7 +320,7 @@ export default async function OrganiserDashboardPage() {
                       </div>
                     ))}
                     <div className="p-3 bg-gray-50 rounded-xl text-xs text-gray-500 text-center leading-relaxed">
-                      Paddymeet reviews all events before going live. Usually 24–48 hours.
+                      Usually reviewed within 24–48 hours.
                     </div>
                   </div>
                 ) : (
@@ -342,7 +342,7 @@ export default async function OrganiserDashboardPage() {
                   <div className="text-xs text-blue-200 mb-4">After Paddymeet commission</div>
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     <div className="bg-white/15 rounded-xl p-3">
-                      <div className="text-xs text-blue-200 mb-0.5">Gross revenue</div>
+                      <div className="text-xs text-blue-200 mb-0.5">Gross</div>
                       <div className="text-sm font-bold text-white">₦{(totalRevenue/1000).toFixed(0)}k</div>
                     </div>
                     <div className="bg-white/15 rounded-xl p-3">
@@ -363,10 +363,9 @@ export default async function OrganiserDashboardPage() {
                 <div className="space-y-1">
                   {[
                     { icon: Plus, label: 'Submit a new event', href: '/organiser/dashboard/events/new' },
-                    { icon: BarChart2, label: 'Download sales report', href: '/organiser/dashboard/reports' },
-                    { icon: Users, label: 'View attendee list', href: '/organiser/dashboard/attendees' },
-                    { icon: CreditCard, label: 'Update bank details', href: '/organiser/dashboard/settings' },
-                    { icon: HelpCircle, label: 'Contact support', href: '/organiser/dashboard/support' },
+                    { icon: BarChart2, label: 'Sales report', href: '/organiser/dashboard/reports' },
+                    { icon: Users, label: 'Attendee list', href: '/organiser/dashboard/attendees' },
+                    { icon: CreditCard, label: 'Bank details', href: '/organiser/dashboard/settings' },
                   ].map(({ icon: Icon, label, href }) => (
                     <Link key={label} href={href}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-gray-50">
@@ -379,7 +378,6 @@ export default async function OrganiserDashboardPage() {
                   ))}
                 </div>
               </div>
-
             </div>
           </div>
         </main>
