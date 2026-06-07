@@ -62,7 +62,7 @@ export default async function OrganiserDashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
             <div>
               <h1 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight mb-1">
-                Good morning, {organiser.contact_name?.split(' ')[0]}
+                Good Day, {organiser.contact_name?.split(' ')[0]}
               </h1>
               <p className="text-sm text-gray-500">Here is how your events are performing</p>
             </div>

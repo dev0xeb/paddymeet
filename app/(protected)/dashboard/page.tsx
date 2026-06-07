@@ -62,7 +62,7 @@ export default async function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pt-8 pb-6 md:pt-10 md:pb-8">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">
-              Good evening, {profile.full_name?.split(' ')[0] || profile.username} 👋
+              Good Day, {profile.full_name?.split(' ')[0] || profile.username} 👋
             </h1>
             <p className="text-sm text-gray-500">Here is what is happening with your events and groups</p>
           </div>
