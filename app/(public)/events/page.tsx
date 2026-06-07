@@ -105,7 +105,8 @@ export default async function EventsPage({
             {events.map((event, index) => (
               <Link key={event.id} href={`/events/${event.id}`}
                 className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-50 transition-all duration-300">
-                <div className={`h-44 bg-gradient-to-br ${gradients[index % gradients.length]} relative`}>
+                <div className={`h-44 relative ${event.cover_image_url ? '' : `bg-gradient-to-br ${gradients[index % gradients.length]}`}`}
+  style={event.cover_image_url ? { backgroundImage: `url(${event.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
                     <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-gray-700">

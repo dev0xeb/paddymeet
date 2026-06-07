@@ -109,7 +109,8 @@ export default async function EventDetailPage({
       </nav>
 
       {/* Hero */}
-      <div className={`h-64 md:h-96 bg-gradient-to-br ${gradient} relative mt-16`}>
+      <div className={`h-64 md:h-96 relative mt-16 ${event.cover_image_url ? '' : `bg-gradient-to-br ${gradient}`}`}
+  style={event.cover_image_url ? { backgroundImage: `url(${event.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
         <div className="absolute top-4 left-4 md:top-6 md:left-6">
           <Link href="/events" className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs md:text-sm font-semibold text-white hover:bg-white/30 transition-colors">
