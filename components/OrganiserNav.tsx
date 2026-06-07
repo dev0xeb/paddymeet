@@ -141,19 +141,6 @@ export default function OrganiserNav({ orgName, pendingEvents = 0 }: Props) {
           </div>
         </div>
       </nav>
-
-      {/* Mobile horizontal scroll nav */}
-      <div className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-100 md:hidden">
-        <div className="flex gap-1.5 px-3 py-2 overflow-x-auto">
-          {navLinks.map(({ icon: Icon, label, href }) => (
-            <Link key={label} href={href}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-full text-xs font-semibold text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex-shrink-0">
-              <Icon className="w-3 h-3" />
-              {label}
-            </Link>
-          ))}
-        </div>
-      </div>
     </>
   )
 }
