@@ -1,0 +1,12 @@
+{
+  "name": "Paddymeet",
+  "short_name": "Paddymeet",
+  "description": "Find your crew. Experience the night.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f97316",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "32x32", "type": "image/x-icon" }
+  ]
+}

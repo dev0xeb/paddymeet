@@ -1,9 +1,9 @@
-import NavigationProgress from '@/components/NavigationProgress'
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { GroupChatProvider } from "@/context/GroupChatContext";
 import GroupChatBar from "@/components/GroupChatBar";
+import NavigationProgress from "@/components/NavigationProgress";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +16,44 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Paddymeet — Find Your Crew",
+  title: {
+    default: "Paddymeet — Find Your Crew",
+    template: "%s | Paddymeet",
+  },
   description: "Discover the best nightlife events in Nigeria. Buy tickets, join groups and connect with your crew.",
+  keywords: ["nightlife", "events", "Nigeria", "tickets", "groups", "afrobeats", "parties", "Lagos", "Abuja", "Port Harcourt"],
+  authors: [{ name: "Paddymeet" }],
+  creator: "Paddymeet",
+  metadataBase: new URL("https://paddymeet.com"),
+  openGraph: {
+    type: "website",
+    locale: "en_NG",
+    url: "https://paddymeet.com",
+    siteName: "Paddymeet",
+    title: "Paddymeet — Find Your Crew",
+    description: "Discover the best nightlife events in Nigeria. Buy tickets, join groups and connect with your crew.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Paddymeet — Find Your Crew",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Paddymeet — Find Your Crew",
+    description: "Discover the best nightlife events in Nigeria. Buy tickets, join groups and connect with your crew.",
+    images: ["/og-image.png"],
+    creator: "@paddymeet",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({
