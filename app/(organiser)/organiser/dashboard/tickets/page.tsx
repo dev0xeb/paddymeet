@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import OrganiserNav from '@/components/OrganiserNav'
 import {
- Ticket, Calendar,
+  Ticket, Calendar,
   TrendingUp, DollarSign, Users, ChevronLeft, ChevronRight
 } from 'lucide-react'
 
@@ -55,7 +55,7 @@ export default async function OrganiserTicketsPage({
   if (eventIds.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
-      <OrganiserNav orgName={organiser.org_name} />
+      <OrganiserNav orgName={organiser?.org_name || ''} />
         <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-8 text-center">
           <Ticket className="w-12 h-12 text-gray-200 mx-auto mb-4 mt-20" />
           <h2 className="text-lg font-bold text-gray-700 mb-2">No events yet</h2>
@@ -100,8 +100,8 @@ export default async function OrganiserTicketsPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-8">
+      <OrganiserNav orgName={organiser?.org_name || ''} />
+      <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
 
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">Ticket Sales</h1>
@@ -109,7 +109,7 @@ export default async function OrganiserTicketsPage({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
           {[
             { label: 'Tickets sold', value: (totalTickets ?? 0).toLocaleString(), icon: Ticket, color: 'blue' },
             { label: 'Gross revenue', value: `₦${(totalRevenue / 1000).toFixed(1)}k`, icon: DollarSign, color: 'green' },

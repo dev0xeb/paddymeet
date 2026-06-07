@@ -102,7 +102,7 @@ export default async function OrganiserAttendeesPage({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
           {[
             { label: 'Total tickets', value: (count ?? 0).toLocaleString(), icon: Ticket, color: 'blue' },
             { label: 'Attended', value: (attendedCount ?? 0).toLocaleString(), icon: CheckCircle, color: 'green' },
@@ -145,7 +145,7 @@ export default async function OrganiserAttendeesPage({
 
         {/* Attendees table */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="grid grid-cols-6 gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100">
+          <div className="hidden md:grid grid-cols-6 gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100">
             {['Attendee', 'Event', 'Ticket', 'Date', 'Location', 'Status'].map(h => (
               <div key={h} className="text-xs font-bold text-gray-400 uppercase tracking-wider">{h}</div>
             ))}
@@ -158,7 +158,7 @@ export default async function OrganiserAttendeesPage({
                 const tt = getField(ticket.ticket_types)
                 const ev = getField(ticket.events)
                 return (
-                  <div key={ticket.id} className="grid grid-cols-6 gap-3 px-5 py-4 hover:bg-gray-50 transition-colors items-center">
+                  <div key={ticket.id} className="flex flex-col sm:grid sm:grid-cols-6 gap-2 sm:gap-3 px-4 py-4 hover:bg-gray-50 transition-colors">
 
                     {/* Attendee */}
                     <div className="flex items-center gap-2 min-w-0">

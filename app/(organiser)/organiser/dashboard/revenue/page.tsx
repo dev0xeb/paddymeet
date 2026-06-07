@@ -90,7 +90,7 @@ export default async function OrganiserRevenuePage({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
           {[
             { label: 'Gross revenue', value: `₦${(grossRevenue / 1000).toFixed(1)}k`, icon: DollarSign, color: 'green', desc: 'Total ticket sales' },
             { label: 'Service fees', value: `₦${(totalFees / 1000).toFixed(1)}k`, icon: Ticket, color: 'orange', desc: 'Paystack charges' },
@@ -116,10 +116,10 @@ export default async function OrganiserRevenuePage({
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
 
           {/* Revenue by event */}
-          <div className="col-span-2 bg-white border border-gray-100 rounded-2xl p-6">
+          <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-5 md:p-6">
             <h2 className="text-sm font-extrabold text-gray-900 mb-4">Revenue by Event</h2>
             {revenueByEvent.length > 0 ? (
               <div className="space-y-3">
@@ -214,7 +214,7 @@ export default async function OrganiserRevenuePage({
             <span className="text-xs text-gray-400">{count} total</span>
           </div>
 
-          <div className="grid grid-cols-4 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
+          <div className="hidden md:grid grid-cols-4 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
             {['Event', 'Date', 'Gross', 'Net'].map(h => (
               <div key={h} className="text-xs font-bold text-gray-400 uppercase tracking-wider">{h}</div>
             ))}
@@ -228,7 +228,7 @@ export default async function OrganiserRevenuePage({
                   : (order.events as { title: string } | null)?.title
                 const net = (order.total_paid || 0) - (order.service_fee || 0) - (order.total_paid || 0) * 0.1
                 return (
-                  <div key={order.id} className="grid grid-cols-4 gap-4 px-5 py-4 hover:bg-gray-50 transition-colors items-center">
+                  <div key={order.id} className="flex flex-col sm:grid sm:grid-cols-4 gap-2 sm:gap-4 px-4 py-4 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                         {evTitle?.charAt(0) || 'E'}

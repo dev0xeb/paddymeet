@@ -77,7 +77,7 @@ export default async function OrganiserPayoutsPage() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
           {[
             { label: 'Available for payout', value: `₦${Math.max(0, pendingPayout / 1000).toFixed(1)}k`, icon: DollarSign, color: 'green', desc: 'Ready to be paid out' },
             { label: 'Total paid out', value: `₦${(totalPaid / 1000).toFixed(1)}k`, icon: CheckCircle, color: 'blue', desc: 'All time payouts' },
@@ -100,10 +100,10 @@ export default async function OrganiserPayoutsPage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
           {/* Payout history */}
-          <div className="col-span-2">
+          <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100">
                 <h2 className="text-sm font-extrabold text-gray-900">Payout History</h2>

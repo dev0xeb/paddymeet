@@ -247,7 +247,7 @@ export default function OrganiserSettingsPage() {
 
             {activeTab === 'profile' && (
               <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Organisation Name</label>
                     <input type="text" value={profile?.org_name || ''} onChange={e => updateField('org_name', e.target.value)} className={inputClass} />
@@ -257,7 +257,7 @@ export default function OrganiserSettingsPage() {
                     <input type="text" value={profile?.contact_name || ''} onChange={e => updateField('contact_name', e.target.value)} className={inputClass} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label>
                     <input type="email" value={profile?.email || ''} disabled className={inputClass + ' opacity-60 cursor-not-allowed'} />
@@ -272,7 +272,7 @@ export default function OrganiserSettingsPage() {
                   <textarea rows={3} value={profile?.description || ''} onChange={e => updateField('description', e.target.value)}
                     placeholder="Tell people about your organisation..." className={inputClass + ' resize-none leading-relaxed'} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Website</label>
                     <input type="url" value={profile?.website || ''} onChange={e => updateField('website', e.target.value)} placeholder="https://yourwebsite.com" className={inputClass} />
