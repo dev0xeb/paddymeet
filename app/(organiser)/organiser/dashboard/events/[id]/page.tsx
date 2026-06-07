@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import OrganiserNav from '@/components/OrganiserNav'
 import {
-  ArrowLeft, Calendar, MapPin, Clock, Ticket,
-  Users, CheckCircle, XCircle, Edit, Eye
+  Calendar, MapPin, Clock, Ticket,
+  Users, CheckCircle, XCircle, Edit
 } from 'lucide-react'
 
 export default async function OrganiserManageEventPage({
@@ -66,40 +67,9 @@ export default async function OrganiserManageEventPage({
     <div className="min-h-screen bg-gray-50">
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-white border-b border-gray-100">
-        <div className="flex items-center gap-4">
-          <Link href="/organiser/dashboard/events" className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> My Events
-          </Link>
-          <div className="h-5 w-px bg-gray-200" />
-          <span className="text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-            Manage Event
-          </span>
-        </div>
-        <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
-        </Link>
-        {event.is_approved && event.is_live && (
-          <Link href={`/events/${event.id}`} target="_blank"
-            className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 text-green-600 text-sm font-bold rounded-xl hover:bg-green-100 transition-colors">
-            <Eye className="w-4 h-4" /> View Live
-          </Link>
-        )}
-        {!event.is_approved && (
-          <Link href={`/organiser/dashboard/events/${id}/edit`}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-600 text-sm font-bold rounded-xl hover:bg-blue-100 transition-colors">
-            <Edit className="w-4 h-4" /> Edit Event
-          </Link>
-        )}
-        {event.is_approved && event.is_live && (
-          <Link href={`/organiser/dashboard/events/${id}/edit`}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:border-gray-300 transition-colors ml-2">
-            <Edit className="w-4 h-4" /> Edit
-          </Link>
-        )}
-      </nav>
+      <OrganiserNav orgName={organiser.org_name} />
 
-      <div className="pt-16 max-w-5xl mx-auto px-6 py-8">
+      <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-8">
 
         {/* Event hero */}
         <div className={`h-40 rounded-2xl bg-gradient-to-br ${gradient} relative mb-6 overflow-hidden`}>

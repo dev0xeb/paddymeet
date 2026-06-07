@@ -4,10 +4,10 @@ import Link from 'next/link'
 import {
   Calendar, Ticket,
   CreditCard, BarChart2, Settings,
-  Bell, Plus, Clock, CheckCircle, XCircle, Eye, TrendingUp,
+  Plus, Clock, CheckCircle, XCircle, Eye, TrendingUp,
   ArrowUpRight, Users, LayoutDashboard
 } from 'lucide-react'
-import LogoutButton from '@/components/LogoutButton'
+import OrganiserNav from '@/components/OrganiserNav'
 import SupportChat from '@/components/SupportChat'
 
 export default async function OrganiserDashboardPage() {
@@ -61,44 +61,8 @@ export default async function OrganiserDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <OrganiserNav orgName={organiser.org_name} pendingEvents={pendingEvents} />
 
-      {/* Top Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 md:px-6 bg-white border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
-            paddy<span className="text-orange-500">meet</span>
-          </Link>
-          <span className="hidden sm:block text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-            Organiser
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Link href="/organiser/dashboard/events/new"
-            className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-blue-500 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-colors">
-            <Plus className="w-3.5 h-3.5" /> New Event
-          </Link>
-          <button className="relative w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 transition-colors">
-            <Bell className="w-4 h-4" />
-            {pendingEvents > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full text-white text-xs flex items-center justify-center font-bold border-2 border-white">
-                {pendingEvents}
-              </span>
-            )}
-          </button>
-          <div className="flex items-center gap-2 px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-full">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-              {organiser.org_name?.charAt(0) || 'O'}
-            </div>
-            <span className="text-xs font-semibold text-gray-700 max-w-[80px] truncate hidden sm:block">
-              {organiser.org_name}
-            </span>
-          </div>
-          <LogoutButton redirectTo="/" />
-        </div>
-      </nav>
-
-      {/* Mobile nav links - horizontal scroll */}
       <div className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-100 md:hidden">
         <div className="flex gap-1 px-3 py-2 overflow-x-auto scrollbar-hide">
           {navLinks.map(({ icon: Icon, label, href }) => (
@@ -145,7 +109,6 @@ export default async function OrganiserDashboardPage() {
               <Settings className="w-4 h-4 flex-shrink-0" />
               Settings
             </Link>
-            <LogoutButton redirectTo="/" />
           </div>
           <div className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
             <div className="flex items-center gap-2 mb-1">

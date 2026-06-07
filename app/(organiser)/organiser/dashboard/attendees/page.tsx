@@ -1,10 +1,10 @@
-import SupportChat from '@/components/SupportChat'
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import OrganiserNav from '@/components/OrganiserNav'
 import {
-  ArrowLeft, Users, Calendar, Ticket,
-  CheckCircle, Clock, ChevronLeft, ChevronRight, Download
+  Users, Calendar, Ticket,
+  CheckCircle, Clock, ChevronLeft, ChevronRight
 } from 'lucide-react'
 
 interface TicketRow {
@@ -56,16 +56,8 @@ export default async function OrganiserAttendeesPage({
   if (eventIds.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-white border-b border-gray-100">
-          <Link href="/organiser/dashboard" className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Dashboard
-          </Link>
-          <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
-            paddy<span className="text-orange-500">meet</span>
-          </Link>
-          <div className="w-24" />
-        </nav>
-        <div className="pt-16 max-w-5xl mx-auto px-6 py-8 text-center">
+      <OrganiserNav orgName={organiser.org_name} />
+        <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-8 text-center">
           <Users className="w-12 h-12 text-gray-200 mx-auto mb-4 mt-20" />
           <h2 className="text-lg font-bold text-gray-700 mb-2">No events yet</h2>
           <p className="text-sm text-gray-400 mb-5">Submit your first event to see attendees</p>
@@ -102,25 +94,7 @@ export default async function OrganiserAttendeesPage({
   return (
     <div className="min-h-screen bg-gray-50">
 
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-white border-b border-gray-100">
-        <div className="flex items-center gap-4">
-          <Link href="/organiser/dashboard" className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Dashboard
-          </Link>
-          <div className="h-5 w-px bg-gray-200" />
-          <span className="text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-            Attendees
-          </span>
-        </div>
-        <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
-        </Link>
-        <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 text-gray-600 text-sm font-semibold rounded-xl hover:border-gray-300 transition-colors">
-          <Download className="w-4 h-4" /> Export CSV
-        </button>
-      </nav>
-
-      <div className="pt-16 max-w-5xl mx-auto px-6 py-8">
+      <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-8">
 
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">Attendees</h1>
@@ -278,7 +252,6 @@ export default async function OrganiserAttendeesPage({
         )}
 
       </div>
-      <SupportChat accountType="organiser" />
     </div>
   )
 }
