@@ -1,10 +1,10 @@
-import SupportChat from '@/components/SupportChat'
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import OrganiserNav from '@/components/OrganiserNav'
 import {
-  ArrowLeft, DollarSign, TrendingUp, Ticket,
-  Calendar, ChevronLeft, ChevronRight, ArrowUpRight
+  DollarSign, TrendingUp, Ticket,
+  Calendar, ChevronLeft, ChevronRight
 } from 'lucide-react'
 
 export default async function OrganiserRevenuePage({
@@ -80,26 +80,9 @@ export default async function OrganiserRevenuePage({
   return (
     <div className="min-h-screen bg-gray-50">
 
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-white border-b border-gray-100">
-        <div className="flex items-center gap-4">
-          <Link href="/organiser/dashboard" className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Dashboard
-          </Link>
-          <div className="h-5 w-px bg-gray-200" />
-          <span className="text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-            Revenue
-          </span>
-        </div>
-        <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
-        </Link>
-        <Link href="/organiser/dashboard/payouts"
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition-colors">
-          View Payouts <ArrowUpRight className="w-4 h-4" />
-        </Link>
-      </nav>
+      <OrganiserNav orgName={organiser.org_name} />
 
-      <div className="pt-16 max-w-5xl mx-auto px-6 py-8">
+      <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-8">
 
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">Revenue</h1>
@@ -305,7 +288,6 @@ export default async function OrganiserRevenuePage({
         )}
 
       </div>
-      <SupportChat accountType="organiser" />
     </div>
   )
 }
