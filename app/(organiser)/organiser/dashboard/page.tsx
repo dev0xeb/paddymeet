@@ -3,9 +3,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
   Calendar, Ticket,
-  CreditCard, BarChart2, Settings,
+  CreditCard, BarChart2,
   Plus, Clock, CheckCircle, XCircle, Eye, TrendingUp,
-  ArrowUpRight, Users, LayoutDashboard
+  ArrowUpRight, Users
 } from 'lucide-react'
 import OrganiserNav from '@/components/OrganiserNav'
 import SupportChat from '@/components/SupportChat'
@@ -49,82 +49,11 @@ export default async function OrganiserDashboardPage() {
     return 'ended'
   }
 
-  const navLinks = [
-    { icon: LayoutDashboard, label: 'Overview', href: '/organiser/dashboard' },
-    { icon: Calendar, label: 'My Events', href: '/organiser/dashboard/events' },
-    { icon: Ticket, label: 'Ticket Sales', href: '/organiser/dashboard/tickets' },
-    { icon: Users, label: 'Attendees', href: '/organiser/dashboard/attendees' },
-    { icon: TrendingUp, label: 'Revenue', href: '/organiser/dashboard/revenue' },
-    { icon: CreditCard, label: 'Payouts', href: '/organiser/dashboard/payouts' },
-    { icon: Settings, label: 'Settings', href: '/organiser/dashboard/settings' },
-  ]
-
   return (
     <div className="min-h-screen bg-gray-50">
       <OrganiserNav orgName={organiser.org_name} pendingEvents={pendingEvents} />
 
-      <div className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-100 md:hidden">
-        <div className="flex gap-1 px-3 py-2 overflow-x-auto scrollbar-hide">
-          {navLinks.map(({ icon: Icon, label, href }) => (
-            <Link key={label} href={href}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-full text-xs font-semibold text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex-shrink-0">
-              <Icon className="w-3 h-3" />
-              {label}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex pt-16">
-
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:flex w-56 fixed top-16 left-0 bottom-0 bg-white border-r border-gray-100 flex-col py-5 px-3">
-          <div className="space-y-0.5 flex-1">
-            {navLinks.slice(0, 4).map(({ icon: Icon, label, href }) => (
-              <Link key={label} href={href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                {label}
-              </Link>
-            ))}
-          </div>
-          <div className="border-t border-gray-100 pt-3 space-y-0.5">
-            <div className="px-3 py-1 text-xs font-bold text-gray-400 uppercase tracking-wider">Finance</div>
-            {navLinks.slice(4, 6).map(({ icon: Icon, label, href }) => (
-              <Link key={label} href={href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                {label}
-              </Link>
-            ))}
-            <Link href="/organiser/dashboard/reports"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
-              <BarChart2 className="w-4 h-4 flex-shrink-0" />
-              Reports
-            </Link>
-          </div>
-          <div className="border-t border-gray-100 pt-3 space-y-0.5">
-            <Link href="/organiser/dashboard/settings"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
-              <Settings className="w-4 h-4 flex-shrink-0" />
-              Settings
-            </Link>
-          </div>
-          <div className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                {organiser.org_name?.charAt(0) || 'O'}
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-gray-900 truncate">{organiser.org_name}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              <span className="text-xs font-semibold text-green-600">Active Organiser</span>
-            </div>
-          </div>
-        </aside>
+      <div className="pt-16">
 
         {/* Main content */}
         <main className="w-full md:ml-56 flex-1 p-4 md:p-8 mt-12 md:mt-0">
