@@ -1,7 +1,8 @@
+import NotificationsBell from '@/components/NotificationsBell'
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, Users, ChevronRight, Bell, Shield } from 'lucide-react'
+import { Calendar, Users, ChevronRight, Shield } from 'lucide-react'
 import UserAvatarMenu from '@/components/UserAvatarMenu'
 import SupportChat from '@/components/SupportChat'
 import OpenGroupButton from '@/components/OpenGroupButton'
@@ -50,9 +51,7 @@ export default async function DashboardPage() {
           <Link href="/events" className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors hidden md:block">
             Browse Events
           </Link>
-          <button className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 transition-colors relative">
-            <Bell className="w-4 h-4" />
-          </button>
+          <NotificationsBell />
           <UserAvatarMenu username={profile.username} tier={tier} />
         </div>
       </nav>
