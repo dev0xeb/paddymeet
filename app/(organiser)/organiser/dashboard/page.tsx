@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
   Calendar, Ticket,
-  CreditCard, BarChart2,
+  CreditCard,
   Plus, Clock, CheckCircle, XCircle, Eye, TrendingUp,
   ArrowUpRight, Users
 } from 'lucide-react'
@@ -249,7 +249,6 @@ export default async function OrganiserDashboardPage() {
                 <div className="space-y-1">
                   {[
                     { icon: Plus, label: 'Submit a new event', href: '/organiser/dashboard/events/new' },
-                    { icon: BarChart2, label: 'Sales report', href: '/organiser/dashboard/reports' },
                     { icon: Users, label: 'Attendee list', href: '/organiser/dashboard/attendees' },
                     { icon: CreditCard, label: 'Bank details', href: '/organiser/dashboard/settings' },
                   ].map(({ icon: Icon, label, href }) => (
