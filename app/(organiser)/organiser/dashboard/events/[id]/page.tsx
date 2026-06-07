@@ -69,7 +69,7 @@ export default async function OrganiserManageEventPage({
       {/* Nav */}
       <OrganiserNav orgName={organiser.org_name} />
 
-      <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-8">
+      <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
 
         {/* Event hero */}
         <div className={`h-40 rounded-2xl bg-gradient-to-br ${gradient} relative mb-6 overflow-hidden`}>
@@ -110,14 +110,14 @@ export default async function OrganiserManageEventPage({
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
           {[
             { label: 'Tickets sold', value: totalTickets, icon: Ticket, color: 'blue' },
             { label: 'Gross revenue', value: `₦${(totalRevenue / 1000).toFixed(1)}k`, icon: CheckCircle, color: 'green' },
             { label: 'Attended', value: attended, icon: Users, color: 'orange' },
             { label: 'Ticket types', value: event.ticket_types?.length || 0, icon: Edit, color: 'purple' },
           ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5">
+            <div key={label} className="bg-white border border-gray-100 rounded-2xl p-4 md:p-5">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${
                 color === 'blue' ? 'bg-blue-50' :
                 color === 'green' ? 'bg-green-50' :
@@ -135,10 +135,10 @@ export default async function OrganiserManageEventPage({
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
           {/* Left — event details */}
-          <div className="col-span-2 space-y-5">
+          <div className="lg:col-span-2 space-y-5">
 
             {/* Event info */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6">
