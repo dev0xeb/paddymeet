@@ -11,26 +11,17 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*, user_interests(*)')
-    .eq('id', user.id)
-    .single()
+  const [
+    { data: profile },
+    { data: tickets },
+    { data: groupMembers },
+  ] = await Promise.all([
+    supabase.from('users').select('*, user_interests(*)').eq('id', user.id).single(),
+    supabase.from('tickets').select('*, events(*)').eq('user_id', user.id).eq('status', 'active').order('purchased_at', { ascending: false }).limit(3),
+    supabase.from('group_members').select('*, groups(*, events(title, event_date, city))').eq('user_id', user.id).limit(3),
+  ])
+
   if (!profile) redirect('/login')
-
-  const { data: tickets } = await supabase
-    .from('tickets')
-    .select('*, events(*)')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .order('purchased_at', { ascending: false })
-    .limit(3)
-
-  const { data: groupMembers } = await supabase
-    .from('group_members')
-    .select('*, groups(*, events(title, event_date, city))')
-    .eq('user_id', user.id)
-    .limit(3)
 
   const tierColors: Record<string, string> = {
     Newbie: 'bg-gray-100 text-gray-600',

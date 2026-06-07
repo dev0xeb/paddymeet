@@ -15,18 +15,12 @@ export default async function OrganiserDashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: organiser } = await supabase
-    .from('organisers')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-  if (!organiser) redirect('/login')
+  const [{ data: organiser }, { data: events }] = await Promise.all([
+    supabase.from('organisers').select('*').eq('id', user.id).single(),
+    supabase.from('events').select('*, ticket_types(*)').eq('organiser_id', user.id).order('created_at', { ascending: false }),
+  ])
 
-  const { data: events } = await supabase
-    .from('events')
-    .select('*, ticket_types(*)')
-    .eq('organiser_id', user.id)
-    .order('created_at', { ascending: false })
+  if (!organiser) redirect('/login')
 
   const eventIds = events?.map(e => e.id) || []
   const { data: orders } = await supabase
