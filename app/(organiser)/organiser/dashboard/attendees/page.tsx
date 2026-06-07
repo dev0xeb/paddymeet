@@ -56,7 +56,7 @@ export default async function OrganiserAttendeesPage({
   if (eventIds.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
-      <OrganiserNav orgName={organiser.org_name} />
+      <OrganiserNav orgName={organiser?.org_name || ''} />
         <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-8 text-center">
           <Users className="w-12 h-12 text-gray-200 mx-auto mb-4 mt-20" />
           <h2 className="text-lg font-bold text-gray-700 mb-2">No events yet</h2>
@@ -93,7 +93,7 @@ export default async function OrganiserAttendeesPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-
+      <OrganiserNav orgName={organiser?.org_name || ''} />
       <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-8">
 
         <div className="mb-6">
