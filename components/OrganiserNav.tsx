@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase'
 
 interface Props {
   orgName: string
+  pendingEvents?: number
 }
 
 interface Notification {
