@@ -9,25 +9,41 @@ export async function POST(
   const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const adminClient = createAdminClient()
-
   const { data: admin } = await adminClient
     .from('admin_team')
     .select('department')
     .eq('id', user.id)
     .single()
-
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Get event details first
+  const { data: event } = await adminClient
+    .from('events')
+    .select('organiser_id, title')
+    .eq('id', id)
+    .single()
+
+  // Update event status
   const { error } = await adminClient
     .from('events')
-    .update({ is_approved: false, is_live: false })
+    .update({ is_approved: false, is_live: false, is_rejected: true })
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+  // Notify organiser
+  if (event) {
+    await adminClient.from('notifications').insert({
+      user_id: event.organiser_id,
+      title: 'Event not approved',
+      message: `Your event "${event.title}" was not approved by Paddymeet. Please contact support for more information or make changes and resubmit.`,
+      type: 'event',
+      is_read: false,
+    })
+  }
 
   return NextResponse.redirect(new URL('/admin/dashboard/events', request.url))
 }
