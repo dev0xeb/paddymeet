@@ -53,6 +53,11 @@ export default async function AdminEventsPage({
   const { count: totalCount } = await adminClient
     .from('events')
     .select('*', { count: 'exact', head: true })
+  
+  const { count: rejectedCount } = await adminClient
+  .from('events')
+  .select('*', { count: 'exact', head: true })
+  .eq('is_rejected', true)
 
   const gradients = [
     'from-purple-900 via-pink-900 to-orange-900',
@@ -96,13 +101,14 @@ export default async function AdminEventsPage({
           {[
             { label: 'Pending review', value: pendingCount ?? 0, color: 'orange', status: 'pending' },
             { label: 'Live events', value: liveCount ?? 0, color: 'green', status: 'live' },
+            { label: 'Rejected', value: rejectedCount ?? 0, color: 'red', status: 'rejected' },
             { label: 'Total events', value: totalCount ?? 0, color: 'blue', status: 'all' },
           ].map(({ label, value, color, status: s }) => (
             <Link key={label} href={`/admin/dashboard/events?status=${s}`}
               className={`bg-white border-2 rounded-2xl p-5 transition-all hover:shadow-sm ${
                 status === s
                   ? color === 'orange' ? 'border-orange-300' :
-                    color === 'green' ? 'border-green-300' : 'border-blue-300'
+                    color === 'green' ? 'border-green-300' : color === 'red' ? 'border-red-300' : 'border-blue-300'
                   : 'border-gray-100'
               }`}>
               <div className="text-2xl font-extrabold text-gray-900 mb-0.5">{value}</div>
@@ -117,6 +123,7 @@ export default async function AdminEventsPage({
           {[
             { label: 'Pending', value: 'pending', count: pendingCount ?? 0 },
             { label: 'Live', value: 'live', count: liveCount ?? 0 },
+            { label: 'Rejected', value: 'rejected', count: rejectedCount ?? 0 },
             { label: 'All Events', value: 'all', count: totalCount ?? 0 },
           ].map(({ label, value, count }) => (
             <Link key={value} href={`/admin/dashboard/events?status=${value}`}
@@ -158,7 +165,7 @@ export default async function AdminEventsPage({
                               ? 'bg-orange-50 text-orange-500 border-orange-200'
                               : 'bg-gray-50 text-gray-500 border-gray-200'
                           }`}>
-                            {event.is_approved && event.is_live ? 'Live' : !event.is_approved ? 'Pending' : 'Approved'}
+                            {event.is_rejected ? 'Rejected' : event.is_approved && event.is_live ? 'Live' : !event.is_approved ? 'Pending' : 'Approved'}
                           </span>
                           {event.is_free && (
                             <span className="px-2 py-0.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full">Free</span>
