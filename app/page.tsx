@@ -457,16 +457,31 @@ export default async function HomePage() {
               <p className="text-sm text-gray-400 leading-relaxed">Find your crew. Experience the night. Built for Lagos, made for everyone.</p>
             </div>
             {[
-              { title: 'Platform', links: ['Browse Events','How It Works','Trust and Safety','For Organisers'] },
-              { title: 'Company', links: ['About Us','Blog','Careers','Contact'] },
-              { title: 'Legal', links: ['Terms of Use','Privacy Policy','Cookie Policy'] },
+              { title: 'Platform', links: [
+                { label: 'Browse Events', href: '/events' },
+                { label: 'How It Works', href: '/how-it-works' },
+                { label: 'Trust and Safety', href: '/trust-and-safety' },
+                { label: 'For Organisers', href: '/for-organisers' },
+              ]},
+              { title: 'Company', links: [
+                { label: 'About Us', href: '/about' },
+                { label: 'Blog', href: '/blog' },
+                { label: 'Careers', href: '/careers' },
+                { label: 'Contact', href: '/contact' },
+              ]},
+              { title: 'Legal', links: [
+                { label: 'Terms of Use', href: '/terms' },
+                { label: 'Privacy Policy', href: '/privacy-policy' },
+                { label: 'Cookie Policy', href: '/cookie-policy' },
+                { label: 'Refund Policy', href: '/refund-policy' },
+              ]},
             ].map(({ title, links }) => (
               <div key={title}>
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">{title}</div>
                 <ul className="space-y-2.5">
                   {links.map(link => (
-                    <li key={link}>
-                      <Link href="/signup" className="text-sm text-gray-400 hover:text-white transition-colors">{link}</Link>
+                    <li key={link.label}>
+                      <Link href={link.href} className="text-sm text-gray-400 hover:text-white transition-colors">{link.label}</Link>
                     </li>
                   ))}
                 </ul>
