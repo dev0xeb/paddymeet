@@ -46,8 +46,8 @@ export default async function HomePage() {
         </Link>
         <div className="hidden md:flex items-center gap-8">
           <Link href="/events" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Events</Link>
-          <Link href="/signup" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">How It Works</Link>
-          <Link href="/signup" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">About</Link>
+          <Link href="/how-it-works" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">How It Works</Link>
+          <Link href="/about" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">About</Link>
         </div>
         <div className="flex items-center gap-3">
           {user && profile ? (
