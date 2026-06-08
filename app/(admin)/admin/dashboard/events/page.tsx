@@ -33,7 +33,7 @@ export default async function AdminEventsPage({
     .select('*, organisers(org_name, contact_name, email), ticket_types(*)')
     .order('created_at', { ascending: false })
 
-  if (status === 'pending') query = query.eq('is_approved', false)
+  if (status === 'pending') query = query.eq('is_approved', false).eq('is_rejected', false)
   if (status === 'live') query = query.eq('is_approved', true).eq('is_live', true)
   if (status === 'all') query = query
 
@@ -43,6 +43,7 @@ export default async function AdminEventsPage({
     .from('events')
     .select('*', { count: 'exact', head: true })
     .eq('is_approved', false)
+    .eq('is_rejected', false)
 
   const { count: liveCount } = await adminClient
     .from('events')
