@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
-  Users, Calendar, Ticket, DollarSign, Shield, Bell,
+  Users, Tag, Star, Calendar, Ticket, DollarSign, Shield, Bell,
   Settings, BarChart2, Flag, CheckCircle, XCircle,
   AlertCircle, TrendingUp, Eye, ChevronRight,
   Megaphone, Search, UserCheck, Database
@@ -59,6 +59,10 @@ export default async function AdminDashboardPage() {
     { icon: Flag, label: 'Reports', href: '/admin/dashboard/reports', depts: ['super_admin', 'support'] },
     { icon: Shield, label: 'Trust Scores', href: '/admin/dashboard/trust', depts: ['super_admin', 'support'] },
     { icon: Database, label: 'Support Tickets', href: '/admin/dashboard/support', depts: ['super_admin', 'support'] },
+    { icon: DollarSign, label: 'Payouts', href: '/admin/dashboard/payouts', depts: ['super_admin', 'finance'] },
+    { icon: Tag, label: 'Promo Codes', href: '/admin/dashboard/promo-codes', depts: ['super_admin', 'marketing'] },
+    { icon: Star, label: 'Featured', href: '/admin/dashboard/featured', depts: ['super_admin', 'marketing'] },
+    { icon: Settings, label: 'Platform Settings', href: '/admin/dashboard/platform-settings', depts: ['super_admin'] },
   ]
 
   const visibleNavItems = navItems.filter(item => item.depts.includes(admin.department))
