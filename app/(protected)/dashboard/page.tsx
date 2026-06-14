@@ -233,17 +233,17 @@ export default async function DashboardPage() {
   <p className="text-xs text-orange-100 mb-4 leading-relaxed">Earn points and rewards for every friend who joins Paddymeet.</p>
 
   <div className="grid grid-cols-2 gap-2 mb-3">
-    <div className="bg-white bg-opacity-15 rounded-xl px-3 py-2.5 text-center">
+    <div className="bg-white/15 rounded-xl px-3 py-2.5 text-center">
       <div className="text-lg font-extrabold text-white">{profile.referral_points || 0}</div>
       <div className="text-xs text-orange-100">Points earned</div>
     </div>
-    <div className="bg-white bg-opacity-15 rounded-xl px-3 py-2.5 text-center">
+    <div className="bg-white/15 rounded-xl px-3 py-2.5 text-center">
       <div className="text-lg font-extrabold text-white">{profile.referral_discount_percent || 0}%</div>
       <div className="text-xs text-orange-100">Discount ready</div>
     </div>
   </div>
 
-  <div className="bg-white bg-opacity-20 rounded-xl px-3 py-2.5 flex items-center justify-between mb-3">
+  <div className="bg-white/20 rounded-xl px-3 py-2.5 flex items-center justify-between mb-3">
     <span className="text-xs font-mono text-white truncate">{profile.referral_code || 'LOADING...'}</span>
     <ReferralCopyButton code={profile.referral_code} />
   </div>

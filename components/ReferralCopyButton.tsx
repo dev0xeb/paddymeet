@@ -16,7 +16,7 @@ export default function ReferralCopyButton({ code }: { code: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="text-xs font-bold text-white bg-white bg-opacity-20 px-2.5 py-1 rounded-lg ml-2 hover:bg-opacity-30 transition-colors flex-shrink-0 flex items-center gap-1"
+      className="text-xs font-bold text-white bg-white/20 px-2.5 py-1 rounded-lg ml-2 hover:bg-white/30 transition-colors flex-shrink-0 flex items-center gap-1"
     >
       {copied ? <><Check className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy Link</>}
     </button>
