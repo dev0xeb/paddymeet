@@ -26,6 +26,7 @@ interface Event {
 interface User {
   id: string
   email: string
+  referral_discount_percent?: number
 }
 
 interface Props {
@@ -51,8 +52,12 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const [confirmedTickets, setConfirmedTickets] = useState<{ ticket_code: string }[]>([])
   const paystackReady = useRef(false)
 
-  const serviceFee = Math.round(ticketType.price * quantity * 0.05)
-  const total = ticketType.price * quantity + serviceFee
+  const discountPercent = user.referral_discount_percent || 0
+  const subtotal = ticketType.price * quantity
+  const discountAmount = Math.round(subtotal * (discountPercent / 100))
+  const discountedSubtotal = subtotal - discountAmount
+  const serviceFee = Math.round(discountedSubtotal * 0.05)
+  const total = discountedSubtotal + serviceFee
 
   // Load Paystack script once on mount
   useEffect(() => {
@@ -84,6 +89,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
           ticket_type_id: ticketType.id,
           quantity,
           user_id: user.id,
+          discount_applied: discountPercent,
         }),
       })
       const data = await res.json()
@@ -256,9 +262,15 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">{ticketType.name} × {quantity}</span>
                 <span className="font-semibold text-gray-900">
-                  {event.is_free ? 'Free' : `₦${(ticketType.price * quantity).toLocaleString()}`}
+                  {event.is_free ? 'Free' : `₦${subtotal.toLocaleString()}`}
                 </span>
               </div>
+              {!event.is_free && discountPercent > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-600 font-semibold">Referral discount ({discountPercent}%)</span>
+                  <span className="font-semibold text-green-600">-₦{discountAmount.toLocaleString()}</span>
+                </div>
+              )}
               {!event.is_free && (
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Service fee</span>
@@ -274,10 +286,12 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
               </div>
             </div>
 
-            <div className="p-3 bg-gray-50 rounded-xl mb-5 text-xs text-gray-500 flex items-center gap-2">
-              <span>🔒</span>
-              {event.is_free ? 'Your free ticket will be confirmed instantly.' : 'Payments are processed securely by Paystack. Paddymeet never stores your card details.'}
-            </div>
+            {!event.is_free && discountPercent > 0 && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-xl mb-3 text-xs text-green-700 flex items-center gap-2">
+                <span>🎁</span>
+                You have a {discountPercent}% referral discount applied to this purchase!
+              </div>
+            )}
 
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 mb-4 break-words">

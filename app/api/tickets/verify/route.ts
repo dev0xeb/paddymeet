@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const body = await request.json()
-  const { reference, event_id, ticket_type_id, quantity, user_id } = body
+  const { reference, event_id, ticket_type_id, quantity, user_id, discount_applied } = body
 
   // Verify payment with Paystack
   const verifyResponse = await fetch(
@@ -35,9 +35,18 @@ export async function POST(request: NextRequest) {
       payment_method: 'paystack',
       payment_reference: reference,
       payment_status: 'completed',
+      discount_applied: discount_applied || 0,
     })
     .select()
     .single()
+
+  // Reset referral discount after use
+  if (discount_applied > 0) {
+    await supabase
+      .from('users')
+      .update({ referral_discount_percent: 0 })
+      .eq('id', user_id)
+  }
 
   if (orderError) {
     return NextResponse.json({ error: orderError.message }, { status: 400 })

@@ -77,7 +77,17 @@ export default async function EventDetailPage({
   ]
   const gradient = gradients[id.charCodeAt(0) % gradients.length]
 
-  const userData = user ? { id: user.id, email: user.email || '' } : null
+  let referralDiscount = 0
+if (user) {
+  const { data: userProfile } = await supabase
+    .from('users')
+    .select('referral_discount_percent')
+    .eq('id', user.id)
+    .single()
+  referralDiscount = userProfile?.referral_discount_percent || 0
+}
+
+const userData = user ? { id: user.id, email: user.email || '', referral_discount_percent: referralDiscount } : null
 
   const eventData = {
     id: event.id,

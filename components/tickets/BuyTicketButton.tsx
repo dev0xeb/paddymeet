@@ -26,6 +26,7 @@ interface Event {
 interface User {
   id: string
   email: string
+  referral_discount_percent?: number
 }
 
 interface Props {

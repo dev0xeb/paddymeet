@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Save, Check, Settings, Shield, DollarSign, Star } from 'lucide-react'
+import { ArrowLeft, Save, Check, Settings, Shield, DollarSign, Star, Gift } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 interface Settings {
@@ -16,6 +16,8 @@ interface Settings {
   max_group_size: number
   payout_hold_days: number
   maintenance_mode: boolean
+  referral_signup_points: number
+  referral_discount_percent: number
 }
 
 export default function AdminPlatformSettingsPage() {
@@ -30,6 +32,8 @@ export default function AdminPlatformSettingsPage() {
     max_group_size: 20,
     payout_hold_days: 2,
     maintenance_mode: false,
+    referral_signup_points: 10,
+    referral_discount_percent: 10,
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -151,21 +155,27 @@ export default function AdminPlatformSettingsPage() {
               </div>
             </div>
 
-            {/* Group Settings */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-5">
-                <Settings className="w-4 h-4 text-blue-500" />
-                <h2 className="text-sm font-extrabold text-gray-900">Group Settings</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>Max Group Size</label>
-                  <input type="number" min="2" max="100" value={settings.max_group_size}
-                    onChange={e => update('max_group_size', parseInt(e.target.value))} className={inputClass} />
-                  <p className="text-xs text-gray-400 mt-1">Maximum members per social group</p>
-                </div>
-              </div>
-            </div>
+{/* Referral Settings */}
+<div className="bg-white border border-gray-100 rounded-2xl p-6">
+  <div className="flex items-center gap-2 mb-5">
+    <Gift className="w-4 h-4 text-pink-500" />
+    <h2 className="text-sm font-extrabold text-gray-900">Referral Program</h2>
+  </div>
+  <div className="grid grid-cols-2 gap-4">
+    <div>
+      <label className={labelClass}>Signup Points</label>
+      <input type="number" min="0" max="1000" value={settings.referral_signup_points}
+        onChange={e => update('referral_signup_points', parseInt(e.target.value))} className={inputClass} />
+      <p className="text-xs text-gray-400 mt-1">Points awarded when a referred friend signs up</p>
+    </div>
+    <div>
+      <label className={labelClass}>First Ticket Discount (%)</label>
+      <input type="number" min="0" max="100" value={settings.referral_discount_percent}
+        onChange={e => update('referral_discount_percent', parseInt(e.target.value))} className={inputClass} />
+      <p className="text-xs text-gray-400 mt-1">Discount given when a referred friend gets their first ticket</p>
+    </div>
+  </div>
+</div>
 
             {/* Maintenance Mode */}
             <div className="bg-white border border-gray-100 rounded-2xl p-6">
