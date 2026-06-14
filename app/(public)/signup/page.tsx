@@ -1,12 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { Users, Mic, ArrowRight, Check, X } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { Users, Mic, ArrowRight, Check, X, Gift } from 'lucide-react'
 
 export default function SignUpPage() {
-  const [role, setRole] = useState<'explorer' | 'organiser' | null>(null)
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <SignUpPageContent />
+    </Suspense>
+  )
+}
 
+function SignUpPageContent() {
+  const [role, setRole] = useState<'explorer' | 'organiser' | null>(null)
   return (
     <div className="min-h-screen bg-white">
       <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 bg-white border-b border-gray-100">
@@ -130,11 +142,20 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<string[]>([])
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '',
-    age: 0, username: '', password: '', gender: '', state: '', city: '',
+    age: 0, username: '', password: '', gender: '', state: '', city: '', referralCode: '',
   })
 
   const update = (field: string, value: string | number) =>
-    setFormData(prev => ({ ...prev, [field]: value }))
+  setFormData(prev => ({ ...prev, [field]: value }))
+
+const searchParams = useSearchParams()
+
+useEffect(() => {
+  const ref = searchParams.get('ref')
+  if (ref) {
+    setFormData(prev => ({ ...prev, referralCode: ref.toUpperCase() }))
+  }
+}, [searchParams])
 
   const interests = [
     'Afrobeats','Live Music','House Music','Hip Hop','Jazz & Soul',
@@ -403,6 +424,25 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
               <div className="text-6xl font-extrabold text-orange-50 leading-none mb-1 select-none">04</div>
               <h3 className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight">Almost there!</h3>
               <p className="text-sm text-gray-500 mb-8 leading-relaxed">Confirm you are human and agree to our terms to create your account.</p>
+
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  Referral code <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <div className="relative">
+                  <Gift className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Enter referral code"
+                    value={formData.referralCode}
+                    onChange={e => update('referralCode', e.target.value.toUpperCase())}
+                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 outline-none focus:border-orange-400 focus:bg-white transition-all font-mono"
+                  />
+                </div>
+                {formData.referralCode && (
+                  <p className="text-xs text-green-600 mt-1.5 font-semibold">You and your friend will both get a reward 🎉</p>
+                )}
+              </div>
 
               <div onClick={() => setCaptchaChecked(!captchaChecked)}
                 className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl mb-4 cursor-pointer hover:border-gray-300 transition-colors">
