@@ -21,6 +21,17 @@ export async function POST(request: NextRequest) {
     if (authError) return NextResponse.json({ error: authError.message }, { status: 400 })
     if (!authData.user) return NextResponse.json({ error: 'Something went wrong' }, { status: 400 })
 
+// Look up referrer if a referral code was provided
+    let referredBy = null
+    if (formData.referralCode) {
+      const { data: referrer } = await supabase
+        .from('users')
+        .select('id')
+        .eq('referral_code', formData.referralCode.toUpperCase())
+        .single()
+      if (referrer) referredBy = referrer.id
+    }
+
     const { error: profileError } = await supabase
       .from('users')
       .insert({
@@ -36,9 +47,39 @@ export async function POST(request: NextRequest) {
         trust_score: 50,
         tier: 'Newbie',
         referral_code: Math.random().toString(36).substring(2, 10).toUpperCase(),
+        referred_by: referredBy,
       })
-
     if (profileError) return NextResponse.json({ error: profileError.message }, { status: 400 })
+
+    // Award referral points to the referrer
+    if (referredBy) {
+      const { data: settings } = await supabase
+        .from('platform_settings')
+        .select('referral_signup_points')
+        .eq('id', 1)
+        .single()
+
+      const points = settings?.referral_signup_points ?? 10
+
+      const { data: referrerProfile } = await supabase
+        .from('users')
+        .select('referral_points')
+        .eq('id', referredBy)
+        .single()
+
+      await supabase
+        .from('users')
+        .update({ referral_points: (referrerProfile?.referral_points || 0) + points })
+        .eq('id', referredBy)
+
+      await supabase.from('notifications').insert({
+        user_id: referredBy,
+        title: 'Referral bonus! 🎉',
+        message: `You earned ${points} points because a friend signed up using your referral code.`,
+        type: 'referral',
+        is_read: false,
+      })
+    }
 
     if (formData.interests?.length > 0) {
       await supabase

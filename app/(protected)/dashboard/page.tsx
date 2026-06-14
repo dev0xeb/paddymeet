@@ -6,6 +6,7 @@ import { Calendar, Users, ChevronRight, Shield } from 'lucide-react'
 import UserAvatarMenu from '@/components/UserAvatarMenu'
 import SupportChat from '@/components/SupportChat'
 import OpenGroupButton from '@/components/OpenGroupButton'
+import ReferralCopyButton from '@/components/ReferralCopyButton'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -226,17 +227,27 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            {/* Referral */}
-            <div className="bg-orange-500 rounded-2xl p-5">
-              <h2 className="text-sm font-extrabold text-white mb-1">Invite friends</h2>
-              <p className="text-xs text-orange-100 mb-4 leading-relaxed">Earn points and rewards for every friend who joins Paddymeet.</p>
-              <div className="bg-white bg-opacity-20 rounded-xl px-3 py-2.5 flex items-center justify-between mb-3">
-                <span className="text-xs font-mono text-white truncate">{profile.referral_code || 'LOADING...'}</span>
-                <button className="text-xs font-bold text-white bg-white bg-opacity-20 px-2.5 py-1 rounded-lg ml-2 hover:bg-opacity-30 transition-colors flex-shrink-0">
-                  Copy
-                </button>
-              </div>
-            </div>
+{/* Referral */}
+<div className="bg-orange-500 rounded-2xl p-5">
+  <h2 className="text-sm font-extrabold text-white mb-1">Invite friends</h2>
+  <p className="text-xs text-orange-100 mb-4 leading-relaxed">Earn points and rewards for every friend who joins Paddymeet.</p>
+
+  <div className="grid grid-cols-2 gap-2 mb-3">
+    <div className="bg-white bg-opacity-15 rounded-xl px-3 py-2.5 text-center">
+      <div className="text-lg font-extrabold text-white">{profile.referral_points || 0}</div>
+      <div className="text-xs text-orange-100">Points earned</div>
+    </div>
+    <div className="bg-white bg-opacity-15 rounded-xl px-3 py-2.5 text-center">
+      <div className="text-lg font-extrabold text-white">{profile.referral_discount_percent || 0}%</div>
+      <div className="text-xs text-orange-100">Discount ready</div>
+    </div>
+  </div>
+
+  <div className="bg-white bg-opacity-20 rounded-xl px-3 py-2.5 flex items-center justify-between mb-3">
+    <span className="text-xs font-mono text-white truncate">{profile.referral_code || 'LOADING...'}</span>
+    <ReferralCopyButton code={profile.referral_code} />
+  </div>
+</div>
 
           </div>
         </div>
