@@ -52,10 +52,23 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const [confirmedTickets, setConfirmedTickets] = useState<{ ticket_code: string }[]>([])
   const paystackReady = useRef(false)
 
+  const [promoCode, setPromoCode] = useState('')
+  const [promoApplied, setPromoApplied] = useState<{ code: string, discount_type: string, discount_value: number } | null>(null)
+  const [promoError, setPromoError] = useState('')
+  const [promoLoading, setPromoLoading] = useState(false)
+
   const discountPercent = user.referral_discount_percent || 0
   const subtotal = ticketType.price * quantity
-  const discountAmount = Math.round(subtotal * (discountPercent / 100))
-  const discountedSubtotal = subtotal - discountAmount
+  const referralDiscountAmount = Math.round(subtotal * (discountPercent / 100))
+
+  const promoDiscountAmount = promoApplied
+    ? promoApplied.discount_type === 'percentage'
+      ? Math.round(subtotal * (promoApplied.discount_value / 100))
+      : Math.min(promoApplied.discount_value, subtotal)
+    : 0
+
+  const totalDiscount = referralDiscountAmount + promoDiscountAmount
+  const discountedSubtotal = Math.max(0, subtotal - totalDiscount)
   const serviceFee = Math.round(discountedSubtotal * 0.05)
   const total = discountedSubtotal + serviceFee
 
@@ -78,6 +91,27 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
     document.head.appendChild(script)
   }, [])
 
+  const handleApplyPromo = async () => {
+    setPromoLoading(true)
+    setPromoError('')
+    try {
+      const res = await fetch('/api/promo/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoCode }),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setPromoError(data.error)
+      } else {
+        setPromoApplied({ code: data.code, discount_type: data.discount_type, discount_value: data.discount_value })
+      }
+    } catch {
+      setPromoError('Could not validate code. Please try again.')
+    }
+    setPromoLoading(false)
+  }
+
   const verifyPayment = async (reference: string) => {
     try {
       const res = await fetch('/api/tickets/verify', {
@@ -90,6 +124,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
           quantity,
           user_id: user.id,
           discount_applied: discountPercent,
+          promo_code: promoApplied?.code || null,
         }),
       })
       const data = await res.json()
@@ -268,7 +303,15 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
               {!event.is_free && discountPercent > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-green-600 font-semibold">Referral discount ({discountPercent}%)</span>
-                  <span className="font-semibold text-green-600">-₦{discountAmount.toLocaleString()}</span>
+                  <span className="font-semibold text-green-600">-₦{referralDiscountAmount.toLocaleString()}</span>
+                </div>
+              )}
+              {!event.is_free && promoApplied && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-600 font-semibold">
+                    Promo {promoApplied.code} ({promoApplied.discount_type === 'percentage' ? `${promoApplied.discount_value}%` : `₦${promoApplied.discount_value}`})
+                  </span>
+                  <span className="font-semibold text-green-600">-₦{promoDiscountAmount.toLocaleString()}</span>
                 </div>
               )}
               {!event.is_free && (
@@ -290,6 +333,37 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
               <div className="p-3 bg-green-50 border border-green-200 rounded-xl mb-3 text-xs text-green-700 flex items-center gap-2">
                 <span>🎁</span>
                 You have a {discountPercent}% referral discount applied to this purchase!
+              </div>
+            )}
+
+            {!event.is_free && !promoApplied && (
+              <div className="mb-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Promo code"
+                    value={promoCode}
+                    onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoError('') }}
+                    className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono text-gray-900 outline-none focus:border-orange-400 transition-all"
+                  />
+                  <button
+                    onClick={handleApplyPromo}
+                    disabled={promoLoading || !promoCode.trim()}
+                    className="px-5 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50"
+                  >
+                    {promoLoading ? '...' : 'Apply'}
+                  </button>
+                </div>
+                {promoError && <p className="text-xs text-red-500 mt-1.5">{promoError}</p>}
+              </div>
+            )}
+
+            {!event.is_free && promoApplied && (
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl mb-4">
+                <span className="text-xs font-bold text-green-700">🎉 Promo code {promoApplied.code} applied!</span>
+                <button onClick={() => { setPromoApplied(null); setPromoCode('') }} className="text-xs font-semibold text-green-600 hover:underline">
+                  Remove
+                </button>
               </div>
             )}
 

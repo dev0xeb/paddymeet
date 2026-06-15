@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const body = await request.json()
-  const { reference, event_id, ticket_type_id, quantity, user_id, discount_applied } = body
+  const { reference, event_id, ticket_type_id, quantity, user_id, discount_applied, promo_code } = body
 
   // Verify payment with Paystack
   const verifyResponse = await fetch(
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       payment_reference: reference,
       payment_status: 'completed',
       discount_applied: discount_applied || 0,
+      promo_code_used: promo_code || null,
     })
     .select()
     .single()
@@ -46,6 +47,22 @@ export async function POST(request: NextRequest) {
       .from('users')
       .update({ referral_discount_percent: 0 })
       .eq('id', user_id)
+  }
+
+  // Increment promo code usage
+  if (promo_code) {
+    const { data: promo } = await supabase
+      .from('promo_codes')
+      .select('uses_count')
+      .eq('code', promo_code)
+      .single()
+
+    if (promo) {
+      await supabase
+        .from('promo_codes')
+        .update({ uses_count: (promo.uses_count || 0) + 1 })
+        .eq('code', promo_code)
+    }
   }
 
   if (orderError) {
