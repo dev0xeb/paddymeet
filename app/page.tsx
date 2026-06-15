@@ -19,20 +19,74 @@ export default async function HomePage() {
     if (organiser) dashboardUrl = '/organiser/dashboard'
   }
 
-  const { data: profile } = user ? await supabase
+const { data: profile } = user ? await supabase
     .from('users')
     .select('username, tier')
     .eq('id', user.id)
     .single() : { data: null }
 
-  const events = [
-    { id: 1, title: 'Lagos Music Festival 2025', category: 'Festival', location: 'Eko Hotel Grounds, VI', date: 'Sat 14 Jun', vibe: 'Turnt', going: 94, groups: true, gradient: 'from-purple-900 via-pink-900 to-orange-900' },
-    { id: 2, title: 'Sunday Sip & Vibe', category: 'Day Party', location: 'Landmark Beach, VI', date: 'Sun 15 Jun', vibe: 'Chill', going: 28, groups: true, gradient: 'from-green-900 via-teal-900 to-blue-900' },
-    { id: 3, title: 'Eko Arts Weekend', category: 'Arts', location: 'Terra Kulture, VI', date: 'Sat–Sun 14–15 Jun', vibe: 'Cultural', going: 12, groups: false, free: true, gradient: 'from-indigo-900 via-purple-900 to-pink-900' },
-    { id: 4, title: 'Midnight Rave Edition', category: 'Club Night', location: 'Lekki Phase 1', date: 'Fri 20 Jun', vibe: 'Wild', going: 47, groups: true, gradient: 'from-orange-900 via-red-900 to-pink-900' },
-    { id: 5, title: 'Burna & Friends Live', category: 'Concert', location: 'Tafawa Balewa Square', date: 'Sat 21 Jun', vibe: 'Exclusive', going: 214, groups: false, gradient: 'from-blue-900 via-indigo-900 to-purple-900' },
-    { id: 6, title: 'Ikoyi Rooftop Sundays', category: 'Lounge', location: 'Ikoyi Club Grounds', date: 'Sun 22 Jun', vibe: 'Social', going: 33, groups: true, gradient: 'from-green-900 via-emerald-900 to-teal-900' },
+  const gradients = [
+    'from-purple-900 via-pink-900 to-orange-900',
+    'from-green-900 via-teal-900 to-blue-900',
+    'from-indigo-900 via-purple-900 to-pink-900',
+    'from-orange-900 via-red-900 to-pink-900',
+    'from-blue-900 via-indigo-900 to-purple-900',
+    'from-green-900 via-emerald-900 to-teal-900',
   ]
+
+  // Try featured events first
+  const { data: featuredRaw } = await supabase
+    .from('events')
+    .select('id, title, event_type, city, state, event_date, vibe, is_free, cover_image_url')
+    .eq('is_approved', true)
+    .eq('is_live', true)
+    .eq('is_featured', true)
+    .order('event_date', { ascending: true })
+    .limit(5)
+
+  let eventsRaw = featuredRaw
+
+  // Fallback to most recent live events if no featured events
+  if (!eventsRaw || eventsRaw.length === 0) {
+    const { data: liveRaw } = await supabase
+      .from('events')
+      .select('id, title, event_type, city, state, event_date, vibe, is_free, cover_image_url')
+      .eq('is_approved', true)
+      .eq('is_live', true)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    eventsRaw = liveRaw
+  }
+
+  type HomeEvent = {
+    id: string
+    title: string
+    category: string
+    location: string
+    date: string
+    vibe: string
+    going: number
+    groups: boolean
+    free: boolean
+    gradient: string
+    cover_image_url: string | null
+  }
+
+  const events: HomeEvent[] = (eventsRaw || []).map((e, i) => ({
+    id: e.id,
+    title: e.title,
+    category: e.event_type || 'Event',
+    location: `${e.city || ''}${e.state ? `, ${e.state}` : ''}`,
+    date: e.event_date
+      ? new Date(e.event_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+      : 'TBC',
+    vibe: e.vibe || 'Social',
+    going: 0,
+    groups: true,
+    free: e.is_free || false,
+    gradient: gradients[i % gradients.length],
+    cover_image_url: e.cover_image_url || null,
+  }))
 
   const vibes = ['Afrobeats', 'Chill', 'Exclusive', 'Amapiano', 'Comedy', 'Day Party', 'Wild', 'Concert', 'Cocktail Night', 'Rooftop', 'Festival', 'Rave']
 
