@@ -215,7 +215,7 @@ export default async function HomePage() {
           <div className="flex items-end justify-between mb-10">
             <div>
               <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-2">Happening Near You</div>
-              <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">Events in <span className="text-orange-500">Lagos</span></h2>
+              <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">Events Across <span className="text-orange-500">Nigeria</span></h2>
               <p className="text-gray-500 mt-2">Tap any event to see full details and join a group</p>
             </div>
             <Link href="/events" className="hidden md:flex items-center gap-2 text-sm font-bold text-orange-500 hover:gap-3 transition-all">
@@ -223,74 +223,87 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="md:col-span-1 md:row-span-2 group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-50 transition-all duration-300 cursor-pointer">
-              <div className={`h-64 bg-gradient-to-br ${events[0].gradient} relative`}>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                  <span className="px-3 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs font-bold text-white">{events[0].vibe}</span>
-                  <span className="flex items-center gap-1 px-2.5 py-1 bg-green-500 rounded-full text-xs font-bold text-white">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    Groups forming
-                  </span>
-                </div>
-              </div>
-              <div className="p-5">
-                <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">{events[0].category} · VI</div>
-                <div className="text-lg font-extrabold text-gray-900 mb-2 tracking-tight">{events[0].title}</div>
-                <div className="text-sm text-gray-500 mb-4">{events[0].date}</div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex">
-                      {['bg-orange-400','bg-pink-500','bg-purple-500'].map((c,i) => (
-                        <div key={i} className={`w-6 h-6 rounded-full ${c} border-2 border-white -ml-1.5 first:ml-0`} />
-                      ))}
+          {events.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <Link href={`/events/${events[0].id}`}
+                  className="md:col-span-1 md:row-span-2 group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-50 transition-all duration-300 cursor-pointer">
+                  <div className={`h-64 relative ${events[0].cover_image_url ? '' : `bg-gradient-to-br ${events[0].gradient}`}`}
+                    style={events[0].cover_image_url ? { backgroundImage: `url(${events[0].cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                      <span className="px-3 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs font-bold text-white">{events[0].vibe}</span>
+                      {events[0].free ? (
+                        <span className="px-2.5 py-1 bg-green-500 rounded-full text-xs font-bold text-white">Free</span>
+                      ) : (
+                        <span className="flex items-center gap-1 px-2.5 py-1 bg-green-500 rounded-full text-xs font-bold text-white">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                          Groups open
+                        </span>
+                      )}
                     </div>
-                    <span className="text-xs text-gray-500">+{events[0].going} going</span>
                   </div>
-                  <Link href="/events" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
-                    Get Tickets
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {events.slice(1, 5).map((event) => (
-              <div key={event.id} className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-50 transition-all duration-300 cursor-pointer">
-                <div className={`h-36 bg-gradient-to-br ${event.gradient} relative`}>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                  <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
-                    <span className="px-2.5 py-1 bg-white/90 rounded-full text-xs font-bold text-gray-700">{event.vibe}</span>
-                    {event.groups && (
-                      <span className="flex items-center gap-1 px-2 py-1 bg-green-500 rounded-full text-xs font-bold text-white">
-                        <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
-                        Groups
+                  <div className="p-5">
+                    <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">{events[0].category}{events[0].location ? ` · ${events[0].location}` : ''}</div>
+                    <div className="text-lg font-extrabold text-gray-900 mb-2 tracking-tight">{events[0].title}</div>
+                    <div className="text-sm text-gray-500 mb-4">{events[0].date}</div>
+                    <div className="flex items-center justify-end">
+                      <span className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full group-hover:bg-orange-600 transition-colors">
+                        {events[0].free ? 'Get Free Ticket' : 'Get Tickets'}
                       </span>
-                    )}
+                    </div>
                   </div>
-                </div>
-                <div className="p-4">
-                  <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">{event.category}</div>
-                  <div className="text-sm font-extrabold text-gray-900 mb-1 tracking-tight">{event.title}</div>
-                  <div className="text-xs text-gray-500 mb-3">{event.date}</div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">+{event.going} going</span>
-                    {event.free ? (
-                      <Link href="/events" className="px-3 py-1.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full hover:bg-green-100 transition-colors">Free</Link>
-                    ) : (
-                      <Link href="/events" className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">Get Tickets</Link>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                </Link>
 
-          <div className="text-center mt-8">
-            <Link href="/events" className="inline-flex items-center gap-2 px-8 py-3.5 border-2 border-gray-200 text-gray-700 font-bold rounded-full hover:border-orange-300 hover:text-orange-500 transition-all">
-              View all events <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+                {events.slice(1, 5).map((event) => (
+                  <Link key={event.id} href={`/events/${event.id}`}
+                    className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-50 transition-all duration-300 cursor-pointer">
+                    <div className={`h-36 relative ${event.cover_image_url ? '' : `bg-gradient-to-br ${event.gradient}`}`}
+                      style={event.cover_image_url ? { backgroundImage: `url(${event.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+                        <span className="px-2.5 py-1 bg-white/90 rounded-full text-xs font-bold text-gray-700">{event.vibe}</span>
+                        {event.groups && (
+                          <span className="flex items-center gap-1 px-2 py-1 bg-green-500 rounded-full text-xs font-bold text-white">
+                            <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
+                            Groups
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">{event.category}</div>
+                      <div className="text-sm font-extrabold text-gray-900 mb-1 tracking-tight">{event.title}</div>
+                      <div className="text-xs text-gray-500 mb-3">{event.date}{event.location ? ` · ${event.location}` : ''}</div>
+                      <div className="flex items-center justify-end">
+                        {event.free ? (
+                          <span className="px-3 py-1.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full">Free</span>
+                        ) : (
+                          <span className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-full group-hover:bg-orange-600 transition-colors">Get Tickets</span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <div className="text-center mt-8">
+                <Link href="/events" className="inline-flex items-center gap-2 px-8 py-3.5 border-2 border-gray-200 text-gray-700 font-bold rounded-full hover:border-orange-300 hover:text-orange-500 transition-all">
+                  View all events <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+              <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🎉</span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-700 mb-2">New events coming soon</h3>
+              <p className="text-sm text-gray-400 mb-6">Check back shortly or browse all events</p>
+              <Link href="/events" className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-colors">
+                Browse Events <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
