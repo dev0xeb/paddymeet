@@ -143,6 +143,7 @@ export default async function TicketsPage() {
                       eventDate={ticket.events?.event_date
                         ? new Date(ticket.events.event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
                         : ''}
+                      venueName={ticket.events?.venue_name}
                     />
                   </div>
                 </div>

@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X, Plus, Minus, Check, ArrowRight, Ticket } from 'lucide-react'
+import { X, Plus, Minus, Check, ArrowRight, Ticket, Download, FileText } from 'lucide-react'
+import QRCode from 'qrcode'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 interface TicketType {
   id: string
@@ -50,7 +53,11 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [confirmedTickets, setConfirmedTickets] = useState<{ ticket_code: string }[]>([])
+  const [qrDataUrls, setQrDataUrls] = useState<Record<string, string>>({})
+  const [downloading, setDownloading] = useState(false)
+  const [downloaded, setDownloaded] = useState(false)
   const paystackReady = useRef(false)
+  const ticketRef = useRef<HTMLDivElement>(null)
 
   const [promoCode, setPromoCode] = useState('')
   const [promoApplied, setPromoApplied] = useState<{ code: string, discount_type: string, discount_value: number } | null>(null)
@@ -71,6 +78,21 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const discountedSubtotal = Math.max(0, subtotal - totalDiscount)
   const serviceFee = Math.round(discountedSubtotal * 0.05)
   const total = discountedSubtotal + serviceFee
+
+  // Generate QR codes once tickets are confirmed
+  useEffect(() => {
+    if (step === 'confirmed' && confirmedTickets.length > 0) {
+      confirmedTickets.forEach(ticket => {
+        QRCode.toDataURL(ticket.ticket_code, {
+          width: 280,
+          margin: 1,
+          color: { dark: '#111827', light: '#ffffff' },
+        }).then(url => {
+          setQrDataUrls(prev => ({ ...prev, [ticket.ticket_code]: url }))
+        })
+      })
+    }
+  }, [step, confirmedTickets])
 
   // Load Paystack script once on mount
   useEffect(() => {
@@ -186,6 +208,40 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
       },
     })
     handler.openIframe()
+  }
+
+  const handleDownloadImage = async () => {
+    if (!ticketRef.current) return
+    setDownloading(true)
+    try {
+      const canvas = await html2canvas(ticketRef.current, { scale: 2, backgroundColor: '#ffffff' })
+      const link = document.createElement('a')
+      link.href = canvas.toDataURL('image/png')
+      link.download = `paddymeet-ticket-${confirmedTickets[0]?.ticket_code}.png`
+      link.click()
+      setDownloaded(true)
+      setTimeout(() => setDownloaded(false), 2000)
+    } catch {
+      // silent fail
+    }
+    setDownloading(false)
+  }
+
+  const handleDownloadPDF = async () => {
+    if (!ticketRef.current) return
+    setDownloading(true)
+    try {
+      const canvas = await html2canvas(ticketRef.current, { scale: 2, backgroundColor: '#ffffff' })
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [canvas.width / 2, canvas.height / 2] })
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2)
+      pdf.save(`paddymeet-ticket-${confirmedTickets[0]?.ticket_code}.pdf`)
+      setDownloaded(true)
+      setTimeout(() => setDownloaded(false), 2000)
+    } catch {
+      // silent fail
+    }
+    setDownloading(false)
   }
 
   const handleFreeClaim = async () => {
@@ -399,22 +455,75 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
 
         {/* Step — Confirmed */}
         {step === 'confirmed' && (
-          <div className="p-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-green-50 border-2 border-green-200 flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-green-500" />
+          <div className="p-6">
+            <div className="text-center mb-5">
+              <div className="w-14 h-14 rounded-full bg-green-50 border-2 border-green-200 flex items-center justify-center mx-auto mb-3">
+                <Check className="w-7 h-7 text-green-500" />
+              </div>
+              <h3 className="text-lg font-extrabold text-gray-900 mb-1">
+                You&apos;re <span className="text-orange-500">in!</span>
+              </h3>
+              <p className="text-xs text-gray-500">Your ticket has been confirmed and emailed to you</p>
             </div>
-            <h3 className="text-xl font-extrabold text-gray-900 mb-2">
-              You&apos;re <span className="text-orange-500">in!</span>
-            </h3>
-            <p className="text-sm text-gray-500 mb-5">Your ticket has been confirmed. See you at the event!</p>
 
-            <div className="space-y-2 mb-5">
-              {confirmedTickets.map((ticket, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <Ticket className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                  <span className="text-xs font-mono font-bold text-gray-700">{ticket.ticket_code}</span>
+            {/* Downloadable ticket card */}
+            {confirmedTickets.length > 0 && (
+              <div ref={ticketRef} className="bg-white rounded-2xl overflow-hidden border-2 border-gray-100 mb-4">
+                <div className="bg-gradient-to-br from-orange-500 to-pink-500 px-5 py-4 text-center">
+                  <div className="text-base font-extrabold text-white tracking-tight">
+                    paddy<span className="text-gray-900">meet</span>
+                  </div>
                 </div>
-              ))}
+                <div className="p-5 text-center">
+                  <div className="text-sm font-extrabold text-gray-900 mb-1">{event.title}</div>
+                  <div className="text-xs text-gray-500 mb-4">
+                    {ticketType.name} · {event.event_date ? new Date(event.event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}{event.venue_name ? ` · ${event.venue_name}` : ''}
+                  </div>
+
+                  <div className="bg-white border-2 border-gray-100 rounded-2xl p-3 inline-block mb-3">
+                    {qrDataUrls[confirmedTickets[0].ticket_code] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={qrDataUrls[confirmedTickets[0].ticket_code]} alt="Ticket QR Code" className="w-48 h-48" />
+                    ) : (
+                      <div className="w-48 h-48 flex items-center justify-center">
+                        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="text-xs font-mono font-extrabold text-gray-700 tracking-widest">{confirmedTickets[0].ticket_code}</div>
+
+                  {confirmedTickets.length > 1 && (
+                    <div className="mt-3 space-y-1.5">
+                      {confirmedTickets.slice(1).map((ticket, i) => (
+                        <div key={i} className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                          <Ticket className="w-3 h-3" /> {ticket.ticket_code}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="border-t border-dashed border-gray-200 px-5 py-3 text-center">
+                  <p className="text-xs text-gray-400">Present this QR code at entry</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={handleDownloadImage}
+                disabled={downloading || Object.keys(qrDataUrls).length === 0}
+                className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-gray-900 text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50"
+              >
+                {downloaded ? <><Check className="w-3.5 h-3.5" /> Saved</> : <><Download className="w-3.5 h-3.5" /> Save Image</>}
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                disabled={downloading || Object.keys(qrDataUrls).length === 0}
+                className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-orange-500 text-white text-xs font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-50"
+              >
+                <FileText className="w-3.5 h-3.5" /> Save PDF
+              </button>
             </div>
 
             <div className="flex gap-2">
