@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Ticket, Calendar, MapPin, Clock, QrCode, ChevronRight } from 'lucide-react'
 import UserAvatarMenu from '@/components/UserAvatarMenu'
+import TicketQRModal from '@/components/TicketQRModal'
 
 export default async function TicketsPage() {
   const supabase = await createClient()
@@ -135,9 +136,14 @@ export default async function TicketsPage() {
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold rounded-xl hover:border-orange-300 hover:text-orange-500 transition-all">
                       View Event <ChevronRight className="w-3.5 h-3.5" />
                     </Link>
-                    <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-orange-500 text-white text-xs font-bold rounded-xl hover:bg-orange-600 transition-colors">
-                      <QrCode className="w-3.5 h-3.5" /> Show QR Code
-                    </button>
+                    <TicketQRModal
+                      ticketCode={ticket.ticket_code}
+                      eventTitle={ticket.events?.title || 'Event'}
+                      ticketTypeName={ticket.ticket_types?.name || 'Standard'}
+                      eventDate={ticket.events?.event_date
+                        ? new Date(ticket.events.event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                        : ''}
+                    />
                   </div>
                 </div>
               </div>

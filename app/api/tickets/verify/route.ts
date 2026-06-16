@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
+import { sendTicketConfirmationEmail } from '@/lib/email'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -160,6 +161,40 @@ export async function POST(request: NextRequest) {
       type: 'ticket',
       is_read: false,
     })
+
+  // Send confirmation email
+  const { data: emailEvent } = await supabase
+    .from('events')
+    .select('title, event_date, start_time, venue_name')
+    .eq('id', event_id)
+    .single()
+
+  const { data: emailUser } = await supabase
+    .from('users')
+    .select('full_name, email')
+    .eq('id', user_id)
+    .single()
+
+  const { data: emailTicketType } = await supabase
+    .from('ticket_types')
+    .select('name')
+    .eq('id', ticket_type_id)
+    .single()
+
+  if (emailUser?.email && createdTickets && createdTickets.length > 0) {
+    await sendTicketConfirmationEmail({
+      to: emailUser.email,
+      userName: emailUser.full_name?.split(' ')[0] || 'there',
+      eventTitle: emailEvent?.title || 'Your event',
+      eventDate: emailEvent?.event_date
+        ? new Date(emailEvent.event_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+        : '',
+      eventTime: emailEvent?.start_time ? emailEvent.start_time.slice(0, 5) : '',
+      venueName: emailEvent?.venue_name || '',
+      ticketCode: createdTickets[0].ticket_code,
+      ticketTypeName: emailTicketType?.name || 'Ticket',
+    })
+  }
 
   // Referral discount trigger — check if this is the user's first ticket
   await awardReferralDiscount(supabase, user_id)
