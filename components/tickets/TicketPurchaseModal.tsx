@@ -221,8 +221,8 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
       link.click()
       setDownloaded(true)
       setTimeout(() => setDownloaded(false), 2000)
-    } catch {
-      // silent fail
+    } catch (err) {
+      console.error('Download image failed:', err)
     }
     setDownloading(false)
   }
