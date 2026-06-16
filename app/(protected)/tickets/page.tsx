@@ -64,6 +64,7 @@ export default async function TicketsPage() {
               ticket_code: string
               status: string
               created_at: string
+              attendee_name: string | null
               ticket_types: { name: string, price: number, is_group_ticket: boolean, group_size: number }
               events: { id: string, title: string, event_date: string, start_time: string, venue_name: string, city: string, event_type: string, vibe: string }
             }, index: number) => (
@@ -144,6 +145,7 @@ export default async function TicketsPage() {
                         ? new Date(ticket.events.event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
                         : ''}
                       venueName={ticket.events?.venue_name}
+                      attendeeName={ticket.attendee_name || undefined}
                     />
                   </div>
                 </div>

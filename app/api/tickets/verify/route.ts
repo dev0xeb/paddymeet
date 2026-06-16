@@ -1,11 +1,20 @@
 import { createClient } from '@/lib/supabase-server'
-import { sendTicketConfirmationEmail } from '@/lib/email'
+import { sendTicketEmail } from '@/lib/email'
 import { NextRequest, NextResponse } from 'next/server'
+
+interface AttendeeInput {
+  name: string
+  email: string
+  phone: string
+}
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const body = await request.json()
-  const { reference, event_id, ticket_type_id, quantity, user_id, discount_applied, promo_code } = body
+  const {
+    reference, event_id, ticket_type_id, quantity, user_id,
+    discount_applied, promo_code, buyer_name, buyer_phone, attendees,
+  } = body
 
   // Verify payment with Paystack
   const verifyResponse = await fetch(
@@ -38,9 +47,15 @@ export async function POST(request: NextRequest) {
       payment_status: 'completed',
       discount_applied: discount_applied || 0,
       promo_code_used: promo_code || null,
+      buyer_name: buyer_name || null,
+      buyer_phone: buyer_phone || null,
     })
     .select()
     .single()
+
+  if (orderError) {
+    return NextResponse.json({ error: orderError.message }, { status: 400 })
+  }
 
   // Reset referral discount after use
   if (discount_applied > 0) {
@@ -66,19 +81,23 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  if (orderError) {
-    return NextResponse.json({ error: orderError.message }, { status: 400 })
-  }
+  const attendeeList: AttendeeInput[] = attendees && attendees.length > 0
+    ? attendees
+    : Array.from({ length: quantity }, () => ({ name: buyer_name || '', email: '', phone: buyer_phone || '' }))
 
-  // Create tickets
+  // Create tickets, one per attendee
   const tickets = []
   for (let i = 0; i < quantity; i++) {
+    const attendee = attendeeList[i] || attendeeList[0]
     tickets.push({
       ticket_type_id,
       event_id,
       user_id,
       ticket_code: `PM-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
       status: 'active',
+      attendee_name: attendee?.name || buyer_name || null,
+      attendee_email: attendee?.email || null,
+      attendee_phone: attendee?.phone || buyer_phone || null,
     })
   }
 
@@ -112,7 +131,6 @@ export async function POST(request: NextRequest) {
         .eq('group_id', group.id)
         .eq('user_id', user_id)
         .single()
-
       if (!existing) {
         await supabase.from('group_members').insert({
           group_id: group.id,
@@ -122,7 +140,6 @@ export async function POST(request: NextRequest) {
       }
     }
   } else {
-    // No groups yet — create main event group automatically
     const { data: event } = await supabase
       .from('events')
       .select('title')
@@ -151,7 +168,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-// Send ticket confirmation notification
+  // Send ticket confirmation notification
   await supabase
     .from('notifications')
     .insert({
@@ -162,38 +179,56 @@ export async function POST(request: NextRequest) {
       is_read: false,
     })
 
-  // Send confirmation email
-  const { data: emailEvent } = await supabase
-    .from('events')
-    .select('title, event_date, start_time, venue_name')
-    .eq('id', event_id)
-    .single()
+  // Send emails — group tickets by destination email
+  if (createdTickets && createdTickets.length > 0) {
+    const { data: emailEvent } = await supabase
+      .from('events')
+      .select('title, event_date, start_time, venue_name')
+      .eq('id', event_id)
+      .single()
 
-  const { data: emailUser } = await supabase
-    .from('users')
-    .select('full_name, email')
-    .eq('id', user_id)
-    .single()
+    const { data: emailUser } = await supabase
+      .from('users')
+      .select('email')
+      .eq('id', user_id)
+      .single()
 
-  const { data: emailTicketType } = await supabase
-    .from('ticket_types')
-    .select('name')
-    .eq('id', ticket_type_id)
-    .single()
+    const { data: emailTicketType } = await supabase
+      .from('ticket_types')
+      .select('name')
+      .eq('id', ticket_type_id)
+      .single()
 
-  if (emailUser?.email && createdTickets && createdTickets.length > 0) {
-    await sendTicketConfirmationEmail({
-      to: emailUser.email,
-      userName: emailUser.full_name?.split(' ')[0] || 'there',
-      eventTitle: emailEvent?.title || 'Your event',
-      eventDate: emailEvent?.event_date
-        ? new Date(emailEvent.event_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
-        : '',
-      eventTime: emailEvent?.start_time ? emailEvent.start_time.slice(0, 5) : '',
-      venueName: emailEvent?.venue_name || '',
-      ticketCode: createdTickets[0].ticket_code,
-      ticketTypeName: emailTicketType?.name || 'Ticket',
+    const buyerEmail = emailUser?.email
+    const eventDateStr = emailEvent?.event_date
+      ? new Date(emailEvent.event_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+      : ''
+    const eventTimeStr = emailEvent?.start_time ? emailEvent.start_time.slice(0, 5) : ''
+
+    const ticketsByEmail: Record<string, { ticketCode: string, ticketTypeName: string, attendeeName?: string }[]> = {}
+    createdTickets.forEach((t) => {
+      const destEmail = t.attendee_email || buyerEmail
+      if (!destEmail) return
+      if (!ticketsByEmail[destEmail]) ticketsByEmail[destEmail] = []
+      ticketsByEmail[destEmail].push({
+        ticketCode: t.ticket_code,
+        ticketTypeName: emailTicketType?.name || 'Ticket',
+        attendeeName: t.attendee_name || undefined,
+      })
     })
+
+    for (const [destEmail, ticketGroup] of Object.entries(ticketsByEmail)) {
+      const recipientName = destEmail === buyerEmail ? (buyer_name || 'there') : (ticketGroup[0].attendeeName || 'there')
+      await sendTicketEmail({
+        to: destEmail,
+        recipientName,
+        eventTitle: emailEvent?.title || 'Your event',
+        eventDate: eventDateStr,
+        eventTime: eventTimeStr,
+        venueName: emailEvent?.venue_name || '',
+        tickets: ticketGroup,
+      })
+    }
   }
 
   // Referral discount trigger — check if this is the user's first ticket
