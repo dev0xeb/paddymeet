@@ -21,7 +21,7 @@ export default async function TicketsPage() {
     .from('tickets')
     .select('*, ticket_types(name, price, is_group_ticket, group_size), events(id, title, event_date, start_time, venue_name, city, event_type, vibe)')
     .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+    .order('purchased_at', { ascending: false })
 
   const activeTickets = tickets?.filter(t => t.status === 'active') || []
   const pastTickets = tickets?.filter(t => t.status !== 'active') || []
