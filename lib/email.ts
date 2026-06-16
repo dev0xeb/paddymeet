@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key')
 
 // Use your verified domain once confirmed. Until then, Resend's test domain works for testing.
 const FROM_EMAIL = 'Paddymeet <tickets@paddymeet.com>'
