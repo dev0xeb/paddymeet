@@ -400,7 +400,6 @@ const userData = user ? { id: user.id, email: user.email || '', referral_discoun
                   <CreateGroupModal
                     eventId={event.id}
                     eventTitle={event.title}
-                    ticketTypes={event.ticket_types || []}
                   />
                 </div>
               ) : (

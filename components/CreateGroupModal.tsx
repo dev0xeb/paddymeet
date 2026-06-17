@@ -1,24 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Users, Ticket, ChevronDown } from 'lucide-react'
+import { X, Users, ChevronDown } from 'lucide-react'
 import { useGroupChat } from '@/context/GroupChatContext'
-
-interface TicketType {
-  id: string
-  name: string
-  price: number
-  is_group_ticket: boolean
-}
 
 interface Props {
   eventId: string
   eventTitle: string
-  ticketTypes: TicketType[]
-  userTicketTypeId?: string
 }
 
-export default function CreateGroupModal({ eventId, eventTitle, ticketTypes, userTicketTypeId }: Props) {
+export default function CreateGroupModal({ eventId, eventTitle }: Props) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<1 | 2>(1)
   const [saving, setSaving] = useState(false)
@@ -29,8 +20,6 @@ export default function CreateGroupModal({ eventId, eventTitle, ticketTypes, use
     name: '',
     description: '',
     vibe: '',
-    group_type: 'social' as 'social' | 'ticket',
-    ticket_type_id: userTicketTypeId || '',
     max_members: 20,
     gender_preference: 'any',
     min_trust_score: 0,
@@ -50,7 +39,6 @@ export default function CreateGroupModal({ eventId, eventTitle, ticketTypes, use
 
   const handleCreate = async () => {
     if (!form.name.trim()) { setError('Please enter a group name'); return }
-    if (form.group_type === 'ticket' && !form.ticket_type_id) { setError('Please select a ticket type'); return }
 
     setSaving(true)
     setError('')
@@ -59,7 +47,7 @@ export default function CreateGroupModal({ eventId, eventTitle, ticketTypes, use
       const res = await fetch('/api/groups/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, event_id: eventId }),
+        body: JSON.stringify({ ...form, group_type: 'social', event_id: eventId }),
       })
       const data = await res.json()
 
@@ -68,12 +56,10 @@ export default function CreateGroupModal({ eventId, eventTitle, ticketTypes, use
       } else {
         setOpen(false)
         setForm({
-          name: '', description: '', vibe: '', group_type: 'social',
-          ticket_type_id: userTicketTypeId || '', max_members: 20,
+          name: '', description: '', vibe: '', max_members: 20,
           gender_preference: 'any', min_trust_score: 0,
         })
         setStep(1)
-        // Open the new group chat
         openGroup({
           id: data.group.id,
           name: data.group.name,
@@ -102,10 +88,9 @@ export default function CreateGroupModal({ eventId, eventTitle, ticketTypes, use
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
 
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div>
-                <h2 className="text-base font-extrabold text-gray-900">Create a Group</h2>
+                <h2 className="text-base font-extrabold text-gray-900">Create a Social Group</h2>
                 <p className="text-xs text-gray-500">{eventTitle}</p>
               </div>
               <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
@@ -115,46 +100,11 @@ export default function CreateGroupModal({ eventId, eventTitle, ticketTypes, use
 
             <div className="p-6">
 
-              {/* Step 1 — Group type */}
               {step === 1 && (
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Group Type</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={() => update('group_type', 'social')}
-                        className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                          form.group_type === 'social' ? 'border-orange-400 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <Users className={`w-5 h-5 mb-2 ${form.group_type === 'social' ? 'text-orange-500' : 'text-gray-400'}`} />
-                        <div className={`text-sm font-bold ${form.group_type === 'social' ? 'text-orange-600' : 'text-gray-900'}`}>Social Group</div>
-                        <div className="text-xs text-gray-500 mt-0.5">Open to anyone attending the event</div>
-                      </button>
-                      <button
-                        onClick={() => update('group_type', 'ticket')}
-                        className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                          form.group_type === 'ticket' ? 'border-orange-400 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <Ticket className={`w-5 h-5 mb-2 ${form.group_type === 'ticket' ? 'text-orange-500' : 'text-gray-400'}`} />
-                        <div className={`text-sm font-bold ${form.group_type === 'ticket' ? 'text-orange-600' : 'text-gray-900'}`}>Ticket Group</div>
-                        <div className="text-xs text-gray-500 mt-0.5">Only for a specific ticket type</div>
-                      </button>
-                    </div>
-                  </div>
-
-                  {form.group_type === 'ticket' && ticketTypes.length > 0 && (
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Ticket Type</label>
-                      <select value={form.ticket_type_id} onChange={e => update('ticket_type_id', e.target.value)} className={inputClass + ' appearance-none'}>
-                        <option value="" disabled>Select ticket type</option>
-                        {ticketTypes.map(t => (
-                          <option key={t.id} value={t.id}>{t.name} — ₦{t.price.toLocaleString()}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    Social groups are for hanging out and meeting people at the event. Looking to split a group ticket? Use the group ticket option under the ticket type instead.
+                  </p>
 
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Group Name *</label>
@@ -167,10 +117,11 @@ export default function CreateGroupModal({ eventId, eventTitle, ticketTypes, use
                     <textarea rows={2} placeholder="What is this group about?" value={form.description} onChange={e => update('description', e.target.value)} className={inputClass + ' resize-none'} maxLength={120} />
                   </div>
 
+                  {error && <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>}
+
                   <button
                     onClick={() => {
                       if (!form.name.trim()) { setError('Please enter a group name'); return }
-                      if (form.group_type === 'ticket' && !form.ticket_type_id) { setError('Please select a ticket type'); return }
                       setError('')
                       setStep(2)
                     }}
@@ -181,7 +132,6 @@ export default function CreateGroupModal({ eventId, eventTitle, ticketTypes, use
                 </div>
               )}
 
-              {/* Step 2 — Preferences */}
               {step === 2 && (
                 <div className="space-y-4">
                   <div>
@@ -247,10 +197,6 @@ export default function CreateGroupModal({ eventId, eventTitle, ticketTypes, use
                     </button>
                   </div>
                 </div>
-              )}
-
-              {error && step === 1 && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>
               )}
             </div>
           </div>

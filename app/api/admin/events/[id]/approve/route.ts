@@ -21,20 +21,38 @@ export async function POST(
 
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Approve the event
+// Approve the event
   const { error } = await adminClient
     .from('events')
     .update({ is_approved: true, is_live: true })
     .eq('id', id)
-
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
   // Fetch the event details for the notification
   const { data: event } = await adminClient
     .from('events')
-    .select('title, city, state, event_date, event_type, vibe')
+    .select('title, city, state, event_date, event_type, vibe, organiser_id')
     .eq('id', id)
     .single()
+
+  // Auto-create the main event group if it doesn't already exist
+  const { data: existingMainGroup } = await adminClient
+    .from('groups')
+    .select('id')
+    .eq('event_id', id)
+    .eq('group_type', 'main')
+    .single()
+
+  if (!existingMainGroup && event) {
+    await adminClient.from('groups').insert({
+      event_id: id,
+      name: `${event.title} — Everyone`,
+      group_type: 'main',
+      creator_id: event.organiser_id,
+      is_active: true,
+      is_merged: false,
+    })
+  }
 
   if (event) {
     // Find users in the same city
