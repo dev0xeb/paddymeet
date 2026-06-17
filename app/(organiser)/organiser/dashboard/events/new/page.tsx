@@ -16,6 +16,7 @@ interface TicketType {
   quantity: number
   is_group_ticket: boolean
   group_size: number
+  group_deadline: string
 }
 
 export default function SubmitEventPage() {
@@ -51,7 +52,7 @@ export default function SubmitEventPage() {
   })
 
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([
-    { name: 'Regular', description: '', price: 0, quantity: 100, is_group_ticket: false, group_size: 1 }
+    { name: 'Regular', description: '', price: 0, quantity: 100, is_group_ticket: false, group_size: 1, group_deadline: '' }
   ])
 
   const update = (field: string, value: string | number | boolean) =>
@@ -63,7 +64,7 @@ export default function SubmitEventPage() {
 
   const addTicketType = () => {
     setTicketTypes(prev => [...prev, {
-      name: '', description: '', price: 0, quantity: 50, is_group_ticket: false, group_size: 1
+      name: '', description: '', price: 0, quantity: 50, is_group_ticket: false, group_size: 1, group_deadline: ''
     }])
   }
 
@@ -433,9 +434,16 @@ export default function SubmitEventPage() {
                     </div>
 
                     {ticket.is_group_ticket && (
-                      <div>
-                        <label className={labelClass}>Group size</label>
-                        <input type="number" placeholder="e.g. 5" min="2" max="20" value={ticket.group_size || ''} onChange={e => updateTicket(i, 'group_size', parseInt(e.target.value))} className={inputClass} />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className={labelClass}>Group size</label>
+                          <input type="number" placeholder="e.g. 5" min="2" max="20" value={ticket.group_size || ''} onChange={e => updateTicket(i, 'group_size', parseInt(e.target.value))} className={inputClass} />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Group sales close</label>
+                          <input type="datetime-local" value={ticket.group_deadline || ''} onChange={e => updateTicket(i, 'group_deadline', e.target.value)} className={inputClass} />
+                          <p className="text-xs text-gray-400 mt-1">Incomplete groups merge after this date</p>
+                        </div>
                       </div>
                     )}
                   </div>

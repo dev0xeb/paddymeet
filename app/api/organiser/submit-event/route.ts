@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
           quantity: number
           is_group_ticket: boolean
           group_size: number
+          group_deadline?: string
         }) => ({
           event_id: event.id,
           name: ticket.name,
@@ -89,6 +90,7 @@ export async function POST(request: NextRequest) {
           quantity_sold: 0,
           is_group_ticket: ticket.is_group_ticket || false,
           group_size: ticket.is_group_ticket ? ticket.group_size : 1,
+          group_deadline: ticket.is_group_ticket && ticket.group_deadline ? ticket.group_deadline : null,
         }))
       )
 
