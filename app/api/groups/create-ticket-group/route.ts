@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Group name is required' }, { status: 400 })
   }
 
-  // Fetch the ticket type
   const { data: ticketType, error: ttError } = await supabase
     .from('ticket_types')
     .select('*')
@@ -39,12 +38,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'This group ticket is sold out' }, { status: 400 })
   }
 
-  // Reserve a slot
+  // Reserve one group slot at the ticket-type level (the "table" itself)
   const { error: reserveError } = await supabase
     .from('ticket_types')
     .update({ quantity_sold: (ticketType.quantity_sold || 0) + 1 })
     .eq('id', ticket_type_id)
-    .eq('quantity_sold', ticketType.quantity_sold || 0) // optimistic lock
+    .eq('quantity_sold', ticketType.quantity_sold || 0)
 
   if (reserveError) {
     return NextResponse.json({ error: 'Could not reserve a slot. Please try again.' }, { status: 400 })
@@ -52,7 +51,6 @@ export async function POST(request: NextRequest) {
 
   const amountPerMember = Math.round(ticketType.price / ticketType.group_size)
 
-  // Create the group
   const { data: group, error: groupError } = await supabase
     .from('groups')
     .insert({
@@ -72,27 +70,15 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (groupError) {
-    // Roll back the reservation since group creation failed
-    await supabase
-      .from('ticket_types')
-      .update({ quantity_sold: ticketType.quantity_sold || 0 })
-      .eq('id', ticket_type_id)
+    await supabase.from('ticket_types').update({ quantity_sold: ticketType.quantity_sold || 0 }).eq('id', ticket_type_id)
     return NextResponse.json({ error: groupError.message }, { status: 400 })
   }
-
-  // Add creator as first (pending) member
-  await supabase.from('group_members').insert({
-    group_id: group.id,
-    user_id: user.id,
-    role: 'admin',
-    payment_status: 'pending',
-    amount_paid: 0,
-  })
 
   return NextResponse.json({
     success: true,
     group,
     amount_per_member: amountPerMember,
+    max_spots: ticketType.group_size,
     needs_payment: ticketType.price > 0,
   })
 }

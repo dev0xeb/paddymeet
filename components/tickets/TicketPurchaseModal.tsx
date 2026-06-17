@@ -79,7 +79,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const [promoLoading, setPromoLoading] = useState(false)
 
   const discountPercent = user.referral_discount_percent || 0
-  const subtotal = ticketType.price * quantity
+  const subtotal = ticketType.is_group_ticket ? ticketType.price : ticketType.price * quantity
   const referralDiscountAmount = Math.round(subtotal * (discountPercent / 100))
 
   const promoDiscountAmount = promoApplied
@@ -93,7 +93,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const serviceFee = Math.round(discountedSubtotal * 0.05)
   const total = discountedSubtotal + serviceFee
 
-  const extraAttendeeCount = Math.max(0, quantity - 1)
+  const extraAttendeeCount = ticketType.is_group_ticket ? Math.max(0, ticketType.group_size - 1) : Math.max(0, quantity - 1)
 
   // Keep attendees array length in sync with quantity
   useEffect(() => {
@@ -185,7 +185,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
           reference,
           event_id: event.id,
           ticket_type_id: ticketType.id,
-          quantity,
+          quantity: ticketType.is_group_ticket ? ticketType.group_size : quantity,
           user_id: user.id,
           discount_applied: discountPercent,
           promo_code: promoApplied?.code || null,
@@ -266,7 +266,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
         body: JSON.stringify({
           event_id: event.id,
           ticket_type_id: ticketType.id,
-          quantity,
+          quantity: ticketType.is_group_ticket ? ticketType.group_size : quantity,
           user_id: user.id,
           buyer_name: buyerName,
           buyer_phone: buyerPhone,
@@ -396,6 +396,13 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
                   </div>
                 </div>
               )}
+
+              {ticketType.is_group_ticket && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl mb-6 text-xs text-blue-700 flex items-center gap-2">
+                <span>🎟️</span>
+                You are buying the full table of {ticketType.group_size}. You can choose who gets each ticket on the next step.
+              </div>
+            )}
 
               <button onClick={() => setStep('details')} className="w-full py-3.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
                 Continue <ArrowRight className="w-4 h-4" />

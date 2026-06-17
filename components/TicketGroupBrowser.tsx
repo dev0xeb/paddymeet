@@ -39,7 +39,7 @@ export default function TicketGroupBrowser({ eventId, eventTitle, ticketType, us
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
 
-  const [paymentModal, setPaymentModal] = useState<{ groupId: string, groupName: string, amount: number, needsPayment: boolean } | null>(null)
+  const [paymentModal, setPaymentModal] = useState<{ groupId: string, groupName: string, amount: number, needsPayment: boolean, remainingSpots: number } | null>(null)
 
   const fetchGroups = async () => {
     const supabase = createClient()
@@ -91,6 +91,7 @@ export default function TicketGroupBrowser({ eventId, eventTitle, ticketType, us
           groupName: data.group.name,
           amount: data.amount_per_member,
           needsPayment: data.needs_payment,
+          remainingSpots: data.max_spots,
         })
       }
     } catch {
@@ -112,6 +113,7 @@ export default function TicketGroupBrowser({ eventId, eventTitle, ticketType, us
           groupName: group.name,
           amount: data.amount_per_member,
           needsPayment: data.needs_payment,
+          remainingSpots: data.remaining_spots,
         })
       }
     } catch {
@@ -210,6 +212,7 @@ export default function TicketGroupBrowser({ eventId, eventTitle, ticketType, us
           eventTitle={eventTitle}
           amountPerMember={paymentModal.amount}
           needsPayment={paymentModal.needsPayment}
+          remainingSpots={paymentModal.remainingSpots}
           userEmail={userEmail}
           onClose={() => setPaymentModal(null)}
           onComplete={() => {
