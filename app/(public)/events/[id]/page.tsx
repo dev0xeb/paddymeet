@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { MapPin, Calendar, Clock, Users, ArrowLeft, Share2 } from 'lucide-react'
 import BuyTicketButton from '@/components/tickets/BuyTicketButton'
 import TicketSelector from '@/components/tickets/TicketSelector'
+import TicketGroupBrowser from '@/components/TicketGroupBrowser'
 
 interface TicketType {
   id: string
@@ -18,6 +19,7 @@ interface TicketType {
   quantity_sold: number
   is_group_ticket: boolean
   group_size: number
+  group_deadline: string | null
 }
 
 export default async function EventDetailPage({
@@ -287,6 +289,18 @@ const userData = user ? { id: user.id, email: user.email || '', referral_discoun
                             )
                           )}
                         </div>
+
+                        {ticket.is_group_ticket && (
+                          <div className="mt-4">
+                            <TicketGroupBrowser
+                              eventId={event.id}
+                              eventTitle={event.title}
+                              ticketType={ticket}
+                              userId={userData?.id || ''}
+                              userEmail={userData?.email || ''}
+                            />
+                          </div>
+                        )}
                       </div>
                     )
                   })}
