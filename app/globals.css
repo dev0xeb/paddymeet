@@ -1,5 +1,52 @@
 @import "tailwindcss";
 
+@theme {
+  /* Primary accent — Hinge coral/rose replaces orange */
+  --color-orange-50: #FDF3F0;
+  --color-orange-100: #FAE4DF;
+  --color-orange-200: #F4C4BB;
+  --color-orange-300: #EAA098;
+  --color-orange-400: #DC7E76;
+  --color-orange-500: #C9625A;
+  --color-orange-600: #B5534C;
+  --color-orange-700: #96413A;
+  --color-orange-800: #75302A;
+  --color-orange-900: #3D0C11;
+
+  /* Warm up the grays — cream instead of cold gray */
+  --color-gray-50: #FDF8F6;
+  --color-gray-100: #F5EDE9;
+  --color-gray-200: #EAD9D4;
+  --color-gray-300: #D4B8B2;
+  --color-gray-400: #B0908A;
+  --color-gray-500: #8C6E69;
+  --color-gray-600: #6B504B;
+  --color-gray-700: #4A3330;
+  --color-gray-800: #2E1A18;
+  --color-gray-900: #1A0A0B;
+
+  /* Warm white background */
+  --color-white: #FFFAF8;
+
+  /* Pink scale — Hinge muted rose */
+  --color-pink-50: #FDF0EE;
+  --color-pink-100: #F9D9D5;
+  --color-pink-200: #F2B3AC;
+  --color-pink-300: #E88C82;
+  --color-pink-400: #D96B60;
+  --color-pink-500: #C9514A;
+  --color-pink-600: #A83E38;
+  --color-pink-700: #862E29;
+  --color-pink-800: #601F1B;
+  --color-pink-900: #3D0C11;
+
+  /* Green — keep for status indicators but warm it slightly */
+  --color-green-50: #F0FAF4;
+  --color-green-100: #DCFAE6;
+  --color-green-500: #22A85A;
+  --color-green-600: #1A8F4A;
+}
+
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
