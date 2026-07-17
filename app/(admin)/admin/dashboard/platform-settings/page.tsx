@@ -1,5 +1,6 @@
 'use client'
 
+import ProcessGroupDeadlinesButton from '@/components/admin/ProcessGroupDeadlinesButton'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Save, Check, Settings, Shield, DollarSign, Star, Gift } from 'lucide-react'
@@ -203,6 +204,11 @@ export default function AdminPlatformSettingsPage() {
             </div>
           </div>
         )}
+        {/* Group deadline processing */}
+        <div className="mb-6">
+          <h2 className="text-sm font-extrabold text-gray-900 mb-3">Group Ticket Tools</h2>
+          <ProcessGroupDeadlinesButton />
+        </div>
       </div>
     </div>
   )
