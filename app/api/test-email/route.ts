@@ -1,11 +1,21 @@
 import { NextResponse } from 'next/server'
+import { sendTicketEmail } from '@/lib/email'
 
 export async function GET() {
-  const key = process.env.RESEND_API_KEY || 'NOT SET'
-  
-  return NextResponse.json({
-    key_length: key.length,
-    key_prefix: key.substring(0, 8),
-    key_set: key !== 'NOT SET',
+  const result = await sendTicketEmail({
+    to: 'oyemadepete@gmail.com',
+    recipientName: 'Peter',
+    eventTitle: 'Test Event',
+    eventDate: 'Sat 1 Aug',
+    eventTime: '20:00',
+    venueName: 'Test Venue, Lagos',
+    tickets: [
+      {
+        ticketCode: 'PM-TEST-12345',
+        ticketTypeName: 'Regular',
+      }
+    ],
   })
+
+  return NextResponse.json(result)
 }
