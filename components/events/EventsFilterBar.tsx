@@ -110,7 +110,10 @@ function LocationDropdown({
   onSelect: (href: string) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const [expandedState, setExpandedState] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
+
   const nigeriaLocations: { state: string; cities: string[] }[] = [
     { state: 'Lagos', cities: ['Lagos Island', 'Lagos Mainland', 'Lekki', 'Victoria Island', 'Ikeja', 'Surulere', 'Yaba', 'Ajah', 'Ikoyi', 'Festac'] },
     { state: 'Abuja (FCT)', cities: ['Central Area', 'Garki', 'Wuse', 'Maitama', 'Asokoro', 'Gwarinpa', 'Lugbe', 'Jabi'] },
@@ -151,6 +154,13 @@ function LocationDropdown({
     { state: 'Ondo', cities: ['Akure', 'Ondo', 'Ore'] },
   ]
 
+  const filtered = search.trim()
+    ? nigeriaLocations.filter(l =>
+        l.state.toLowerCase().includes(search.toLowerCase()) ||
+        l.cities.some(c => c.toLowerCase().includes(search.toLowerCase()))
+      )
+    : nigeriaLocations
+
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -166,8 +176,16 @@ function LocationDropdown({
     Object.entries(currentParams).forEach(([k, v]) => {
       if (v && k !== 'city') params.set(k, v)
     })
-    params.set('city', city.toLowerCase())
+    params.set('city', city)
     return `/events?${params.toString()}`
+  }
+
+  const clearCity = () => {
+    const params = new URLSearchParams()
+    Object.entries(currentParams).forEach(([k, v]) => {
+      if (v && k !== 'city') params.set(k, v)
+    })
+    onSelect(`/events${params.toString() ? `?${params.toString()}` : ''}`)
   }
 
   return (
@@ -181,51 +199,93 @@ function LocationDropdown({
         }`}
       >
         <MapPin className="w-3.5 h-3.5" />
-        {currentCity ? currentCity.charAt(0).toUpperCase() + currentCity.slice(1) : 'Location'}
+        {currentCity || 'Location'}
         <ChevronDown className={`w-3 h-3 opacity-60 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="absolute top-[calc(100%+8px)] left-0 bg-white border border-gray-200 rounded-2xl shadow-2xl z-[999] w-72 max-h-96 overflow-y-auto">
-          <div className="sticky top-0 bg-white px-4 pt-3 pb-2 border-b border-gray-100">
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Location</div>
+        <div className="absolute top-[calc(100%+8px)] left-0 bg-white border border-gray-200 rounded-2xl shadow-2xl z-[999] w-72">
+          {/* Search */}
+          <div className="p-3 border-b border-gray-100">
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus-within:border-orange-400 transition-all">
+              <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => { setSearch(e.target.value); setExpandedState(null) }}
+                placeholder="Search state or city..."
+                className="bg-transparent outline-none text-sm text-gray-900 w-full placeholder:text-gray-400"
+                autoFocus
+              />
+              {search && (
+                <button onClick={() => { setSearch(''); setExpandedState(null) }}>
+                  <X className="w-3.5 h-3.5 text-gray-400 hover:text-gray-600" />
+                </button>
+              )}
+            </div>
           </div>
-          <div className="p-2">
-            <button
-              onClick={() => {
-                setOpen(false)
-                const params = new URLSearchParams()
-                Object.entries(currentParams).forEach(([k, v]) => {
-                  if (v && k !== 'city') params.set(k, v)
-                })
-                onSelect(`/events${params.toString() ? `?${params.toString()}` : ''}`)
-              }}
-              className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-orange-500 hover:bg-orange-50 transition-colors mb-1"
-            >
-              All of Nigeria
-            </button>
-            {nigeriaLocations.map(({ state, cities }) => (
-              <div key={state} className="mb-2">
-                <div className="px-3 py-1 text-xs font-bold text-gray-400 uppercase tracking-wider">{state}</div>
-                {cities.map(city => (
+
+          {/* List */}
+          <div className="max-h-72 overflow-y-auto p-2">
+            {/* All Nigeria option */}
+            {currentCity && (
+              <button
+                onClick={() => { setOpen(false); clearCity() }}
+                className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-orange-500 hover:bg-orange-50 transition-colors mb-1"
+              >
+                All of Nigeria
+              </button>
+            )}
+
+            {filtered.length === 0 && (
+              <p className="text-sm text-gray-400 text-center py-4">No results found</p>
+            )}
+
+            {filtered.map(({ state, cities }) => {
+              const isExpanded = expandedState === state || search.trim() !== ''
+              const matchingCities = search.trim()
+                ? cities.filter(c => c.toLowerCase().includes(search.toLowerCase()) || state.toLowerCase().includes(search.toLowerCase()))
+                : cities
+
+              return (
+                <div key={state}>
+                  {/* State row */}
                   <button
-                    key={city}
-                    onClick={() => {
-                      setOpen(false)
-                      onSelect(buildHref(city))
-                    }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors text-left ${
-                      currentCity === city.toLowerCase()
-                        ? 'bg-orange-50 text-orange-500'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
+                    onClick={() => setExpandedState(isExpanded && !search ? null : state)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold text-gray-800 hover:bg-gray-50 transition-colors text-left"
                   >
-                    <MapPin className="w-3 h-3 flex-shrink-0" />
-                    {city}
+                    <span>{state}</span>
+                    {!search && (
+                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                    )}
                   </button>
-                ))}
-              </div>
-            ))}
+
+                  {/* Cities */}
+                  {isExpanded && (
+                    <div className="ml-3 mb-1 space-y-0.5">
+                      {matchingCities.map(city => (
+                        <button
+                          key={city}
+                          onClick={() => {
+                            setOpen(false)
+                            setSearch('')
+                            onSelect(buildHref(city))
+                          }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left ${
+                            currentCity === city
+                              ? 'bg-orange-50 text-orange-500 font-bold'
+                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          }`}
+                        >
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          {city}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
