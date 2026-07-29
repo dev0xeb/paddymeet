@@ -194,28 +194,30 @@ const { data: profile } = user ? await supabase
                 </div>
               </div>
 
-              <div className="absolute top-16 left-1/2 -translate-x-1/2 w-72 bg-white rounded-2xl shadow-2xl overflow-hidden z-10 animate-float-medium">
-                <div className={`h-40 bg-gradient-to-br ${events[0].gradient} relative flex items-end p-4`}>
-                  <span className="relative z-10 px-3 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs font-bold text-white uppercase tracking-wider">Trending</span>
-                </div>
-                <div className="p-4">
-                  <div className="font-bold text-gray-900 mb-1">{events[0].title}</div>
-                  <div className="text-xs text-gray-500 mb-3 flex items-center gap-1"><MapPin className="w-3 h-3" /> {events[0].location}</div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="flex">
-                        {['bg-orange-400','bg-pink-500','bg-purple-500'].map((c,i) => (
-                          <div key={i} className={`w-6 h-6 rounded-full ${c} border-2 border-white -ml-1.5 first:ml-0`} />
-                        ))}
+              {events.length > 0 && (
+                <div className="absolute top-16 left-1/2 -translate-x-1/2 w-72 bg-white rounded-2xl shadow-2xl overflow-hidden z-10 animate-float-medium">
+                  <div className={`h-40 bg-gradient-to-br ${events[0].gradient} relative flex items-end p-4`}>
+                    <span className="relative z-10 px-3 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs font-bold text-white uppercase tracking-wider">Trending</span>
+                  </div>
+                  <div className="p-4">
+                    <div className="font-bold text-gray-900 mb-1">{events[0].title}</div>
+                    <div className="text-xs text-gray-500 mb-3 flex items-center gap-1"><MapPin className="w-3 h-3" /> {events[0].location}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="flex">
+                          {['bg-orange-400','bg-pink-500','bg-purple-500'].map((c,i) => (
+                            <div key={i} className={`w-6 h-6 rounded-full ${c} border-2 border-white -ml-1.5 first:ml-0`} />
+                          ))}
+                        </div>
+                        <span className="text-xs text-gray-500">+{events[0].going}</span>
                       </div>
-                      <span className="text-xs text-gray-500">+{events[0].going}</span>
+                      <Link href="/events" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
+                        Get Tickets
+                      </Link>
                     </div>
-                    <Link href="/events" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
-                      Get Tickets
-                    </Link>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="absolute top-12 left-0 w-52 bg-white rounded-2xl shadow-lg border border-gray-100 p-4 z-20 animate-float-fast">
                 <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">Day Party</div>
