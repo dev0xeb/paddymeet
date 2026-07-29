@@ -4,5 +4,7 @@
       "path": "/api/cron/process-group-deadlines",
       "schedule": "0 * * * *"
     }
-  ]
+  ],
+  "buildCommand": "npm run build",
+  "installCommand": "npm install --prefer-offline"
 }
