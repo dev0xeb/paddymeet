@@ -1,3 +1,4 @@
+import PayoutActionButtons from '@/components/admin/PayoutActionButtons'
 import { createClient } from '@/lib/supabase-server'
 import { createAdminClient } from '@/lib/supabase-admin'
 import { redirect } from 'next/navigation'
@@ -114,14 +115,12 @@ export default async function AdminPayoutsPage() {
                     <div className="text-sm font-extrabold text-gray-900">₦{payout.total.toLocaleString()}</div>
                     <div className="text-xs text-gray-400">{payout.orders} orders</div>
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <button className="px-3 py-1.5 bg-green-50 border border-green-200 text-green-600 text-xs font-bold rounded-xl hover:bg-green-100 transition-colors flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" /> Mark Paid
-                    </button>
-                    <button className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-500 text-xs font-bold rounded-xl hover:bg-red-100 transition-colors flex items-center gap-1">
-                      <XCircle className="w-3 h-3" /> Hold
-                    </button>
-                  </div>
+                  <PayoutActionButtons
+                    organiserId={payout.organiser_id}
+                    orgName={payout.org_name}
+                    amount={payout.total}
+                    ordersCount={payout.orders}
+                  />
                 </div>
               ))}
             </div>
