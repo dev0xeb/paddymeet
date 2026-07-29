@@ -1,3 +1,4 @@
+import ShareButton from '@/components/ShareButton'
 import SupportChat from '@/components/SupportChat'
 import OpenGroupButton from '@/components/OpenGroupButton'
 import CreateGroupModal from '@/components/CreateGroupModal'
@@ -5,7 +6,7 @@ import UserAvatarMenu from '@/components/UserAvatarMenu'
 import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { MapPin, Calendar, Clock, Users, ArrowLeft, Share2 } from 'lucide-react'
+import { MapPin, Calendar, Clock, Users, ArrowLeft } from 'lucide-react'
 import BuyTicketButton from '@/components/tickets/BuyTicketButton'
 import TicketSelector from '@/components/tickets/TicketSelector'
 import TicketGroupBrowser from '@/components/TicketGroupBrowser'
@@ -130,9 +131,10 @@ const userData = user ? { id: user.id, email: user.email || '', referral_discoun
           </Link>
         </div>
         <div className="absolute top-4 right-4 md:top-6 md:right-6">
-          <button className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-xs md:text-sm font-semibold text-white hover:bg-white/30 transition-colors">
-            <Share2 className="w-3.5 h-3.5" /> Share
-          </button>
+          <ShareButton
+            eventTitle={event.title}
+            eventUrl={`https://paddymeet.com/events/${event.id}`}
+          />
         </div>
         <div className="absolute bottom-16 left-4 md:bottom-24 md:left-6 flex items-center gap-2 flex-wrap">
           {event.event_type && (
