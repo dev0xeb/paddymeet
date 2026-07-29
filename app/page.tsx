@@ -177,7 +177,7 @@ const { data: profile } = user ? await supabase
                 </div>
                 <div>
                   <div className="flex items-center gap-1 text-orange-400 text-sm">★★★★★</div>
-                  <div className="text-sm text-gray-500">Loved by <strong className="text-gray-900">2,400+ people</strong> across Lagos</div>
+                  <div className="text-sm text-gray-500">Loved by <strong className="text-gray-900">people</strong> across Nigeria</div>
                 </div>
               </div>
             </div>
@@ -221,8 +221,8 @@ const { data: profile } = user ? await supabase
 
               <div className="absolute top-12 left-0 w-52 bg-white rounded-2xl shadow-lg border border-gray-100 p-4 z-20 animate-float-fast">
                 <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">Day Party</div>
-                <div className="text-sm font-bold text-gray-900 mb-1">Sunday Sip & Vibe</div>
-                <div className="text-xs text-gray-500 mb-3 flex items-center gap-1"><MapPin className="w-3 h-3" /> Landmark Beach</div>
+                <div className="text-sm font-bold text-gray-900 mb-1">Rooftop Vibes Lagos</div>
+                <div className="text-xs text-gray-500 mb-3 flex items-center gap-1"><MapPin className="w-3 h-3" /> Lagos Island</div>
                 <div className="flex items-center gap-1.5 text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full w-fit">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                   Groups open
@@ -230,17 +230,17 @@ const { data: profile } = user ? await supabase
               </div>
 
               <div className="absolute top-48 right-0 w-52 bg-white rounded-2xl shadow-lg border border-gray-100 p-4 z-20 animate-float-slow">
-                <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">Comedy</div>
-                <div className="text-sm font-bold text-gray-900 mb-1">Lagos Laughs Out Loud</div>
-                <div className="text-xs text-gray-500 flex items-center gap-1"><MapPin className="w-3 h-3" /> Federal Palace</div>
+                <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">Afrobeats</div>
+                <div className="text-sm font-bold text-gray-900 mb-1">Friday Night Live</div>
+                <div className="text-xs text-gray-500 flex items-center gap-1"><MapPin className="w-3 h-3" /> Victoria Island</div>
               </div>
 
               <div className="absolute bottom-24 left-4 w-52 bg-white rounded-2xl shadow-lg border border-gray-100 p-4 z-20 animate-float-medium">
                 <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">Exclusive</div>
-                <div className="text-sm font-bold text-gray-900 mb-1">VIP Rooftop VI</div>
+                <div className="text-sm font-bold text-gray-900 mb-1">Members Only Night</div>
                 <div className="text-xs text-orange-500 font-bold flex items-center gap-1.5 mt-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                  4 spots left
+                  Few spots left
                 </div>
               </div>
 
@@ -249,7 +249,7 @@ const { data: profile } = user ? await supabase
                   <Users className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-gray-900">3 groups forming</div>
+                  <div className="text-sm font-bold text-gray-900">Groups forming</div>
                   <div className="text-xs text-gray-500">for this weekend</div>
                 </div>
               </div>
