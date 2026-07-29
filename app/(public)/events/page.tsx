@@ -27,10 +27,14 @@ export default async function EventsPage({
     .eq('is_live', true)
     .order('event_date', { ascending: true })
 
-  if (params.city) query = query.eq('city', params.city)
+  if (params.city) query = query.ilike('city', `%${params.city}%`)
   if (params.type) query = query.eq('event_type', params.type)
   if (params.vibe) query = query.eq('vibe', params.vibe)
   if (params.search) query = query.ilike('title', `%${params.search}%`)
+  if (params.date) {
+    const nextDay = new Date(new Date(params.date).getTime() + 86400000).toISOString().split('T')[0]
+    query = query.gte('event_date', params.date).lt('event_date', nextDay)
+  }
 
   const { data: events } = await query.limit(24)
 
