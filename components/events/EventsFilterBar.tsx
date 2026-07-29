@@ -111,7 +111,45 @@ function LocationDropdown({
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const cities = ['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan']
+  const nigeriaLocations: { state: string; cities: string[] }[] = [
+    { state: 'Lagos', cities: ['Lagos Island', 'Lagos Mainland', 'Lekki', 'Victoria Island', 'Ikeja', 'Surulere', 'Yaba', 'Ajah', 'Ikoyi', 'Festac'] },
+    { state: 'Abuja (FCT)', cities: ['Central Area', 'Garki', 'Wuse', 'Maitama', 'Asokoro', 'Gwarinpa', 'Lugbe', 'Jabi'] },
+    { state: 'Rivers', cities: ['Port Harcourt', 'Obio-Akpor', 'Eleme', 'Bonny'] },
+    { state: 'Oyo', cities: ['Ibadan', 'Ogbomosho', 'Oyo'] },
+    { state: 'Kano', cities: ['Kano', 'Fagge', 'Dala', 'Gwale'] },
+    { state: 'Anambra', cities: ['Awka', 'Onitsha', 'Nnewi'] },
+    { state: 'Enugu', cities: ['Enugu', 'Nsukka'] },
+    { state: 'Delta', cities: ['Asaba', 'Warri', 'Ughelli'] },
+    { state: 'Edo', cities: ['Benin City', 'Auchi'] },
+    { state: 'Imo', cities: ['Owerri', 'Orlu'] },
+    { state: 'Kaduna', cities: ['Kaduna', 'Zaria'] },
+    { state: 'Kwara', cities: ['Ilorin', 'Offa'] },
+    { state: 'Osun', cities: ['Osogbo', 'Ile-Ife', 'Ilesa'] },
+    { state: 'Ogun', cities: ['Abeokuta', 'Sagamu', 'Ijebu-Ode'] },
+    { state: 'Cross River', cities: ['Calabar', 'Ogoja'] },
+    { state: 'Akwa Ibom', cities: ['Uyo', 'Eket'] },
+    { state: 'Bayelsa', cities: ['Yenagoa', 'Ogbia'] },
+    { state: 'Plateau', cities: ['Jos', 'Bukuru'] },
+    { state: 'Borno', cities: ['Maiduguri', 'Biu'] },
+    { state: 'Sokoto', cities: ['Sokoto', 'Binji'] },
+    { state: 'Katsina', cities: ['Katsina', 'Daura'] },
+    { state: 'Niger', cities: ['Minna', 'Bida', 'Suleja'] },
+    { state: 'Kebbi', cities: ['Birnin Kebbi', 'Argungu'] },
+    { state: 'Zamfara', cities: ['Gusau', 'Kaura Namoda'] },
+    { state: 'Jigawa', cities: ['Dutse', 'Hadejia'] },
+    { state: 'Yobe', cities: ['Damaturu', 'Potiskum'] },
+    { state: 'Adamawa', cities: ['Yola', 'Mubi'] },
+    { state: 'Taraba', cities: ['Jalingo', 'Wukari'] },
+    { state: 'Gombe', cities: ['Gombe', 'Kumo'] },
+    { state: 'Bauchi', cities: ['Bauchi', 'Azare'] },
+    { state: 'Nassarawa', cities: ['Lafia', 'Keffi'] },
+    { state: 'Benue', cities: ['Makurdi', 'Gboko'] },
+    { state: 'Kogi', cities: ['Lokoja', 'Okene'] },
+    { state: 'Ebonyi', cities: ['Abakaliki', 'Onueke'] },
+    { state: 'Abia', cities: ['Umuahia', 'Aba'] },
+    { state: 'Ekiti', cities: ['Ado-Ekiti', 'Ikere-Ekiti'] },
+    { state: 'Ondo', cities: ['Akure', 'Ondo', 'Ore'] },
+  ]
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -132,46 +170,63 @@ function LocationDropdown({
     return `/events?${params.toString()}`
   }
 
-  const displayCity = currentCity
-    ? currentCity.charAt(0).toUpperCase() + currentCity.slice(1)
-    : 'Lagos'
-
   return (
     <div className="relative flex-shrink-0" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm font-semibold text-gray-700 hover:border-gray-300 transition-all"
+        className={`flex items-center gap-2 px-4 py-2 border rounded-full text-sm font-semibold transition-all ${
+          currentCity
+            ? 'bg-orange-500 border-orange-500 text-white'
+            : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'
+        }`}
       >
-        <MapPin className="w-3.5 h-3.5 text-orange-500" />
-        {displayCity}
-        <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <MapPin className="w-3.5 h-3.5" />
+        {currentCity ? currentCity.charAt(0).toUpperCase() + currentCity.slice(1) : 'Location'}
+        <ChevronDown className={`w-3 h-3 opacity-60 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="absolute top-[calc(100%+8px)] left-0 bg-white border border-gray-200 rounded-2xl p-2 shadow-2xl z-[999] min-w-[200px]">
-          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 py-1 mb-1">
-            Change location
+        <div className="absolute top-[calc(100%+8px)] left-0 bg-white border border-gray-200 rounded-2xl shadow-2xl z-[999] w-72 max-h-96 overflow-y-auto">
+          <div className="sticky top-0 bg-white px-4 pt-3 pb-2 border-b border-gray-100">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Location</div>
           </div>
-          {cities.map(city => (
+          <div className="p-2">
             <button
-              key={city}
               onClick={() => {
                 setOpen(false)
-                onSelect(buildHref(city))
+                const params = new URLSearchParams()
+                Object.entries(currentParams).forEach(([k, v]) => {
+                  if (v && k !== 'city') params.set(k, v)
+                })
+                onSelect(`/events${params.toString() ? `?${params.toString()}` : ''}`)
               }}
-              className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
-                currentCity === city.toLowerCase()
-                  ? 'bg-orange-50 text-orange-500'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
+              className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-orange-500 hover:bg-orange-50 transition-colors mb-1"
             >
-              <MapPin className="w-3.5 h-3.5" />
-              {city}
-              {city === 'Lagos' && !currentCity && (
-                <span className="ml-auto text-xs text-orange-500 font-bold">Current</span>
-              )}
+              All of Nigeria
             </button>
-          ))}
+            {nigeriaLocations.map(({ state, cities }) => (
+              <div key={state} className="mb-2">
+                <div className="px-3 py-1 text-xs font-bold text-gray-400 uppercase tracking-wider">{state}</div>
+                {cities.map(city => (
+                  <button
+                    key={city}
+                    onClick={() => {
+                      setOpen(false)
+                      onSelect(buildHref(city))
+                    }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors text-left ${
+                      currentCity === city.toLowerCase()
+                        ? 'bg-orange-50 text-orange-500'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                    {city}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
