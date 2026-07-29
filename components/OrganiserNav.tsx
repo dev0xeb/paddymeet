@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Calendar, Ticket, Users, TrendingUp,
-  CreditCard, Settings, Bell, Plus,
+  CreditCard, Settings, Bell, Plus, QrCode,
   LogOut, ChevronDown, X, CheckCircle
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
@@ -30,6 +30,7 @@ const navLinks = [
   { icon: Users, label: 'Attendees', href: '/organiser/dashboard/attendees' },
   { icon: TrendingUp, label: 'Revenue', href: '/organiser/dashboard/revenue' },
   { icon: CreditCard, label: 'Payouts', href: '/organiser/dashboard/payouts' },
+  { icon: QrCode, label: 'Scanner', href: '/organiser/dashboard/scanner' },
   { icon: Settings, label: 'Settings', href: '/organiser/dashboard/settings' },
 ]
 
