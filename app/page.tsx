@@ -14,9 +14,23 @@ export default async function HomePage() {
         .single()
     : { data: null }
 
+  // Fetch real upcoming events in PaddyMeet
+  const { data: eventsRaw } = await supabase
+    .from('events')
+    .select('id, title, event_type, city, state, event_date, vibe, is_free, cover_image_url, venue_name, start_time, ticket_types(price)')
+    .eq('is_approved', true)
+    .eq('is_live', true)
+    .order('is_featured', { ascending: false })
+    .order('event_date', { ascending: true })
+    .limit(12)
+
   return (
     <>
-      <LandingClientPage user={user} profile={profile} />
+      <LandingClientPage
+        user={user}
+        profile={profile}
+        liveEvents={eventsRaw || []}
+      />
       <SupportChat accountType="explorer" />
     </>
   )

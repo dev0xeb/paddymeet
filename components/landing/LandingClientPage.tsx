@@ -7,13 +7,30 @@ import {
   CheckCircle2, ChevronDown, CircleDollarSign, Compass, CreditCard,
   EyeOff, FileSpreadsheet, Flame, KeyRound, MapPin, Menu, MessageCircle,
   Plus, QrCode, Radio, ScanLine, Send, ShieldCheck, Sparkles, Star,
+  TrendingUp, UserCheck, Users, WalletCards, X, Zap
 } from 'lucide-react'
 
 const orange = '#FF5B1E'
 
+export interface LiveEvent {
+  id: string
+  title: string
+  event_type: string
+  city: string
+  state?: string
+  event_date: string
+  vibe?: string
+  is_free?: boolean
+  cover_image_url?: string
+  venue_name?: string
+  start_time?: string
+  ticket_types?: { price: number }[]
+}
+
 interface Props {
   user: any
   profile: any
+  liveEvents?: LiveEvent[]
 }
 
 function Brand({ compact = false }: { compact?: boolean }) {
@@ -46,8 +63,13 @@ function SectionHead({ eyebrow, title, copy, number }: { eyebrow: string; title:
   )
 }
 
-function TiltPass() {
+function TiltPass({ topEvent }: { topEvent?: LiveEvent }) {
   const [transform, setTransform] = useState('rotateX(3deg) rotateY(-8deg)')
+
+  const formattedDate = topEvent?.event_date
+    ? new Date(topEvent.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
+    : '29 / 08 / 26'
+
   return (
     <div
       className="pass-stage"
@@ -63,20 +85,32 @@ function TiltPass() {
       <div className="pass-card" style={{ transform }}>
         <div className="pass-top">
           <span>PADDYMEET / LIVE PASS</span>
-          <span>PM–0429</span>
+          <span>PM–{topEvent?.id?.slice(0, 4).toUpperCase() || '0429'}</span>
         </div>
         <div className="pass-art">
-          <img src="/manus-storage/paddymeet-hero_e7298a92.jpg" alt="Crowd at a Lagos night event" />
+          <img
+            src={topEvent?.cover_image_url || '/manus-storage/paddymeet-hero_e7298a92.jpg'}
+            alt={topEvent?.title || 'Crowd at a Lagos night event'}
+          />
           <div className="pass-art-overlay" />
           <div className="pass-art-copy">
             <small>THE NEXT NIGHT OUT</small>
-            <strong>ODYSSEY<br />AFTER DARK</strong>
+            <strong>{topEvent?.title || 'ODYSSEY AFTER DARK'}</strong>
           </div>
         </div>
         <div className="pass-meta">
-          <div><span>VENUE</span><b>Terra Kulture</b></div>
-          <div><span>DATE</span><b>29 / 08 / 26</b></div>
-          <div><span>CITY</span><b>LAGOS, NG</b></div>
+          <div>
+            <span>VENUE</span>
+            <b>{topEvent?.venue_name || 'Terra Kulture'}</b>
+          </div>
+          <div>
+            <span>DATE</span>
+            <b>{formattedDate}</b>
+          </div>
+          <div>
+            <span>CITY</span>
+            <b>{topEvent?.city?.toUpperCase() || 'LAGOS, NG'}</b>
+          </div>
         </div>
         <div className="pass-divider">
           <span /><i>SCANNABLE / VERIFIED</i><span />
@@ -99,34 +133,59 @@ function TiltPass() {
   )
 }
 
-const mockEvents = [
-  { image: '/manus-storage/paddymeet-rooftop_f107e10f.jpg', tag: 'ROOFTOP / LAGOS', title: 'Soft Launch Sundays', date: 'SAT · 29 AUG', venue: 'The Observatory · VI', price: '₦18,500', groups: '3 social groups forming', tone: 'orange' },
-  { image: '/manus-storage/paddymeet-hero_e7298a92.jpg', tag: 'RAVE / ABUJA', title: 'Midnight Odyssey', date: 'FRI · 04 SEP', venue: 'The Bunker · Wuse II', price: '₦22,000', groups: '8 social groups forming', tone: 'purple' },
-  { image: '/manus-storage/paddymeet-beach_b7c330cf.jpg', tag: 'BEACH / LAGOS', title: 'Sundown Social Club', date: 'SUN · 06 SEP', venue: 'Landmark Beach · Oniru', price: '₦12,000', groups: '5 social groups forming', tone: 'gold' },
+const defaultCardImages = [
+  '/manus-storage/paddymeet-rooftop_f107e10f.jpg',
+  '/manus-storage/paddymeet-hero_e7298a92.jpg',
+  '/manus-storage/paddymeet-beach_b7c330cf.jpg',
 ]
 
-function EventCard({ event }: { event: typeof mockEvents[number] }) {
+const defaultTones = ['orange', 'purple', 'gold']
+
+function EventCard({ event, index }: { event: LiveEvent; index: number }) {
+  const imageSrc =
+    event.cover_image_url || defaultCardImages[index % defaultCardImages.length]
+  const tone = defaultTones[index % defaultTones.length]
+
+  const formattedDate = event.event_date
+    ? new Date(event.event_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()
+    : 'SAT · 29 AUG'
+
+  const lowestPrice =
+    event.is_free
+      ? 'FREE'
+      : event.ticket_types && event.ticket_types.length > 0
+      ? `₦${Math.min(...event.ticket_types.map((t) => t.price)).toLocaleString()}`
+      : '₦15,000'
+
+  const tag = `${(event.event_type || 'NIGHTLIFE').toUpperCase()} / ${(event.city || 'LAGOS').toUpperCase()}`
+
   return (
     <article className="event-card">
       <div className="event-image">
-        <img src={event.image} alt={event.title} />
+        <img src={imageSrc} alt={event.title} />
         <div className="event-overlay" />
-        <span className={`event-tag event-tag--${event.tone}`}>{event.tag}</span>
+        <span className={`event-tag event-tag--${tone}`}>{tag}</span>
         <button className="save-button" aria-label={`Save ${event.title}`}><Star size={16} /></button>
         <div className="event-title">
-          <small>{event.date}</small>
+          <small>{formattedDate}</small>
           <h3>{event.title}</h3>
         </div>
       </div>
       <div className="event-body">
-        <div className="event-location"><MapPin size={14} />{event.venue}</div>
+        <div className="event-location">
+          <MapPin size={14} />
+          <span>{event.venue_name || event.city}</span>
+        </div>
         <div className="event-row">
-          <span className="group-count"><Users size={14} />{event.groups}</span>
-          <strong>{event.price}</strong>
+          <span className="group-count"><Users size={14} /> 3 social groups forming</span>
+          <strong>{lowestPrice}</strong>
         </div>
         <div className="event-footer">
           <span><ShieldCheck size={13} /> 10 min hold</span>
-          <ArrowRight size={17} />
+          <Link href={`/events/${event.id}`} className="hover:text-[#FF5B1E] flex items-center gap-1">
+            <span>Join Squad</span>
+            <ArrowRight size={17} />
+          </Link>
         </div>
       </div>
     </article>
@@ -239,13 +298,61 @@ function Share2Icon() {
   return <Send size={17} />
 }
 
-export default function LandingClientPage({ user, profile }: Props) {
+export default function LandingClientPage({ user, profile, liveEvents = [] }: Props) {
   const [open, setOpen] = useState(false)
   const [vibe, setVibe] = useState('All energy')
   const [city, setCity] = useState('Lagos')
   const [energy, setEnergy] = useState('Rave & Afrobeats')
   const [crewType, setCrewType] = useState('Open social crew')
   const [friends, setFriends] = useState(5)
+
+  const fallbackEvents: LiveEvent[] = [
+    {
+      id: 'e1',
+      title: 'Soft Launch Sundays',
+      event_type: 'Rooftop',
+      city: 'Lagos',
+      event_date: '2026-08-29',
+      venue_name: 'The Observatory · VI',
+      vibe: 'Rooftop',
+      ticket_types: [{ price: 18500 }],
+    },
+    {
+      id: 'e2',
+      title: 'Midnight Odyssey',
+      event_type: 'Rave',
+      city: 'Abuja',
+      event_date: '2026-09-04',
+      venue_name: 'The Bunker · Wuse II',
+      vibe: 'Rave & electronic',
+      ticket_types: [{ price: 22000 }],
+    },
+    {
+      id: 'e3',
+      title: 'Sundown Social Club',
+      event_type: 'Beach day',
+      city: 'Lagos',
+      event_date: '2026-09-06',
+      venue_name: 'Landmark Beach · Oniru',
+      vibe: 'Beach day',
+      ticket_types: [{ price: 12000 }],
+    },
+  ]
+
+  const displayList = liveEvents && liveEvents.length > 0 ? liveEvents : fallbackEvents
+
+  // Filter events based on energy tab
+  const filteredEvents =
+    vibe === 'All energy'
+      ? displayList
+      : displayList.filter(
+          (e) =>
+            e.vibe?.toLowerCase().includes(vibe.toLowerCase().slice(0, 4)) ||
+            e.event_type?.toLowerCase().includes(vibe.toLowerCase().slice(0, 4))
+        )
+
+  const finalEventList = filteredEvents.length > 0 ? filteredEvents : displayList
+  const topUpcomingEvent = displayList[0]
 
   const reward = friends >= 5 ? '10% off your next 3 tickets' : friends >= 3 ? '5% off your next ticket' : 'A better night, loading'
   const vibes = useMemo(
@@ -372,7 +479,7 @@ export default function LandingClientPage({ user, profile }: Props) {
             </div>
           </div>
 
-          <TiltPass />
+          <TiltPass topEvent={topUpcomingEvent} />
         </section>
 
         {/* Live Ticker */}
@@ -410,13 +517,13 @@ export default function LandingClientPage({ user, profile }: Props) {
           </div>
 
           <div className="event-grid">
-            {mockEvents.map((e) => (
-              <EventCard event={e} key={e.title} />
+            {finalEventList.slice(0, 3).map((e, idx) => (
+              <EventCard event={e} index={idx} key={e.id || e.title} />
             ))}
           </div>
 
           <div className="section-foot">
-            <span>03 / 27 events matching your energy</span>
+            <span>{finalEventList.length < 10 ? `0${finalEventList.length}` : finalEventList.length} live upcoming events in Lagos & Abuja</span>
             <Link href="/events">
               See all live events <ArrowRight size={15} />
             </Link>
