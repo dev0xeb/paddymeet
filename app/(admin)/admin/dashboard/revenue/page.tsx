@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase-server'
 import { createAdminClient } from '@/lib/supabase-admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, DollarSign, TrendingUp, Percent, Calendar } from 'lucide-react'
+import { ArrowLeft, DollarSign, TrendingUp, Percent, Calendar, ShieldCheck, Building2 } from 'lucide-react'
 
 export default async function AdminRevenuePage() {
   const supabase = await createClient()
@@ -18,10 +18,10 @@ export default async function AdminRevenuePage() {
     { data: settings },
   ] = await Promise.all([
     adminClient.from('orders').select('total_paid, service_fee, amount, created_at, event_id, payment_status').eq('payment_status', 'completed'),
-    adminClient.from('platform_settings').select('commission_rate').eq('id', 1).single(),
+    adminClient.from('platform_settings').select('platform_fee_percent').eq('id', 1).single(),
   ])
 
-  const commissionRate = (settings?.commission_rate ?? 10) / 100
+  const commissionRate = (settings?.platform_fee_percent ?? 5.0) / 100
 
   const totalGross = orders?.reduce((sum, o) => sum + (o.total_paid || 0), 0) || 0
   const totalServiceFees = orders?.reduce((sum, o) => sum + (o.service_fee || 0), 0) || 0
@@ -52,117 +52,176 @@ export default async function AdminRevenuePage() {
     : { data: [] }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-gray-900 border-b border-gray-800">
+    <div className="min-h-screen bg-slate-50 antialiased">
+      {/* Top Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-slate-900 border-b border-slate-800">
         <div className="flex items-center gap-4">
-          <Link href="/admin/dashboard" className="flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors">
+          <Link
+            href="/admin/dashboard"
+            className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" /> Dashboard
           </Link>
-          <div className="h-5 w-px bg-gray-700" />
-          <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">Revenue</span>
+          <div className="h-5 w-px bg-slate-700" />
+          <span className="text-xs font-semibold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
+            Revenue Analytics
+          </span>
         </div>
-        <Link href="/" className="text-lg font-bold text-white tracking-tight">paddy<span className="text-orange-500">meet</span></Link>
+        <Link href="/" className="text-lg font-bold text-white tracking-tight">
+          paddy<span className="text-orange-500">meet</span>
+        </Link>
       </nav>
 
-      <div className="pt-16 max-w-6xl mx-auto px-4 md:px-6 py-8">
+      <div className="pt-16 max-w-7xl mx-auto px-4 md:px-6 py-8">
+        
+        {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">Revenue Overview</h1>
-          <p className="text-sm text-gray-500">Platform-wide earnings and commission breakdown</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">Revenue Overview</h1>
+          <p className="text-xs text-slate-500">Platform-wide financial statement, commissions, and host payout breakdown.</p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
-            { label: 'Gross transaction volume', value: `₦${(totalGross/1000).toFixed(0)}k`, icon: DollarSign, color: 'blue' },
-            { label: 'Platform earnings', value: `₦${(platformEarnings/1000).toFixed(0)}k`, icon: TrendingUp, color: 'green' },
-            { label: 'Commission rate', value: `${(commissionRate * 100).toFixed(0)}%`, icon: Percent, color: 'orange' },
-            { label: 'Owed to organisers', value: `₦${(organiserPayout/1000).toFixed(0)}k`, icon: Calendar, color: 'purple' },
-          ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-white border border-gray-100 rounded-2xl p-4 md:p-5">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${
-                color === 'blue' ? 'bg-blue-50' : color === 'green' ? 'bg-green-50' : color === 'orange' ? 'bg-orange-50' : 'bg-purple-50'
-              }`}>
-                <Icon className={`w-4 h-4 ${
-                  color === 'blue' ? 'text-blue-500' : color === 'green' ? 'text-green-500' : color === 'orange' ? 'text-orange-500' : 'text-purple-500'
-                }`} />
+            {
+              label: 'Gross Transaction Volume',
+              value: `₦${totalGross.toLocaleString()}`,
+              subtext: 'Total volume processed',
+              icon: DollarSign,
+              color: 'emerald'
+            },
+            {
+              label: 'Platform Net Earnings',
+              value: `₦${platformEarnings.toLocaleString()}`,
+              subtext: 'Fees + Commission retained',
+              icon: TrendingUp,
+              color: 'blue'
+            },
+            {
+              label: 'Platform Commission Rate',
+              value: `${(commissionRate * 100).toFixed(1)}%`,
+              subtext: 'Configured platform fee',
+              icon: Percent,
+              color: 'orange'
+            },
+            {
+              label: 'Owed to Organisers',
+              value: `₦${organiserPayout.toLocaleString()}`,
+              subtext: 'Scheduled host transfers',
+              icon: Calendar,
+              color: 'purple'
+            },
+          ].map(({ label, value, subtext, icon: Icon, color }) => (
+            <div key={label} className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</span>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  color === 'emerald' ? 'bg-emerald-50 text-emerald-600' :
+                  color === 'blue' ? 'bg-blue-50 text-blue-600' :
+                  color === 'orange' ? 'bg-orange-50 text-orange-600' : 'bg-purple-50 text-purple-600'
+                }`}>
+                  <Icon className="w-4 h-4" />
+                </div>
               </div>
-              <div className="text-xl md:text-2xl font-extrabold text-gray-900 mb-0.5">{value}</div>
-              <div className="text-xs text-gray-500">{label}</div>
+              <div className="text-2xl font-extrabold text-slate-900 tracking-tight mb-0.5">{value}</div>
+              <div className="text-[11px] text-slate-400 font-medium">{subtext}</div>
             </div>
           ))}
         </div>
 
-        {/* Breakdown */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
+        {/* Breakdown Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
-          {/* Monthly chart */}
-          <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-5 md:p-6">
-            <h2 className="text-sm font-extrabold text-gray-900 mb-5">Revenue by Month</h2>
+          {/* Monthly Revenue Chart */}
+          <div className="lg:col-span-2 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-sm font-bold text-slate-900">Revenue by Month</h2>
+              <span className="text-xs text-slate-400">Last 6 months</span>
+            </div>
             {monthlyEntries.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {monthlyEntries.map(([month, value]) => (
-                  <div key={month}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="font-semibold text-gray-600">{month}</span>
-                      <span className="font-bold text-gray-900">₦{value.toLocaleString()}</span>
+                  <div key={month} className="space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-semibold text-slate-700">{month}</span>
+                      <span className="font-bold text-slate-900">₦{value.toLocaleString()}</span>
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full" style={{ width: `${(value / maxMonthly) * 100}%` }} />
+                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-500"
+                        style={{ width: `${(value / maxMonthly) * 100}%` }}
+                      />
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <p className="text-sm text-gray-400">No revenue data yet</p>
+              <div className="text-center py-10">
+                <p className="text-xs text-slate-400">No monthly revenue records found</p>
               </div>
             )}
           </div>
 
-          {/* Revenue breakdown */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-5 md:p-6">
-            <h2 className="text-sm font-extrabold text-gray-900 mb-5">Breakdown</h2>
+          {/* Revenue Breakdown Table */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+            <h2 className="text-sm font-bold text-slate-900 mb-4">Financial Ledger Breakdown</h2>
             <div className="space-y-3">
               {[
-                { label: 'Ticket sales', value: totalTicketRevenue },
-                { label: 'Service fees', value: totalServiceFees },
-                { label: 'Platform commission', value: platformCommission },
-                { label: 'Organiser payouts', value: organiserPayout },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                  <span className="text-xs text-gray-500">{label}</span>
-                  <span className="text-sm font-bold text-gray-900">₦{value.toLocaleString()}</span>
+                { label: 'Gross Ticket Sales', value: totalTicketRevenue, desc: 'Base ticket prices paid by attendees' },
+                { label: 'Processing / Service Fees', value: totalServiceFees, desc: 'Transactional processing fees' },
+                { label: 'Platform Commission (5%)', value: platformCommission, desc: 'Platform retained cut' },
+                { label: 'Net Organiser Payouts', value: organiserPayout, desc: 'Payable to verified event hosts' },
+              ].map(({ label, value, desc }) => (
+                <div key={label} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-xs font-semibold text-slate-600">{label}</span>
+                    <span className="text-sm font-extrabold text-slate-900">₦{value.toLocaleString()}</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400">{desc}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Top events */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 md:p-6">
-          <h2 className="text-sm font-extrabold text-gray-900 mb-5">Top Earning Events</h2>
+        {/* Top Earning Events */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold text-slate-900">Top Earning Events</h2>
+            <Link href="/admin/dashboard/events" className="text-xs font-semibold text-orange-600 hover:underline">
+              View All Events →
+            </Link>
+          </div>
           {topEvents && topEvents.length > 0 ? (
             <div className="space-y-3">
               {topEventIds.map(([eventId, revenue]) => {
                 const event = topEvents.find(e => e.id === eventId)
                 const org = Array.isArray(event?.organisers) ? event.organisers[0] : event?.organisers
                 return (
-                  <div key={eventId} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold text-gray-900 truncate">{event?.title || 'Unknown event'}</div>
-                      <div className="text-xs text-gray-500">{org?.org_name || '—'}</div>
+                  <div key={eventId} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200/80 hover:bg-slate-50/80 transition-colors">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        {event?.title?.charAt(0).toUpperCase() || 'E'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-slate-900 truncate">{event?.title || 'Unknown Event'}</div>
+                        <div className="text-xs text-slate-500">Host: {org?.org_name || 'Organiser'}</div>
+                      </div>
                     </div>
-                    <div className="text-sm font-extrabold text-green-600">₦{revenue.toLocaleString()}</div>
+                    <div className="text-base font-extrabold text-emerald-600 whitespace-nowrap">
+                      ₦{revenue.toLocaleString()}
+                    </div>
                   </div>
                 )
               })}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-sm text-gray-400">No revenue data yet</p>
+            <div className="text-center py-10 border border-dashed border-slate-200 rounded-xl">
+              <p className="text-xs text-slate-400">No event revenue transactions recorded yet</p>
             </div>
           )}
         </div>
+
       </div>
     </div>
   )

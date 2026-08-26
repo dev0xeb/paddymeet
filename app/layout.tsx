@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "./landing.css";
 import { GroupChatProvider } from "@/context/GroupChatContext";
 import GroupChatBar from "@/components/GroupChatBar";
 import NavigationProgress from "@/components/NavigationProgress";

@@ -19,21 +19,48 @@ export async function POST(
     .eq('id', user.id)
     .single()
 
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const searchParams = request.nextUrl.searchParams
+  const autoVerifyHost = searchParams.get('autoVerifyHost') === 'true'
 
-// Approve the event
-  const { error } = await adminClient
-    .from('events')
-    .update({ is_approved: true, is_live: true })
-    .eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-
-  // Fetch the event details for the notification
+  // Fetch event and organiser
   const { data: event } = await adminClient
     .from('events')
-    .select('title, city, state, event_date, event_type, vibe, organiser_id')
+    .select('id, title, city, state, event_date, event_type, vibe, organiser_id, organisers(id, org_name, is_verified)')
     .eq('id', id)
     .single()
+
+  if (!event) {
+    return NextResponse.json({ error: 'Event not found' }, { status: 404 })
+  }
+
+  const organiser = event.organisers as unknown as { id: string, org_name: string, is_verified: boolean } | null
+
+  // Enforce Host KYC Rule
+  if (!organiser?.is_verified) {
+    if (autoVerifyHost && organiser?.id) {
+      // Auto-verify host as requested by admin
+      await adminClient
+        .from('organisers')
+        .update({ is_verified: true, is_active: true })
+        .eq('id', organiser.id)
+    } else {
+      return NextResponse.json({
+        error: 'Host Unverified',
+        message: `Cannot approve event: "${organiser?.org_name || 'The host'}" is not yet verified. Please verify the host first.`,
+        requires_kyc: true,
+        host_id: organiser?.id,
+        host_name: organiser?.org_name,
+      }, { status: 400 })
+    }
+  }
+
+  // Approve the event
+  const { error } = await adminClient
+    .from('events')
+    .update({ is_approved: true, is_live: true, is_rejected: false })
+    .eq('id', id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
   // Auto-create the main event group if it doesn't already exist
   const { data: existingMainGroup } = await adminClient
@@ -114,6 +141,11 @@ export async function POST(
         }
       }
     }
+  }
+
+  const isJson = request.headers.get('accept')?.includes('application/json') || request.nextUrl.searchParams.has('autoVerifyHost')
+  if (isJson) {
+    return NextResponse.json({ success: true, message: 'Event approved and published live' })
   }
 
   return NextResponse.redirect(new URL('/admin/dashboard/events', request.url))

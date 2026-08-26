@@ -2,6 +2,42 @@ import { createClient } from '@/lib/supabase-server'
 import { createAdminClient } from '@/lib/supabase-admin'
 import { NextRequest, NextResponse } from 'next/server'
 
+export async function GET() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const adminClient = createAdminClient()
+  const { data: admin } = await adminClient
+    .from('admin_team')
+    .select('department')
+    .eq('id', user.id)
+    .single()
+
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const [
+    { count: usersCount },
+    { count: organisersCount },
+    { count: verifiedOrganisersCount },
+    { data: recentAnnouncements }
+  ] = await Promise.all([
+    adminClient.from('users').select('*', { count: 'exact', head: true }).eq('is_suspended', false),
+    adminClient.from('organisers').select('*', { count: 'exact', head: true }),
+    adminClient.from('organisers').select('*', { count: 'exact', head: true }).eq('is_verified', true),
+    adminClient.from('announcements').select('*').order('sent_at', { ascending: false }).limit(5),
+  ])
+
+  return NextResponse.json({
+    counts: {
+      users: usersCount || 0,
+      organisers: organisersCount || 0,
+      verifiedOrganisers: verifiedOrganisersCount || 0,
+    },
+    recentAnnouncements: recentAnnouncements || []
+  })
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -17,7 +53,7 @@ export async function POST(request: NextRequest) {
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   // Only super_admin and marketing can send announcements
-  if (!['super_admin', 'marketing'].includes(admin.department)) {
+  if (!['super_admin', 'marketing', 'operations'].includes(admin.department)) {
     return NextResponse.json({ error: 'Not authorized to send announcements' }, { status: 403 })
   }
 
@@ -28,7 +64,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Title and message are required' }, { status: 400 })
   }
 
-  // Get target users
+  // Get target user IDs
   let userIds: string[] = []
 
   if (audience === 'all') {
@@ -37,6 +73,17 @@ export async function POST(request: NextRequest) {
       .select('id')
       .eq('is_suspended', false)
     userIds = users?.map(u => u.id) || []
+  } else if (audience === 'organisers') {
+    const { data: orgs } = await adminClient
+      .from('organisers')
+      .select('id')
+    userIds = orgs?.map(o => o.id) || []
+  } else if (audience === 'verified_organisers') {
+    const { data: orgs } = await adminClient
+      .from('organisers')
+      .select('id')
+      .eq('is_verified', true)
+    userIds = orgs?.map(o => o.id) || []
   } else if (audience === 'city' && city) {
     const { data: users } = await adminClient
       .from('users')
@@ -45,15 +92,31 @@ export async function POST(request: NextRequest) {
       .eq('is_suspended', false)
     userIds = users?.map(u => u.id) || []
   } else if (audience === 'individual' && user_email) {
-    const { data: users } = await adminClient
+    // Check users table first
+    const { data: userRecord } = await adminClient
       .from('users')
       .select('id')
       .eq('email', user_email)
-    userIds = users?.map(u => u.id) || []
+      .single()
+
+    if (userRecord) {
+      userIds = [userRecord.id]
+    } else {
+      // Check organisers table
+      const { data: orgRecord } = await adminClient
+        .from('organisers')
+        .select('id')
+        .eq('email', user_email)
+        .single()
+
+      if (orgRecord) {
+        userIds = [orgRecord.id]
+      }
+    }
   }
 
   if (userIds.length === 0) {
-    return NextResponse.json({ error: 'No users found for the selected audience' }, { status: 400 })
+    return NextResponse.json({ error: 'No recipients found for the selected audience' }, { status: 400 })
   }
 
   // Create notifications in database

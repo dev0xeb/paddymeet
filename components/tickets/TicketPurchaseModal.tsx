@@ -77,6 +77,8 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const [promoApplied, setPromoApplied] = useState<{ code: string, discount_type: string, discount_value: number } | null>(null)
   const [promoError, setPromoError] = useState('')
   const [promoLoading, setPromoLoading] = useState(false)
+  const [reservationId, setReservationId] = useState<string | null>(null)
+  const [reservationTimeLeft, setReservationTimeLeft] = useState<number | null>(null)
 
   const discountPercent = user.referral_discount_percent || 0
   const subtotal = ticketType.is_group_ticket ? ticketType.price : ticketType.price * quantity
@@ -123,6 +125,32 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
     script.onload = () => { paystackReady.current = true }
     document.head.appendChild(script)
   }, [])
+
+  // 10-minute reservation countdown timer
+  useEffect(() => {
+    if (reservationTimeLeft === null || reservationTimeLeft <= 0) return
+    const timer = setInterval(() => {
+      setReservationTimeLeft(prev => {
+        if (prev === null || prev <= 1) {
+          clearInterval(timer)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [reservationTimeLeft])
+
+  const handleModalClose = () => {
+    if (reservationId && step !== 'confirmed' && step !== 'processing') {
+      fetch('/api/tickets/release', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reservation_id: reservationId }),
+      }).catch(() => {})
+    }
+    onClose()
+  }
 
   const handleApplyPromo = async () => {
     setPromoLoading(true)
@@ -176,7 +204,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
     return list
   }
 
-  const verifyPayment = async (reference: string) => {
+  const verifyPayment = async (reference: string, activeResId?: string | null) => {
     try {
       const res = await fetch('/api/tickets/verify', {
         method: 'POST',
@@ -191,6 +219,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
           promo_code: promoApplied?.code || null,
           buyer_name: buyerName,
           buyer_phone: buyerPhone,
+          reservation_id: activeResId || reservationId,
           attendees: buildAttendeesPayload(),
         }),
       })
@@ -212,7 +241,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
     setLoading(false)
   }
 
-  const handlePaystack = () => {
+  const handlePaystack = async () => {
     setLoading(true)
     setError('')
 
@@ -230,6 +259,35 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
       return
     }
 
+    // 1. Temporarily reserve tickets to prevent overselling (SRS §7 & §21)
+    let activeResId = reservationId
+    try {
+      const resRes = await fetch('/api/tickets/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ticket_type_id: ticketType.id,
+          event_id: event.id,
+          quantity: ticketType.is_group_ticket ? ticketType.group_size : quantity,
+        }),
+      })
+      const resData = await resRes.json()
+      if (resData.error) {
+        setError(resData.error)
+        setLoading(false)
+        return
+      }
+      if (resData.reservation_id) {
+        activeResId = resData.reservation_id
+        setReservationId(resData.reservation_id)
+        setReservationTimeLeft(600) // 10 minutes
+      }
+    } catch {
+      setError('Unable to reserve tickets. Please check your connection and try again.')
+      setLoading(false)
+      return
+    }
+
     const ref = `PM-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
 
     const handler = pw.PaystackPop.setup({
@@ -241,12 +299,18 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
       metadata: {
         event_id: event.id,
         ticket_type_id: ticketType.id,
-        quantity,
+        quantity: ticketType.is_group_ticket ? ticketType.group_size : quantity,
         user_id: user.id,
+        buyer_name: buyerName,
+        buyer_phone: buyerPhone,
+        discount_applied: discountPercent,
+        promo_code: promoApplied?.code || null,
+        reservation_id: activeResId,
+        attendees: buildAttendeesPayload(),
       },
       callback: (response: { reference: string }) => {
         setStep('processing')
-        verifyPayment(response.reference)
+        verifyPayment(response.reference, activeResId)
       },
       onClose: () => {
         setLoading(false)
@@ -333,7 +397,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
     <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={step !== 'processing' ? onClose : undefined}
+        onClick={step !== 'processing' ? handleModalClose : undefined}
       />
 
       <div className="relative w-full md:max-w-md bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
@@ -344,7 +408,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
             {step === 'confirmed' ? 'Tickets Confirmed!' : step === 'processing' ? 'Processing...' : step === 'details' ? 'Your Details' : 'Get Tickets'}
           </h2>
           {step !== 'processing' && (
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
+            <button onClick={handleModalClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -531,6 +595,17 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
                   </span>
                 </div>
               </div>
+
+              {reservationTimeLeft !== null && reservationTimeLeft > 0 && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl mb-3 text-xs text-amber-800 flex items-center justify-between">
+                  <span className="font-semibold flex items-center gap-1.5">
+                    <span>⏱️</span> Tickets reserved for checkout
+                  </span>
+                  <span className="font-mono font-bold bg-amber-200/60 px-2 py-0.5 rounded text-amber-900">
+                    {Math.floor(reservationTimeLeft / 60)}:{String(reservationTimeLeft % 60).padStart(2, '0')}
+                  </span>
+                </div>
+              )}
 
               {!event.is_free && discountPercent > 0 && (
                 <div className="p-3 bg-green-50 border border-green-200 rounded-xl mb-3 text-xs text-green-700 flex items-center gap-2">

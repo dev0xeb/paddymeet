@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Shield } from 'lucide-react'
-import { createClient } from '@/lib/supabase'
+import { Eye, EyeOff, Shield, Loader2, AlertCircle } from 'lucide-react'
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('')
@@ -11,118 +9,117 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const router = useRouter()
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      setError('Please enter your email and password.')
-      return
-    }
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    if (!email || !password || loading) return
+
     setLoading(true)
     setError('')
 
-    const supabase = createClient()
+    try {
+      const res = await fetch('/api/auth/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
 
-    // Sign in
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+      const data = await res.json()
 
-    if (authError) {
-      setError('Invalid credentials.')
+      if (!res.ok || data.error) {
+        setError(data.error || 'Invalid admin credentials')
+        setLoading(false)
+        return
+      }
+
+      // Hard redirect to ensure server session cookies are sent
+      window.location.href = data.redirect || '/admin/dashboard'
+    } catch {
+      setError('An error occurred signing in. Please check your network connection.')
       setLoading(false)
-      return
     }
-
-    // Check if user is in admin_team
-    const { data: admin } = await supabase
-      .from('admin_team')
-      .select('id, department')
-      .eq('id', data.user.id)
-      .single()
-
-    if (!admin) {
-      await supabase.auth.signOut()
-      setError('Access denied.')
-      setLoading(false)
-      return
-    }
-
-    router.push('/admin/dashboard')
   }
 
-  const inputClass = "w-full px-4 py-3.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white outline-none focus:border-orange-500 focus:bg-gray-750 transition-all placeholder:text-gray-500"
+  const inputClass = "w-full px-4 py-3.5 bg-slate-900 border border-slate-800 rounded-xl text-sm text-white outline-none focus:border-orange-500 transition-all placeholder:text-slate-500 shadow-sm"
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mx-auto mb-4 shadow-sm">
             <Shield className="w-6 h-6 text-orange-500" />
           </div>
           <div className="text-xl font-bold text-white tracking-tight">
             paddy<span className="text-orange-500">meet</span>
           </div>
+          <p className="text-xs text-slate-500 mt-1 font-medium">Administrator Command Centre</p>
         </div>
 
-        {/* Form */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-
-          <div className="mb-5">
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleLogin()}
-              className={inputClass}
-            />
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-              Password
-            </label>
-            <div className="relative">
+        {/* Form Card */}
+        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+          <form onSubmit={handleLogin} className="space-y-4">
+            
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                Administrator Email
+              </label>
               <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                className={inputClass + ' pr-12'}
+                type="email"
+                required
+                placeholder="admin@paddymeet.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className={inputClass}
               />
-              <button
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
             </div>
-          </div>
 
-          {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 mb-4">
-              {error}
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className={inputClass + ' pr-12'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          )}
 
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            className={`w-full py-3.5 text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center ${
-              loading ? 'bg-gray-700 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'
-            }`}
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
+            {error && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs text-rose-400 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
 
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Authenticating...</span>
+                </>
+              ) : (
+                <span>Sign In to Admin Portal</span>
+              )}
+            </button>
+          </form>
         </div>
 
       </div>

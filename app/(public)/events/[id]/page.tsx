@@ -10,6 +10,7 @@ import { MapPin, Calendar, Clock, Users, ArrowLeft } from 'lucide-react'
 import BuyTicketButton from '@/components/tickets/BuyTicketButton'
 import TicketSelector from '@/components/tickets/TicketSelector'
 import TicketGroupBrowser from '@/components/TicketGroupBrowser'
+import FollowOrganiserButton from '@/components/FollowOrganiserButton'
 
 interface TicketType {
   id: string
@@ -435,6 +436,29 @@ const userData = user ? { id: user.id, email: user.email || '', referral_discoun
 
           {/* Right — sticky sidebar */}
           <div className="space-y-4">
+            {/* Hosted by Organiser Card */}
+            {event.organisers && (
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-extrabold text-sm flex-shrink-0">
+                    {(Array.isArray(event.organisers) ? event.organisers[0]?.org_name : event.organisers?.org_name)?.charAt(0)?.toUpperCase() || 'O'}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Hosted by</div>
+                    <div className="text-sm font-extrabold text-gray-900 truncate">
+                      {Array.isArray(event.organisers) ? event.organisers[0]?.org_name : event.organisers?.org_name}
+                    </div>
+                  </div>
+                </div>
+                {event.organiser_id && (
+                  <FollowOrganiserButton
+                    organiserId={event.organiser_id}
+                    organiserName={Array.isArray(event.organisers) ? event.organisers[0]?.org_name : event.organisers?.org_name}
+                  />
+                )}
+              </div>
+            )}
+
             <div className="bg-white rounded-2xl border border-gray-100 p-5 lg:sticky lg:top-24">
               <div className="text-center pb-4 border-b border-gray-100 mb-4">
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">

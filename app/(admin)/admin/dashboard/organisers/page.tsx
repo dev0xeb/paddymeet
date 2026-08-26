@@ -5,8 +5,9 @@ import Link from 'next/link'
 import {
   ArrowLeft, Search, CheckCircle, XCircle, Eye,
   MapPin, Calendar, ChevronLeft, ChevronRight,
-  Building2, Ticket, DollarSign
+  Building2, Ticket, DollarSign, Trash2
 } from 'lucide-react'
+import AdminDeleteOrganiserButton from '@/components/AdminDeleteOrganiserButton'
 
 export default async function AdminOrganisersPage({
   searchParams,
@@ -49,16 +50,23 @@ export default async function AdminOrganisersPage({
   const { data: organisers, count } = await query
   const totalPages = Math.ceil((count || 0) / pageSize)
 
-  // Get event counts per organiser
+  // Get events and revenue per organiser
   const organiserIds = organisers?.map(o => o.id) || []
-  const { data: eventCounts } = await adminClient
+  const { data: organiserEvents } = await adminClient
     .from('events')
-    .select('organiser_id')
+    .select('id, organiser_id, orders(total_paid, payment_status)')
     .in('organiser_id', organiserIds)
 
   const eventCountMap: Record<string, number> = {}
-  eventCounts?.forEach(e => {
+  const revenueMap: Record<string, number> = {}
+
+  organiserEvents?.forEach(e => {
     eventCountMap[e.organiser_id] = (eventCountMap[e.organiser_id] || 0) + 1
+    const orders = (e.orders as unknown as Array<{ total_paid: number, payment_status: string }>) || []
+    const eventRevenue = orders
+      .filter(o => o.payment_status === 'completed')
+      .reduce((sum, o) => sum + (o.total_paid || 0), 0)
+    revenueMap[e.organiser_id] = (revenueMap[e.organiser_id] || 0) + eventRevenue
   })
 
   return (
@@ -157,7 +165,7 @@ export default async function AdminOrganisersPage({
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {[
                     { icon: Ticket, label: 'Events', value: eventCountMap[org.id] || 0 },
-                    { icon: DollarSign, label: 'Revenue', value: '—' },
+                    { icon: DollarSign, label: 'Revenue', value: revenueMap[org.id] ? `₦${revenueMap[org.id].toLocaleString()}` : '₦0' },
                     { icon: Calendar, label: 'Joined', value: org.created_at ? new Date(org.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—' },
                   ].map(({ icon: Icon, label, value }) => (
                     <div key={label} className="p-2.5 bg-gray-50 rounded-xl text-center">
@@ -197,7 +205,7 @@ export default async function AdminOrganisersPage({
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 border-t border-gray-100 pt-4">
+                <div className="flex items-center gap-2 border-t border-gray-100 pt-4 flex-wrap">
                   <Link href={`/admin/dashboard/organisers/${org.id}`}
                     className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border border-gray-200 text-gray-600 text-xs font-bold rounded-xl hover:border-gray-300 transition-colors flex-1 justify-center">
                     <Eye className="w-3.5 h-3.5" /> View Details
@@ -215,7 +223,7 @@ export default async function AdminOrganisersPage({
                   {org.is_verified && org.is_active && (
                     <form action={`/api/admin/organisers/${org.id}/suspend`} method="POST" className="flex-1">
                       <button type="submit"
-                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 border border-red-200 text-red-500 text-xs font-bold rounded-xl hover:bg-red-100 transition-colors">
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-600 text-xs font-bold rounded-xl hover:bg-amber-100 transition-colors">
                         <XCircle className="w-3.5 h-3.5" /> Suspend
                       </button>
                     </form>
@@ -229,6 +237,12 @@ export default async function AdminOrganisersPage({
                       </button>
                     </form>
                   )}
+
+                  <AdminDeleteOrganiserButton
+                    organiserId={org.id}
+                    organiserName={org.org_name}
+                    organiserEmail={org.email}
+                  />
                 </div>
               </div>
             ))}

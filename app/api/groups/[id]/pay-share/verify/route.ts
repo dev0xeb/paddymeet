@@ -44,6 +44,22 @@ export async function POST(
 
   if (!group) return NextResponse.json({ error: 'Group not found' }, { status: 404 })
 
+  // Idempotency check: if webhook already fulfilled this group share payment
+  if (reference !== 'FREE') {
+    const { data: existingMembers } = await supabase
+      .from('group_members')
+      .select('id, attendee_name, ticket_id')
+      .eq('payment_reference', reference)
+
+    if (existingMembers && existingMembers.length > 0) {
+      return NextResponse.json({
+        success: true,
+        group_completed: group.status === 'completed',
+        members_paid: existingMembers.length,
+      })
+    }
+  }
+
   // Re-check capacity right before committing
   const { count: currentPaid } = await supabase
     .from('group_members')

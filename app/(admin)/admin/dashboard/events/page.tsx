@@ -6,6 +6,7 @@ import {
   ArrowLeft, CheckCircle, XCircle, Eye, Calendar,
   MapPin, Users, Clock, Filter
 } from 'lucide-react'
+import AdminApproveEventButton from '@/components/AdminApproveEventButton'
 
 export default async function AdminEventsPage({
   searchParams,
@@ -30,7 +31,7 @@ export default async function AdminEventsPage({
 
   let query = adminClient
     .from('events')
-    .select('*, organisers(org_name, contact_name, email), ticket_types(*)')
+    .select('*, organisers(id, org_name, contact_name, email, is_verified), ticket_types(*)')
     .order('created_at', { ascending: false })
 
   if (status === 'pending') query = query.eq('is_approved', false).eq('is_rejected', false)
@@ -38,14 +39,14 @@ export default async function AdminEventsPage({
   if (status === 'rejected') query = query.eq('is_rejected', true)
   // 'all' — no filter
 
-  const { data: events } = await query.limit(50)
-
   const [
+    { data: events },
     { count: pendingCount },
     { count: liveCount },
     { count: rejectedCount },
     { count: totalCount },
   ] = await Promise.all([
+    query.limit(50),
     adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_approved', false).eq('is_rejected', false),
     adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_approved', true).eq('is_live', true),
     adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_rejected', true),
@@ -226,12 +227,13 @@ export default async function AdminEventsPage({
                       {/* Only show approve/reject for pending events */}
                       {!event.is_approved && !event.is_rejected && (
                         <>
-                          <form action={`/api/admin/events/${event.id}/approve`} method="POST">
-                            <button type="submit"
-                              className="w-full flex items-center justify-center gap-1.5 px-4 py-2 bg-green-500 text-white text-xs font-bold rounded-xl hover:bg-green-600 transition-colors">
-                              <CheckCircle className="w-3.5 h-3.5" /> Approve
-                            </button>
-                          </form>
+                          <AdminApproveEventButton
+                            eventId={event.id}
+                            eventTitle={event.title}
+                            organiserId={event.organiser_id}
+                            organiserName={event.organisers?.org_name}
+                            isHostVerified={event.organisers?.is_verified}
+                          />
                           <form action={`/api/admin/events/${event.id}/reject`} method="POST">
                             <button type="submit"
                               className="w-full flex items-center justify-center gap-1.5 px-4 py-2 bg-red-50 border border-red-200 text-red-500 text-xs font-bold rounded-xl hover:bg-red-100 transition-colors">

@@ -11,7 +11,8 @@ import {
 import { createClient } from '@/lib/supabase'
 
 interface Props {
-  orgName: string
+  orgName?: string
+  contactName?: string
   pendingEvents?: number
 }
 
@@ -34,7 +35,7 @@ const navLinks = [
   { icon: Settings, label: 'Settings', href: '/organiser/dashboard/settings' },
 ]
 
-export default function OrganiserNav({ orgName }: Props) {
+export default function OrganiserNav({ orgName, contactName }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -42,6 +43,9 @@ export default function OrganiserNav({ orgName }: Props) {
   const menuRef = useRef<HTMLDivElement>(null)
   const notifRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+
+  const displayName = contactName || orgName || 'Organiser'
+  const initial = displayName.charAt(0).toUpperCase()
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -123,7 +127,7 @@ export default function OrganiserNav({ orgName }: Props) {
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl border border-gray-100 shadow-2xl overflow-hidden z-[100]">
+            <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl border border-slate-200/80 shadow-2xl overflow-hidden z-[100]">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <span className="text-sm font-bold text-gray-900">Notifications</span>
                 <div className="flex items-center gap-2">
@@ -168,27 +172,30 @@ export default function OrganiserNav({ orgName }: Props) {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => { setMenuOpen(!menuOpen); setNotifOpen(false) }}
-            className="flex items-center gap-2 px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-full hover:border-blue-300 transition-all"
+            className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-full hover:border-slate-300 transition-all"
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-              {orgName?.charAt(0) || 'O'}
+            <div className="w-7 h-7 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm">
+              {initial}
             </div>
-            <span className="text-xs font-semibold text-gray-700 max-w-[80px] truncate hidden sm:block">
-              {orgName}
+            <span className="text-xs font-semibold text-slate-700 max-w-[120px] truncate hidden sm:block">
+              {displayName}
             </span>
-            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-gray-100 shadow-2xl overflow-hidden z-[100]">
-              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                    {orgName?.charAt(0) || 'O'}
+            <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl border border-slate-200/80 shadow-2xl overflow-hidden z-[100]">
+              <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/70">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    {initial}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-bold text-gray-900 truncate">{orgName}</div>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-500">Organiser</span>
+                    <div className="text-sm font-bold text-slate-900 truncate">{displayName}</div>
+                    {orgName && <div className="text-xs text-slate-500 truncate">{orgName}</div>}
+                    <span className="inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200/80">
+                      Organiser Host
+                    </span>
                   </div>
                 </div>
               </div>

@@ -25,5 +25,11 @@ export async function POST(
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+  const isJson = request.headers.get('accept')?.includes('application/json')
+  if (isJson) {
+    return NextResponse.json({ success: true, message: 'Host verified successfully' })
+  }
+
   return NextResponse.redirect(new URL('/admin/dashboard/organisers', request.url))
 }

@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import OrganiserNav from '@/components/OrganiserNav'
-import { Save, User, CreditCard, Building2, Check, Eye, EyeOff, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Save, User, CreditCard, Building2, Check, Eye, EyeOff, Loader2, CheckCircle, AlertCircle, ChevronDown } from 'lucide-react'
 
 interface OrganiserProfile {
   id: string
@@ -64,6 +65,7 @@ export default function OrganiserSettingsPage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showNewPw, setShowNewPw] = useState(false)
+  const [showConfirmPw, setShowConfirmPw] = useState(false)
 
   const verifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevInputRef = useRef({ accountNumber: '', selectedBankCode: '' })
@@ -211,10 +213,17 @@ export default function OrganiserSettingsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      <OrganiserNav orgName={profile?.org_name || ''} />
+      <OrganiserNav orgName={profile?.org_name || ''} contactName={profile?.contact_name} />
 
-      <div className="pt-24 md:pt-16 max-w-3xl mx-auto px-4 md:px-6 py-8">
+      <div className="pt-24 md:pt-20 max-w-3xl mx-auto px-4 md:px-6 py-8">
         <div className="mb-6">
+          <Link
+            href="/organiser/dashboard"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-3 group"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-slate-400 group-hover:-translate-x-0.5 transition-transform" />
+            Back to Dashboard
+          </Link>
           <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">Settings</h1>
           <p className="text-sm text-gray-500">Manage your organiser profile and account settings</p>
         </div>
@@ -283,8 +292,8 @@ export default function OrganiserSettingsPage() {
                   </div>
                 </div>
                 <button onClick={handleSaveProfile} disabled={saving}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-500 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
-                  {saving ? 'Saving...' : 'Save Profile'}{!saving && <Save className="w-4 h-4" />}
+                  className="w-full flex items-center justify-center py-3.5 bg-blue-500 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                  {saving ? 'Saving...' : 'Save Profile'}
                 </button>
               </div>
             )}
@@ -296,22 +305,28 @@ export default function OrganiserSettingsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Bank</label>
-                  <select value={selectedBankCode} onChange={e => setSelectedBankCode(e.target.value)} className={inputClass + ' appearance-none'}>
-                    <option value="" disabled>Select your bank</option>
-                    {banks.map(bank => <option key={bank.code} value={bank.code}>{bank.name}</option>)}
-                  </select>
+                  <div className="relative">
+                    <select value={selectedBankCode} onChange={e => setSelectedBankCode(e.target.value)} className={inputClass + ' appearance-none pr-10'}>
+                      <option value="" disabled>Select your bank</option>
+                      {banks.map((bank, index) => (
+                        <option key={`${bank.code}-${index}`} value={bank.code}>
+                          {bank.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Account Number</label>
-                  <div className="relative">
-                    <input type={showAccountNumber ? 'text' : 'password'} value={accountNumber}
-                      onChange={e => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      placeholder="10-digit account number" className={inputClass + ' pr-10'} />
-                    <button onClick={() => setShowAccountNumber(!showAccountNumber)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                      {showAccountNumber ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={accountNumber}
+                    onChange={e => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="10-digit account number"
+                    className={inputClass}
+                  />
                   <div className="text-xs text-gray-400 mt-1">{accountNumber.length}/10 digits</div>
                 </div>
 
@@ -338,8 +353,8 @@ export default function OrganiserSettingsPage() {
                 )}
 
                 <button onClick={handleSaveBank} disabled={saving || !verifiedName || verifying}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-500 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
-                  {saving ? 'Saving...' : 'Save Bank Details'}{!saving && <Save className="w-4 h-4" />}
+                  className="w-full flex items-center justify-center py-3.5 bg-blue-500 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                  {saving ? 'Saving...' : 'Save Bank Details'}
                 </button>
               </div>
             )}
@@ -363,14 +378,28 @@ export default function OrganiserSettingsPage() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Confirm New Password</label>
-                      <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                        placeholder="Repeat your new password" className={inputClass} />
+                      <div className="relative">
+                        <input
+                          type={showConfirmPw ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          placeholder="Repeat your new password"
+                          className={inputClass + ' pr-10'}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPw(!showConfirmPw)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showConfirmPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
                 <button onClick={handleChangePassword} disabled={saving}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-500 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
-                  {saving ? 'Updating...' : 'Update Password'}{!saving && <Save className="w-4 h-4" />}
+                  className="w-full flex items-center justify-center py-3.5 bg-blue-500 text-white text-sm font-bold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                  {saving ? 'Updating...' : 'Update Password'}
                 </button>
               </div>
             )}

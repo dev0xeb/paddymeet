@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, Eye, EyeOff, Check, Shield, Users, Mic } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 
 const REMEMBER_KEY = 'pm_device_trusted'
 const REMEMBER_DAYS = 30
@@ -201,6 +202,21 @@ export default function LoginPage() {
                 {loginAs === 'organiser'
                   ? '🎤 Logging in as an Organiser — you\'ll be taken to your organiser dashboard.'
                   : '👥 Logging in as an Explorer — you\'ll be taken to your personal dashboard.'}
+              </div>
+
+              {/* Google Login */}
+              <div className="mb-5">
+                <GoogleAuthButton
+                  mode="login"
+                  accountType={loginAs}
+                  onError={(err) => setError(err)}
+                />
+              </div>
+
+              <div className="relative flex items-center gap-4 mb-5">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs text-gray-400 font-medium">or continue with email</span>
+                <div className="flex-1 h-px bg-gray-200" />
               </div>
 
               <div className="mb-4">

@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Users, Mic, ArrowRight, Check, X, Gift } from 'lucide-react'
+import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 
 export default function SignUpPage() {
   return (
@@ -280,7 +281,22 @@ useEffect(() => {
               <div className="text-6xl font-extrabold text-orange-50 leading-none mb-1 select-none">01</div>
               <h3 className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight">Personal details</h3>
               <p className="text-sm text-gray-500 mb-2 leading-relaxed">Your real name is for verification only and stays completely private.</p>
-              <p className="text-xs text-gray-400 mb-8">All fields are required</p>
+
+              {/* Google Sign up */}
+              <div className="my-6">
+                <GoogleAuthButton
+                  mode="signup"
+                  accountType="explorer"
+                  onError={(err) => setError(err)}
+                />
+                <div className="relative flex items-center gap-4 mt-6 mb-2">
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-xs text-gray-400 font-medium">or register with email</span>
+                  <div className="flex-1 h-px bg-gray-200" />
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-400 mb-6">All fields are required</p>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
@@ -594,7 +610,22 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
             <>
               <h3 className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight">Tell us about your organisation</h3>
               <p className="text-sm text-gray-500 mb-2 leading-relaxed">This information will be used to verify your identity and set up your account.</p>
-              <p className="text-xs text-gray-400 mb-8">All fields marked with * are required</p>
+
+              {/* Google Sign up */}
+              <div className="my-6">
+                <GoogleAuthButton
+                  mode="signup"
+                  accountType="organiser"
+                  onError={(err) => setError(err)}
+                />
+                <div className="relative flex items-center gap-4 mt-6 mb-2">
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-xs text-gray-400 font-medium">or fill out organisation form</span>
+                  <div className="flex-1 h-px bg-gray-200" />
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-400 mb-6">All fields marked with * are required</p>
 
               <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Organisation name <span className="text-red-400">*</span></label>

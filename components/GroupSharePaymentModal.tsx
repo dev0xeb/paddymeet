@@ -136,6 +136,11 @@ export default function GroupSharePaymentModal({
       amount: totalAmount * 100,
       currency: 'NGN',
       ref,
+      metadata: {
+        group_id: groupId,
+        spots: spotCount,
+        attendees: buildAttendeesPayload(),
+      },
       callback: (response: { reference: string }) => {
         setStep('processing')
         verifyShare(response.reference)

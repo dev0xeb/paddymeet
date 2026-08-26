@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
   const {
     reference, event_id, ticket_type_id, quantity, user_id,
     discount_applied, promo_code, buyer_name, buyer_phone, attendees,
+    reservation_id,
   } = body
 
   // Verify payment with Paystack
@@ -32,6 +33,29 @@ export async function POST(request: NextRequest) {
   }
 
   const amountPaid = verifyData.data.amount / 100
+
+  // Idempotency check: if webhook already fulfilled this payment, return the created tickets
+  const { data: existingOrder } = await supabase
+    .from('orders')
+    .select('id, payment_status')
+    .eq('payment_reference', reference)
+    .maybeSingle()
+
+  if (existingOrder && existingOrder.payment_status === 'completed') {
+    const { data: existingTickets } = await supabase
+      .from('tickets')
+      .select('*')
+      .eq('event_id', event_id)
+      .eq('user_id', user_id)
+      .order('created_at', { ascending: false })
+      .limit(quantity)
+
+    return NextResponse.json({
+      success: true,
+      order_id: existingOrder.id,
+      tickets: existingTickets || [],
+    })
+  }
 
   // Create order
   const { data: order, error: orderError } = await supabase
@@ -115,6 +139,14 @@ export async function POST(request: NextRequest) {
     ticket_type_id,
     amount: quantity,
   })
+
+  // Convert temporary reservation to completed status
+  if (reservation_id && !reservation_id.startsWith('res-soft-')) {
+    await supabase
+      .from('ticket_reservations')
+      .update({ status: 'converted' })
+      .eq('id', reservation_id)
+  }
 
   // Auto-add user to event groups
   const { data: eventGroups } = await supabase

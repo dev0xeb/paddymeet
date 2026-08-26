@@ -12,6 +12,13 @@ export async function POST(request: NextRequest) {
   const adminClient = createAdminClient()
   const now = new Date().toISOString()
 
+  // Housekeeping: clean up expired ticket reservations
+  await adminClient
+    .from('ticket_reservations')
+    .update({ status: 'expired' })
+    .eq('status', 'pending')
+    .lt('expires_at', now)
+
   // Find all ticket types whose deadline has passed and haven't been processed yet
   const { data: expiredTicketTypes, error: ttError } = await adminClient
     .from('ticket_types')

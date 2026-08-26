@@ -12,8 +12,13 @@ export async function POST(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const adminClient = createAdminClient()
-  const { data: admin } = await adminClient.from('admin_team').select('department').eq('id', user.id).single()
-  if (!admin || !['super_admin', 'marketing'].includes(admin.department)) {
+  const { data: admin } = await adminClient
+    .from('admin_team')
+    .select('department')
+    .eq('id', user.id)
+    .single()
+
+  if (!admin || !['super_admin', 'marketing', 'operations'].includes(admin.department)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -23,6 +28,13 @@ export async function POST(
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+  const isJson = request.headers.get('accept')?.includes('application/json') ||
+                 request.headers.get('content-type')?.includes('application/json')
+
+  if (isJson) {
+    return NextResponse.json({ success: true, is_featured: true })
+  }
 
   return NextResponse.redirect(new URL('/admin/dashboard/featured', request.url))
 }

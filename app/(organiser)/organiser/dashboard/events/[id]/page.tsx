@@ -4,7 +4,7 @@ import Link from 'next/link'
 import OrganiserNav from '@/components/OrganiserNav'
 import {
   Calendar, MapPin, Clock, Ticket,
-  Users, CheckCircle, XCircle, Edit
+  Users, CheckCircle, XCircle, Edit, Download
 } from 'lucide-react'
 
 export default async function OrganiserManageEventPage({
@@ -192,9 +192,23 @@ export default async function OrganiserManageEventPage({
 
             {/* Recent attendees */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-extrabold text-gray-900">Recent Attendees</h2>
-                <Link href="/organiser/dashboard/attendees" className="text-xs font-bold text-blue-500 hover:underline">View all →</Link>
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div>
+                  <h2 className="text-sm font-extrabold text-gray-900">Recent Attendees</h2>
+                  <p className="text-xs text-gray-500">Live attendee list & check-in log</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`/api/organiser/events/${id}/export`}
+                    download
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Export Manifest (CSV)
+                  </a>
+                  <Link href="/organiser/dashboard/attendees" className="text-xs font-bold text-blue-500 hover:underline">
+                    View all →
+                  </Link>
+                </div>
               </div>
               {tickets && tickets.length > 0 ? (
                 <div className="space-y-2">

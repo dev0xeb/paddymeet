@@ -15,7 +15,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch banks' }, { status: 400 })
     }
 
-    return NextResponse.json({ banks: data.data })
+    const rawBanks = Array.isArray(data.data) ? data.data : []
+    const seenCodes = new Set<string>()
+    const uniqueBanks = rawBanks.filter((bank: { code: string; name: string }) => {
+      if (!bank.code || seenCodes.has(bank.code)) return false
+      seenCodes.add(bank.code)
+      return true
+    })
+
+    return NextResponse.json({ banks: uniqueBanks })
   } catch {
     return NextResponse.json({ error: 'Failed to fetch banks' }, { status: 500 })
   }

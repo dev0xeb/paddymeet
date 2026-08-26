@@ -62,9 +62,9 @@ export default function UserAvatarMenu({ username, tier = 'Newbie' }: Props) {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
     { icon: Ticket, label: 'My Tickets', href: '/tickets' },
-    { icon: Users, label: 'My Groups', href: '/dashboard' },
-    { icon: Star, label: 'Trust Score', href: '/dashboard' },
-    { icon: Gift, label: 'Referrals', href: '/dashboard' },
+    { icon: Users, label: 'My Groups', href: '/groups' },
+    { icon: Star, label: 'Trust Score', href: '/trust-score' },
+    { icon: Gift, label: 'Referrals', href: '/referrals' },
     { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
   ]
 

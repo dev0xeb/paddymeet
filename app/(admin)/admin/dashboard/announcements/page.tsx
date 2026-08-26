@@ -1,11 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Send, Users, MapPin, User, Bell, Mail, CheckCircle, Clock, Megaphone } from 'lucide-react'
+import {
+  ArrowLeft, Send, Users, MapPin, User, Bell, Mail,
+  CheckCircle, Clock, Megaphone, ShieldCheck, Building2,
+  AlertCircle, Loader2, Sparkles
+} from 'lucide-react'
 
-type AudienceType = 'all' | 'city' | 'individual'
+type AudienceType = 'all' | 'organisers' | 'verified_organisers' | 'city' | 'individual'
 type ChannelType = 'push' | 'email' | 'both'
+
+interface RecentAnnouncement {
+  id: string
+  title: string
+  message: string
+  audience: string
+  channel: string
+  sent_at: string
+  sent_to_count: number
+}
 
 const cities = [
   'Lagos', 'Abuja', 'Port Harcourt', 'Ibadan', 'Warri',
@@ -22,14 +36,47 @@ export default function AdminAnnouncementsPage() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
+  const [sentCount, setSentCount] = useState(0)
 
-  const canSend = title && message &&
+  const [counts, setCounts] = useState({ users: 0, organisers: 0, verifiedOrganisers: 0 })
+  const [recentList, setRecentList] = useState<RecentAnnouncement[]>([])
+
+  const fetchStatsAndHistory = async () => {
+    try {
+      const res = await fetch('/api/admin/announcements')
+      const data = await res.json()
+      if (data.counts) setCounts(data.counts)
+      if (data.recentAnnouncements) setRecentList(data.recentAnnouncements)
+    } catch {
+      // ignore
+    }
+  }
+
+  useEffect(() => {
+    fetchStatsAndHistory()
+  }, [])
+
+  const canSend = Boolean(
+    title.trim() &&
+    message.trim() &&
     (audience === 'all' ||
+      audience === 'organisers' ||
+      audience === 'verified_organisers' ||
       (audience === 'city' && selectedCity) ||
-      (audience === 'individual' && userEmail))
+      (audience === 'individual' && userEmail.trim()))
+  )
+
+  const getEstimatedReach = () => {
+    if (audience === 'all') return `${counts.users} registered user${counts.users === 1 ? '' : 's'}`
+    if (audience === 'organisers') return `${counts.organisers} event host${counts.organisers === 1 ? '' : 's'}`
+    if (audience === 'verified_organisers') return `${counts.verifiedOrganisers} verified host${counts.verifiedOrganisers === 1 ? '' : 's'}`
+    if (audience === 'city') return selectedCity ? `Users in ${selectedCity}` : 'Select a city'
+    if (audience === 'individual') return userEmail ? `1 direct account` : 'Enter email'
+    return '0 recipients'
+  }
 
   const handleSend = async () => {
-    if (!canSend) return
+    if (!canSend || loading) return
     setLoading(true)
     setError('')
 
@@ -51,31 +98,35 @@ export default function AdminAnnouncementsPage() {
         setError(data.error)
       } else {
         setSent(true)
+        setSentCount(data.sent_to || 0)
         setTitle('')
         setMessage('')
         setSelectedCity('')
         setUserEmail('')
+        fetchStatsAndHistory()
       }
     } catch {
-      setError('Something went wrong. Please try again.')
+      setError('Something went wrong sending the announcement. Please try again.')
     }
     setLoading(false)
   }
 
-  const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 outline-none focus:border-orange-400 focus:bg-white transition-all"
+  const inputClass = "w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-orange-500 transition-all shadow-sm"
 
   return (
-    <div className="min-h-screen bg-gray-50">
-
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-gray-900 border-b border-gray-800">
+    <div className="min-h-screen bg-slate-50 antialiased">
+      {/* Top Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-slate-900 border-b border-slate-800">
         <div className="flex items-center gap-4">
-          <Link href="/admin/dashboard" className="flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors">
+          <Link
+            href="/admin/dashboard"
+            className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" /> Dashboard
           </Link>
-          <div className="h-5 w-px bg-gray-700" />
-          <span className="text-xs font-bold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
-            Announcements
+          <div className="h-5 w-px bg-slate-700" />
+          <span className="text-xs font-semibold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
+            Broadcast Centre
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
@@ -83,63 +134,85 @@ export default function AdminAnnouncementsPage() {
         </Link>
       </nav>
 
-      <div className="pt-16 max-w-4xl mx-auto px-6 py-8">
-
+      <div className="pt-16 max-w-7xl mx-auto px-4 md:px-6 py-8">
+        
+        {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">Send Announcement</h1>
-          <p className="text-sm text-gray-500">Send push notifications and emails to your users</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">Broadcast Announcement</h1>
+          <p className="text-xs text-slate-500">Send push notifications and official email blasts to users and event hosts.</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Left — compose */}
-          <div className="col-span-2 space-y-5">
+          {/* Left Column (2 Cols) — Compose */}
+          <div className="lg:col-span-2 space-y-6">
 
             {/* Success message */}
             {sent && (
-              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-2xl">
-                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <div>
-                  <div className="text-sm font-bold text-green-700">Announcement sent successfully</div>
-                  <button onClick={() => setSent(false)} className="text-xs text-green-600 hover:underline mt-0.5">
-                    Send another
-                  </button>
+              <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 rounded-2xl animate-fade-in shadow-sm">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                  <div>
+                    <div className="text-xs font-bold text-emerald-800">Announcement broadcasted successfully!</div>
+                    <div className="text-[11px] text-emerald-700 mt-0.5">
+                      Delivered to <strong>{sentCount}</strong> active recipient{sentCount === 1 ? '' : 's'}.
+                    </div>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setSent(false)}
+                  className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline"
+                >
+                  Send another
+                </button>
               </div>
             )}
 
-            {/* Audience */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h2 className="text-sm font-extrabold text-gray-900 mb-4">Who are you sending to?</h2>
-              <div className="grid grid-cols-3 gap-3">
+            {/* Step 1: Target Audience */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-bold text-slate-900">1. Select Target Audience</h2>
+                <span className="text-[11px] font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
+                  Est. Reach: {getEstimatedReach()}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
-                  { value: 'all', icon: Users, label: 'All Users', desc: 'Every registered user' },
-                  { value: 'city', icon: MapPin, label: 'Specific City', desc: 'Users in one city' },
-                  { value: 'individual', icon: User, label: 'One User', desc: 'A specific account' },
+                  { value: 'all', icon: Users, label: 'All Attendees', desc: `Every user (~${counts.users})` },
+                  { value: 'organisers', icon: Building2, label: 'All Hosts', desc: `All organisers (~${counts.organisers})` },
+                  { value: 'verified_organisers', icon: ShieldCheck, label: 'Verified Hosts', desc: `Verified hosts (~${counts.verifiedOrganisers})` },
+                  { value: 'city', icon: MapPin, label: 'Specific City', desc: 'Users in a selected city' },
+                  { value: 'individual', icon: User, label: 'Single Account', desc: 'Specific email address' },
                 ].map(({ value, icon: Icon, label, desc }) => (
                   <button
                     key={value}
+                    type="button"
                     onClick={() => setAudience(value as AudienceType)}
-                    className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                    className={`p-3.5 rounded-2xl border text-left transition-all ${
                       audience === value
-                        ? 'border-orange-400 bg-orange-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-orange-500 bg-orange-50/70 ring-2 ring-orange-500/20 shadow-sm'
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
                     }`}
                   >
-                    <Icon className={`w-5 h-5 mb-2 ${audience === value ? 'text-orange-500' : 'text-gray-400'}`} />
-                    <div className={`text-sm font-bold ${audience === value ? 'text-orange-600' : 'text-gray-900'}`}>{label}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{desc}</div>
+                    <Icon className={`w-4 h-4 mb-2 ${audience === value ? 'text-orange-600' : 'text-slate-400'}`} />
+                    <div className={`text-xs font-bold ${audience === value ? 'text-orange-950' : 'text-slate-900'}`}>{label}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5 leading-tight">{desc}</div>
                   </button>
                 ))}
               </div>
 
               {/* City selector */}
               {audience === 'city' && (
-                <div className="mt-4">
+                <div className="mt-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                  <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">
+                    Choose Target City
+                  </label>
                   <select
                     value={selectedCity}
                     onChange={e => setSelectedCity(e.target.value)}
-                    className={inputClass + ' appearance-none'}
+                    className={inputClass}
                   >
                     <option value="" disabled>Select a city</option>
                     {cities.map(city => (
@@ -151,10 +224,13 @@ export default function AdminAnnouncementsPage() {
 
               {/* Individual user */}
               {audience === 'individual' && (
-                <div className="mt-4">
+                <div className="mt-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                  <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">
+                    Recipient Email Address
+                  </label>
                   <input
                     type="email"
-                    placeholder="Enter user email address"
+                    placeholder="Enter attendee or organiser email"
                     value={userEmail}
                     onChange={e => setUserEmail(e.target.value)}
                     className={inputClass}
@@ -163,112 +239,161 @@ export default function AdminAnnouncementsPage() {
               )}
             </div>
 
-            {/* Channel */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h2 className="text-sm font-extrabold text-gray-900 mb-4">How are you sending it?</h2>
-              <div className="grid grid-cols-3 gap-3">
+            {/* Step 2: Delivery Channels */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+              <h2 className="text-sm font-bold text-slate-900 mb-4">2. Delivery Channels</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
-                  { value: 'push', icon: Bell, label: 'Push Only', desc: 'In-app notification' },
-                  { value: 'email', icon: Mail, label: 'Email Only', desc: 'Send to inbox' },
-                  { value: 'both', icon: Megaphone, label: 'Push + Email', desc: 'Maximum reach' },
+                  { value: 'push', icon: Bell, label: 'Push Only', desc: 'In-app notification badge' },
+                  { value: 'email', icon: Mail, label: 'Email Only', desc: 'Delivered directly to inbox' },
+                  { value: 'both', icon: Megaphone, label: 'Push + Email', desc: 'Maximum visibility & reach' },
                 ].map(({ value, icon: Icon, label, desc }) => (
                   <button
                     key={value}
+                    type="button"
                     onClick={() => setChannel(value as ChannelType)}
-                    className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                    className={`p-3.5 rounded-2xl border text-left transition-all ${
                       channel === value
-                        ? 'border-orange-400 bg-orange-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-orange-500 bg-orange-50/70 ring-2 ring-orange-500/20 shadow-sm'
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
                     }`}
                   >
-                    <Icon className={`w-5 h-5 mb-2 ${channel === value ? 'text-orange-500' : 'text-gray-400'}`} />
-                    <div className={`text-sm font-bold ${channel === value ? 'text-orange-600' : 'text-gray-900'}`}>{label}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{desc}</div>
+                    <Icon className={`w-4 h-4 mb-2 ${channel === value ? 'text-orange-600' : 'text-slate-400'}`} />
+                    <div className={`text-xs font-bold ${channel === value ? 'text-orange-950' : 'text-slate-900'}`}>{label}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">{desc}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Message */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h2 className="text-sm font-extrabold text-gray-900 mb-4">Write your message</h2>
+            {/* Step 3: Message Content */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+              <h2 className="text-sm font-bold text-slate-900 mb-4">3. Message Content</h2>
 
               <div className="mb-4">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                  Title <span className="text-red-400">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Announcement Subject / Title <span className="text-rose-500">*</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400">{title.length}/80</span>
+                </div>
                 <input
                   type="text"
-                  placeholder="e.g. New events this weekend in Lagos"
+                  placeholder="e.g. Major platform update for upcoming weekend events"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   maxLength={80}
                   className={inputClass}
                 />
-                <div className="text-xs text-gray-400 mt-1 text-right">{title.length}/80</div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                  Message <span className="text-red-400">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Message Body <span className="text-rose-500">*</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400">{message.length}/500</span>
+                </div>
                 <textarea
                   rows={5}
-                  placeholder="Write your announcement here..."
+                  placeholder="Type your official announcement here..."
                   value={message}
                   onChange={e => setMessage(e.target.value)}
                   maxLength={500}
                   className={inputClass + ' resize-none leading-relaxed'}
                 />
-                <div className="text-xs text-gray-400 mt-1 text-right">{message.length}/500</div>
               </div>
+
+              {error && (
+                <div className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
             </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
-                {error}
-              </div>
-            )}
-
-            <button
-              onClick={handleSend}
-              disabled={!canSend || loading}
-              className={`w-full flex items-center justify-center gap-2 py-4 text-white text-sm font-bold rounded-xl transition-colors ${
-                canSend && !loading
-                  ? 'bg-orange-500 hover:bg-orange-600'
-                  : 'bg-gray-300 cursor-not-allowed'
-              }`}
-            >
-              {loading ? 'Sending...' : 'Send Announcement'}
-              {!loading && <Send className="w-4 h-4" />}
-            </button>
 
           </div>
 
-          {/* Right — preview and history */}
-          <div className="space-y-5">
+          {/* Right Column (1 Col) — Summary, Action & Preview */}
+          <div className="space-y-6">
 
-            {/* Preview */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h2 className="text-sm font-extrabold text-gray-900 mb-4">Preview</h2>
+            {/* Broadcast Action & Summary Card */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+              <h2 className="text-sm font-bold text-slate-900 mb-3">Broadcast Summary</h2>
+              
+              <div className="space-y-2.5 mb-5 text-xs">
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+                  <span className="text-slate-500">Target Audience</span>
+                  <span className="font-semibold text-slate-900 capitalize text-right">
+                    {audience === 'all' ? 'All Attendees' :
+                     audience === 'organisers' ? 'All Hosts' :
+                     audience === 'verified_organisers' ? 'Verified Hosts' :
+                     audience === 'city' ? selectedCity || 'Choose city' : userEmail || 'Enter email'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+                  <span className="text-slate-500">Est. Reach</span>
+                  <span className="font-semibold text-orange-600">{getEstimatedReach()}</span>
+                </div>
+
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+                  <span className="text-slate-500">Channel</span>
+                  <span className="font-semibold text-slate-900 capitalize">
+                    {channel === 'both' ? 'Push + Email' : channel === 'push' ? 'Push only' : 'Email only'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-slate-500">Status</span>
+                  <span className={`font-semibold ${canSend ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {canSend ? 'Ready to broadcast' : 'Fill required fields'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Primary Send Button */}
+              <button
+                type="button"
+                onClick={handleSend}
+                disabled={!canSend || loading}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Broadcasting Message...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Send Announcement Now</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Live Previews */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
+              <h2 className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-4">Live Notification Preview</h2>
 
               {/* Push notification preview */}
               {(channel === 'push' || channel === 'both') && (
                 <div className="mb-4">
-                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Push notification</div>
-                  <div className="p-3 bg-gray-900 rounded-2xl">
+                  <div className="text-[11px] font-semibold text-slate-400 mb-2">Push Notification (Lock Screen)</div>
+                  <div className="p-3.5 bg-slate-900 rounded-2xl text-white shadow-md border border-slate-800">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-lg bg-orange-500 flex items-center justify-center flex-shrink-0">
+                      <div className="w-5 h-5 rounded-md bg-orange-500 flex items-center justify-center flex-shrink-0">
                         <Bell className="w-3 h-3 text-white" />
                       </div>
-                      <span className="text-xs font-bold text-white">paddymeet</span>
-                      <span className="text-xs text-gray-500 ml-auto">now</span>
+                      <span className="text-xs font-bold">paddymeet</span>
+                      <span className="text-[10px] text-slate-400 ml-auto">Just now</span>
                     </div>
-                    <div className="text-xs font-bold text-white mb-0.5">
-                      {title || 'Your announcement title'}
+                    <div className="text-xs font-bold mb-0.5">
+                      {title || 'Announcement Title'}
                     </div>
-                    <div className="text-xs text-gray-400 leading-relaxed line-clamp-2">
-                      {message || 'Your message will appear here...'}
+                    <div className="text-[11px] text-slate-300 leading-relaxed line-clamp-3">
+                      {message || 'Your message preview will appear here in real-time...'}
                     </div>
                   </div>
                 </div>
@@ -277,62 +402,41 @@ export default function AdminAnnouncementsPage() {
               {/* Email preview */}
               {(channel === 'email' || channel === 'both') && (
                 <div>
-                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Email</div>
-                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                    <div className="text-xs text-gray-500 mb-1">From: hello@paddymeet.com</div>
-                    <div className="text-xs font-bold text-gray-900 mb-2">
-                      {title || 'Your announcement title'}
+                  <div className="text-[11px] font-semibold text-slate-400 mb-2">Email Inbox Preview</div>
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div className="text-[10px] text-slate-400 mb-1">From: hello@paddymeet.com</div>
+                    <div className="text-xs font-bold text-slate-900 mb-1.5">
+                      {title || 'Announcement Subject'}
                     </div>
-                    <div className="text-xs text-gray-600 leading-relaxed line-clamp-3">
-                      {message || 'Your message will appear here...'}
+                    <div className="text-[11px] text-slate-600 leading-relaxed line-clamp-3">
+                      {message || 'Email announcement body will render here...'}
                     </div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Summary */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h2 className="text-sm font-extrabold text-gray-900 mb-4">Summary</h2>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Audience</span>
-                  <span className="text-xs font-bold text-gray-900 capitalize">
-                    {audience === 'all' ? 'All users' : audience === 'city' ? selectedCity || 'Select city' : userEmail || 'Enter email'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Channel</span>
-                  <span className="text-xs font-bold text-gray-900 capitalize">
-                    {channel === 'both' ? 'Push + Email' : channel === 'push' ? 'Push only' : 'Email only'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Status</span>
-                  <span className={`text-xs font-bold ${canSend ? 'text-green-600' : 'text-gray-400'}`}>
-                    {canSend ? 'Ready to send' : 'Fill in all fields'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent announcements */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h2 className="text-sm font-extrabold text-gray-900 mb-4">Recent</h2>
-              <div className="space-y-3">
-                {[
-                  { title: 'Welcome to Paddymeet!', time: '2 days ago', audience: 'All users' },
-                  { title: 'New events in Lagos', time: '5 days ago', audience: 'Lagos' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-2 p-3 bg-gray-50 rounded-xl">
-                    <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold text-gray-900 truncate">{item.title}</div>
-                      <div className="text-xs text-gray-400">{item.audience} · {item.time}</div>
+            {/* Recent Announcements History */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
+              <h2 className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">Recent Broadcasts</h2>
+              {recentList && recentList.length > 0 ? (
+                <div className="space-y-2.5">
+                  {recentList.map((item) => (
+                    <div key={item.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                      <div className="font-bold text-slate-900 truncate mb-0.5">{item.title}</div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-400">
+                        <span className="capitalize">{item.audience.replace('_', ' ')}</span>
+                        <span>{item.sent_to_count} recipients</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
+                  <Clock className="w-5 h-5 text-slate-300 mx-auto mb-1.5" />
+                  <p className="text-xs text-slate-400">No previous broadcasts yet</p>
+                </div>
+              )}
             </div>
 
           </div>
