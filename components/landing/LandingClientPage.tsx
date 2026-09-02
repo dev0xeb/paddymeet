@@ -516,17 +516,30 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
         <section className="hero-fullscreen">
           <div className="hero-copy">
             <div className="kicker">
-              <Sparkles size={15} /> THE NEXT-GEN NIGHTLIFE PLATFORM
+              <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping inline-block mr-1" />
+              <Sparkles size={13} className="text-orange-400" /> NOW LIVE IN LAGOS & ABUJA
             </div>
             <h1>
-              DON’T JUST BUY<br />
-              <em>A TICKET.</em><br />
-              <span>FIND YOUR CREW.</span>
+              Your next<br />
+              <span style={{ color: '#FF5B1E', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>night out</span><br />
+              <span style={{ color: '#9ca3af', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>starts here.</span>
             </h1>
-            <p className="hero-lede">
-              The social ticketing platform built for Lagos and Abuja nightlife. Form private squads, split VIP tables with 1-click Pay & Share, and step into the event verified.
+            <p className="hero-lede text-base leading-relaxed text-gray-300">
+              Discover events, join groups of like-minded people, coordinate together, and arrive as a crew — safely and anonymously.
             </p>
 
+            {/* Direct Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3.5 mb-6">
+              <Link className="button text-sm px-6 py-3.5 font-bold" href="/events">
+                <span>Find Events Near Me</span>
+                <ArrowRight size={16} />
+              </Link>
+              <Link className="button button--outline text-sm px-6 py-3.5 font-bold" href="/events">
+                <span>Browse Events</span>
+              </Link>
+            </div>
+
+            {/* Weekend Matcher Bar */}
             <div className="matcher">
               <div className="matcher-field">
                 <MapPin size={16} />
