@@ -65,117 +65,80 @@ function SectionHead({ eyebrow, title, copy, number }: { eyebrow: string; title:
 }
 
 /**
- * Primary Featured Event Showcase Card with Embedded Dummy Chat Interface
- * (Client item: Replace event image with dummy chat interface inside event visual)
+ * Hero VIP Live Pass Card with Real Photography Artwork and QR Pass
  */
-function PrimaryEventShowcase({ topEvent }: { topEvent?: LiveEvent }) {
-  const formattedDate = topEvent?.event_date
-    ? new Date(topEvent.event_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()
-    : 'SAT · 29 AUG'
+function TiltPass({ topEvent }: { topEvent?: LiveEvent }) {
+  const [transform, setTransform] = useState('rotateX(2deg) rotateY(-5deg)')
 
-  const lowestPrice =
-    topEvent?.is_free
-      ? 'FREE'
-      : topEvent?.ticket_types && topEvent.ticket_types.length > 0
-      ? `₦${Math.min(...topEvent.ticket_types.map((t) => t.price)).toLocaleString()}`
-      : '₦18,500'
+  const formattedDate = topEvent?.event_date
+    ? new Date(topEvent.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
+    : '29 / 08 / 26'
 
   return (
-    <div className="primary-showcase-stage">
-      <div className="primary-event-card">
-        
-        {/* Header Bar */}
-        <div className="card-header-bar">
-          <span className="flex items-center gap-1.5 text-orange-400">
-            <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
-            FEATURED EVENT / LIVE PASS
+    <div
+      className="pass-stage"
+      onMouseMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect()
+        const x = (e.clientX - r.left) / r.width - 0.5
+        const y = (e.clientY - r.top) / r.height - 0.5
+        setTransform(`rotateX(${y * -8 + 2}deg) rotateY(${x * 12 - 5}deg)`)
+      }}
+      onMouseLeave={() => setTransform('rotateX(2deg) rotateY(-5deg)')}
+    >
+      <div className="pass-glow" />
+      <div className="pass-card" style={{ transform }}>
+        <div className="pass-top">
+          <span className="flex items-center gap-1.5">
+            <Radio size={11} className="text-emerald-400 animate-pulse" />
+            PADDYMEET / LIVE PASS
           </span>
-          <span className="text-gray-400 font-mono">
-            PM–{topEvent?.id?.slice(0, 4).toUpperCase() || '0429'}
-          </span>
+          <span>PM–{topEvent?.id?.slice(0, 4).toUpperCase() || '0429'}</span>
         </div>
-
-        {/* Event Title & Price */}
-        <div className="card-event-info">
+        <div className="pass-art">
+          <img
+            src={topEvent?.cover_image_url || '/manus-storage/paddymeet-hero_e7298a92.jpg'}
+            alt={topEvent?.title || 'Crowd at a Lagos night event'}
+          />
+          <div className="pass-art-overlay" />
+          <div className="pass-art-copy">
+            <small>THE NEXT NIGHT OUT</small>
+            <strong>{topEvent?.title || 'ODYSSEY AFTER DARK'}</strong>
+          </div>
+        </div>
+        <div className="pass-meta">
           <div>
-            <h3>{topEvent?.title || 'Odyssey After Dark'}</h3>
-            <p>
-              <MapPin className="w-3.5 h-3.5 text-orange-400" />
-              <span>{topEvent?.venue_name || 'Terra Kulture'} · {topEvent?.city || 'Lagos'}</span>
-            </p>
+            <span>VENUE</span>
+            <b>{topEvent?.venue_name || 'Terra Kulture'}</b>
           </div>
-          <div className="card-price-pill">
-            {lowestPrice}
+          <div>
+            <span>DATE</span>
+            <b>{formattedDate}</b>
           </div>
-        </div>
-
-        {/* Embedded Dummy Chat Interface (Directly Inside Event Visual) */}
-        <div className="event-chat-container">
-          <div className="event-chat-header">
-            <span className="flex items-center gap-1.5 font-bold text-gray-300">
-              <MessageSquare className="w-3 h-3 text-purple-400" />
-              SQUAD FORMATION CHAT
-            </span>
-            <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-              <CheckCircle2 className="w-2.5 h-2.5" />
-              3/4 confirmed
-            </span>
-          </div>
-
-          {/* Chat Bubble 1 */}
-          <div className="chat-bubble-row">
-            <div className="chat-avatar-badge chat-avatar-badge--1">T</div>
-            <div className="chat-bubble-content">
-              <small>
-                <UserCheck className="w-2.5 h-2.5 text-orange-400" />
-                TUNDE · LEKKI
-              </small>
-              <p>Just reserved our 4-person table on Pay & Share!</p>
-            </div>
-          </div>
-
-          {/* Chat Bubble 2 */}
-          <div className="chat-bubble-row">
-            <div className="chat-avatar-badge chat-avatar-badge--2">A</div>
-            <div className="chat-bubble-content">
-              <small>
-                <ShieldCheck className="w-2.5 h-2.5 text-purple-400" />
-                AMAKA · VI
-              </small>
-              <p>Paid my exact ₦40k split. Who is handling the ride?</p>
-            </div>
-          </div>
-
-          {/* Chat Bubble 3 (System Confirmation) */}
-          <div className="chat-bubble-row">
-            <div className="chat-avatar-badge chat-avatar-badge--3">
-              <Check className="w-3 h-3 text-white" />
-            </div>
-            <div className="chat-bubble-content chat-bubble-content--verified">
-              <small>
-                <Zap className="w-2.5 h-2.5 text-emerald-400" />
-                PADDYMEET CONCIERGE
-              </small>
-              <p>All splits cleared. 4 encrypted QR passes issued to squad members.</p>
-            </div>
+          <div>
+            <span>CITY</span>
+            <b>{topEvent?.city?.toUpperCase() || 'LAGOS, NG'}</b>
           </div>
         </div>
-
-        {/* Footer Action */}
-        <div className="card-footer-action">
-          <div className="card-squad-status">
-            <Users className="w-4 h-4 text-emerald-400" />
-            <span>{formattedDate} · 1 spot remaining</span>
-          </div>
-          <Link
-            href={topEvent?.id ? `/events/${topEvent.id}` : '/events'}
-            className="button button--small"
-          >
-            <span>Join Squad</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+        <div className="pass-divider">
+          <span /><i>SCANNABLE / VERIFIED</i><span />
         </div>
-
+        <div className="pass-bottom">
+          <div className="pass-qr"><QrCode size={52} /></div>
+          <div>
+            <small>SQUAD INVENTORY</small>
+            <strong>3 seats left</strong>
+            <div className="avatars">
+              <span>F</span><span>M</span><span>+</span>
+            </div>
+          </div>
+          <ShieldCheck className="pass-shield" size={24} />
+        </div>
+      </div>
+      <div className="float-chip float-chip--top">
+        <Radio size={13} /> 218 squads active
+      </div>
+      <div className="float-chip float-chip--bottom">
+        <CheckCircle2 size={13} /> Trust verified
       </div>
     </div>
   )
@@ -254,12 +217,16 @@ function EventCard({ event, index }: { event: LiveEvent; index: number }) {
   )
 }
 
+/**
+ * Section 02: Squad Room Interactive Chat Simulator
+ * (Client item: Chat interface replacement in Section 02 - Never Party Alone)
+ */
 function SquadRoom() {
   const [messages, setMessages] = useState([
-    'Just reserved 4 seats on Pay & Share!',
-    'Joining from Lekki Phase 1, can carpool 2 people!'
+    'Just reserved a 4-person table on Pay & Share!',
+    'Joining from Lekki Phase 1, paid my ₦40k split 🚗',
   ])
-  const addMessage = () => setMessages((m) => [...m, 'Payment confirmed for 4/4 members. QR passes issued.'])
+  const addMessage = () => setMessages((m) => [...m, 'Payment confirmed for 4/4 members. Individual QR passes dropped.'])
   
   return (
     <div className="squad-layout">
@@ -280,10 +247,10 @@ function SquadRoom() {
           {messages.map((msg, i) => (
             <div className={`chat-line ${i === 2 ? 'chat-line--system' : ''}`} key={`${msg}-${i}`}>
               <span className={`chat-avatar chat-avatar--${i}`}>
-                {i === 2 ? <Check size={13} /> : ['A', 'J'][i]}
+                {i === 2 ? <Check size={13} /> : ['T', 'A'][i]}
               </span>
               <div>
-                <small>{i === 2 ? 'PADDYBOT · JUST NOW' : ['AMAKA · VERIFIED EXPLORER', 'JIDE · VIBE EXPLORER'][i]}</small>
+                <small>{i === 2 ? 'PADDYBOT CONCIERGE · JUST NOW' : ['TUNDE · VERIFIED EXPLORER', 'AMAKA · VIBE EXPLORER'][i]}</small>
                 <p>{msg}</p>
               </div>
             </div>
@@ -475,18 +442,17 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
         </Link>
       </div>
 
-      {/* Site Navigation Bar */}
+      {/* Clean Site Navigation Bar */}
       <header className="nav-wrap">
         <nav className="nav-bar">
           <Brand />
           
           <div className={`nav-links ${open ? 'nav-links--open' : ''}`}>
             {links.map(([href, label]) => (
-              <Link key={href} href={href} className="nav-link">
+              <Link key={href} href={href} className="nav-link font-medium">
                 {label}
               </Link>
             ))}
-            <a href="#organisers">For Organisers</a>
             {open && (
               <div className="mobile-nav-city flex items-center gap-1 text-orange-400">
                 <Sparkles size={14} /> Lagos / Abuja
@@ -495,8 +461,7 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
           </div>
 
           <div className="nav-actions">
-            <span className="nav-live"><Radio size={14} /> 142 active</span>
-            <Link href="/login" className="login">Log in</Link>
+            <Link href="/login" className="login font-medium">Log in</Link>
             <Link href="/signup" className="button button--small">
               <span>Get early access</span>
               <ArrowRight size={14} />
@@ -512,19 +477,19 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
       {/* Main Content Sections */}
       <main>
         
-        {/* Section 0: Fullscreen Primary Event Showcase Stage (Client item 29:29 & 33:29) */}
+        {/* Section 0: Fullscreen Primary Event Showcase Stage */}
         <section className="hero-fullscreen">
           <div className="hero-copy">
-            <div className="kicker">
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping inline-block mr-1" />
-              <Sparkles size={13} className="text-orange-400" /> NOW LIVE IN LAGOS & ABUJA
+            <div className="kicker mb-3">
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-ping inline-block mr-1.5" />
+              <Sparkles size={14} className="text-orange-400" /> NOW LIVE IN LAGOS & ABUJA
             </div>
             <h1>
               Your next<br />
               <span style={{ color: '#FF5B1E', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>night out</span><br />
               <span style={{ color: '#9ca3af', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>starts here.</span>
             </h1>
-            <p className="hero-lede text-base leading-relaxed text-gray-300">
+            <p className="hero-lede">
               Discover events, join groups of like-minded people, coordinate together, and arrive as a crew — safely and anonymously.
             </p>
 
@@ -586,8 +551,8 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
             </div>
           </div>
 
-          {/* Primary Event Card with Embedded Dummy Chat (Client item 33:29) */}
-          <PrimaryEventShowcase topEvent={topUpcomingEvent} />
+          {/* Primary Event VIP Pass Visual on Right */}
+          <TiltPass topEvent={topUpcomingEvent} />
         </section>
 
         {/* Live Ticker with Vector Icons */}
@@ -602,7 +567,7 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
           </div>
         </section>
 
-        {/* Section 01: Horizontally Swiping Events Showcase Below Hero (Client item 29:29 & 31:48) */}
+        {/* Section 01: Horizontally Swiping Events Showcase Below Hero */}
         <section id="events" className="section-pad events-section-wrap">
           <SectionHead
             number="01"
@@ -624,7 +589,7 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
             ))}
           </div>
 
-          {/* Horizontal Swiping Event Carousel (Client item 31:48) */}
+          {/* Horizontal Swiping Event Carousel */}
           <div className="carousel-container">
             <div className="carousel-track" ref={carouselRef}>
               {finalEventList.map((e, idx) => (
@@ -657,7 +622,7 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
           </div>
         </section>
 
-        {/* Section 02: Squad Section */}
+        {/* Section 02: Squad Section with Realistic Dummy Chat Simulator */}
         <section id="squad" className="section-pad squad-section">
           <SectionHead
             number="02"
@@ -739,7 +704,7 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
           </div>
         </section>
 
-        {/* Section 05: Organisers Section with Engagement Metrics (Client item 34:21) */}
+        {/* Section 05: Organisers Section with Engagement Metrics */}
         <section id="organisers" className="section-pad organiser-section">
           <div className="organiser-copy">
             <SectionHead
@@ -780,7 +745,7 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
               <p>guest manifest for your gate team</p>
             </div>
 
-            {/* Engagement Metrics replacing Live Sales (Client item 34:21) */}
+            {/* Engagement Metrics */}
             <div className="studio-card studio-card--wide studio-card--engagement">
               <div>
                 <span className="text-xs font-bold text-gray-400 tracking-wider">ORGANISER & ATTENDEE ENGAGEMENT</span>
