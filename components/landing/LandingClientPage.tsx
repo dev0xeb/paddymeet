@@ -166,7 +166,7 @@ function EventCard({ event, index }: { event: LiveEvent; index: number }) {
       ? 'FREE'
       : event.ticket_types && event.ticket_types.length > 0
       ? `₦${Math.min(...event.ticket_types.map((t) => t.price)).toLocaleString()}`
-      : '₦15,000'
+      : '₦10,000'
 
   const tag = `${(event.event_type || 'NIGHTLIFE').toUpperCase()} / ${(event.city || 'LAGOS').toUpperCase()}`
 
@@ -176,11 +176,11 @@ function EventCard({ event, index }: { event: LiveEvent; index: number }) {
         <img src={imageSrc} alt={event.title} />
         <div className="event-overlay" />
         <span className={`event-tag event-tag--${tone}`}>
-          <Sparkles className="w-2.5 h-2.5" />
+          <Radio className="w-2 h-2 text-emerald-400 animate-pulse" />
           {tag}
         </span>
         <button className="save-button" aria-label={`Save ${event.title}`}>
-          <Star size={15} />
+          <Star size={14} />
         </button>
         <div className="event-title">
           <small>
@@ -192,24 +192,31 @@ function EventCard({ event, index }: { event: LiveEvent; index: number }) {
       </div>
       <div className="event-body">
         <div className="event-location">
-          <MapPin size={14} />
-          <span>{event.venue_name || event.city}</span>
+          <MapPin size={13} className="text-orange-400 flex-shrink-0" />
+          <span className="truncate">{event.venue_name || event.city}</span>
         </div>
         <div className="event-row">
-          <span className="group-count">
-            <Users size={14} />
-            <span>3 squads forming</span>
-          </span>
-          <strong>{lowestPrice}</strong>
+          <div className="flex items-center gap-1.5">
+            <div className="flex -space-x-1.5">
+              <span className="w-5 h-5 rounded-full bg-orange-600/80 border border-gray-900 text-[9px] grid place-items-center font-bold text-white">T</span>
+              <span className="w-5 h-5 rounded-full bg-purple-600/80 border border-gray-900 text-[9px] grid place-items-center font-bold text-white">A</span>
+              <span className="w-5 h-5 rounded-full bg-emerald-600/80 border border-gray-900 text-[8px] grid place-items-center font-bold text-white">+3</span>
+            </div>
+            <span className="text-[11px] text-emerald-400 font-semibold">3 squads active</span>
+          </div>
+          <strong className="text-sm font-bold text-white">{lowestPrice}</strong>
         </div>
         <div className="event-footer">
-          <span>
+          <span className="text-[11px] text-gray-400 flex items-center gap-1">
             <ShieldCheck size={13} className="text-emerald-400" />
-            <span>10 min hold</span>
+            <span>Pay & Share</span>
           </span>
-          <Link href={`/events/${event.id}`} className="hover:text-[#FF5B1E] flex items-center gap-1 font-semibold text-orange-400">
+          <Link
+            href={`/events/${event.id}`}
+            className="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 bg-orange-500/10 hover:bg-orange-500/20 px-2.5 py-1 rounded-md border border-orange-500/20 transition-colors"
+          >
             <span>Get Ticket</span>
-            <ArrowRight size={15} />
+            <ArrowRight size={13} />
           </Link>
         </div>
       </div>
