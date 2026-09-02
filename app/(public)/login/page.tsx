@@ -276,19 +276,9 @@ export default function LoginPage() {
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </button>
 
-              <div className="relative flex items-center gap-4 my-5">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span className="text-xs text-gray-400 font-medium">or</span>
-                <div className="flex-1 h-px bg-gray-200" />
-              </div>
-
-              <p className="text-center text-sm text-gray-500 mb-2">
+              <p className="text-center text-sm text-gray-500 mt-6">
                 Don&apos;t have an account?{' '}
                 <Link href="/signup" className="text-orange-500 font-bold hover:underline">Sign up free</Link>
-              </p>
-              <p className="text-center text-xs text-gray-400">
-                Admin?{' '}
-                <Link href="/admin-login" className="text-gray-500 font-semibold hover:underline">Sign in here</Link>
               </p>
             </>
           )}
