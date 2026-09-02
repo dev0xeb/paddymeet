@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Users, Mic, ArrowRight, Check, X, Gift } from 'lucide-react'
-import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
+import { createClient } from '@/lib/supabase'
 
 export default function SignUpPage() {
   return (
@@ -118,17 +118,28 @@ function PasswordStrength({ password }: { password: string }) {
   const checks = validatePassword(password)
   const items = [
     { label: 'At least 8 characters', met: checks.minLength },
-    { label: 'At least one number', met: checks.hasNumber },
-    { label: 'At least one special character (!@#$%&*)', met: checks.hasSpecial },
+    { label: 'Contains a number', met: checks.hasNumber },
+    { label: 'Contains a special character', met: checks.hasSpecial },
   ]
+  const metCount = items.filter(i => i.met).length
+  const colors = ['bg-red-400', 'bg-orange-400', 'bg-green-400']
+  const color = metCount === 0 ? 'bg-gray-200' : colors[metCount - 1]
+
   return (
-    <div className="mt-2 space-y-1">
-      {items.map(({ label, met }) => (
-        <div key={label} className={`flex items-center gap-2 text-xs font-medium ${met ? 'text-green-600' : 'text-gray-400'}`}>
-          {met ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-          {label}
-        </div>
-      ))}
+    <div className="mt-2 space-y-2">
+      <div className="flex gap-1.5">
+        {[1, 2, 3].map(i => (
+          <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i <= metCount ? color : 'bg-gray-200'}`} />
+        ))}
+      </div>
+      <div className="space-y-1">
+        {items.map(({ label, met }) => (
+          <div key={label} className="flex items-center gap-1.5 text-xs">
+            {met ? <Check className="w-3 h-3 text-green-400 flex-shrink-0" /> : <X className="w-3 h-3 text-gray-300 flex-shrink-0" />}
+            <span className={met ? 'text-green-500 font-medium' : 'text-gray-400'}>{label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -143,20 +154,21 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<string[]>([])
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '',
-    age: 0, username: '', password: '', gender: '', state: '', city: '', referralCode: '',
+    age: 0, username: '', password: '', gender: '',
+    state: '', city: '', referralCode: '',
   })
 
   const update = (field: string, value: string | number) =>
-  setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData(prev => ({ ...prev, [field]: value }))
 
-const searchParams = useSearchParams()
+  const searchParams = useSearchParams()
 
-useEffect(() => {
-  const ref = searchParams.get('ref')
-  if (ref) {
-    setFormData(prev => ({ ...prev, referralCode: ref.toUpperCase() }))
-  }
-}, [searchParams])
+  useEffect(() => {
+    const ref = searchParams.get('ref')
+    if (ref) {
+      setFormData(prev => ({ ...prev, referralCode: ref.toUpperCase() }))
+    }
+  }, [searchParams])
 
   const interests = [
     'Afrobeats','Live Music','House Music','Hip Hop','Jazz & Soul',
@@ -226,6 +238,12 @@ useEffect(() => {
         setError(data.error)
         setLoading(false)
       } else {
+        // Sign in immediately to establish user session
+        const supabase = createClient()
+        await supabase.auth.signInWithPassword({
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+        })
         window.location.href = '/dashboard'
       }
     } catch {
@@ -280,23 +298,7 @@ useEffect(() => {
             <div>
               <div className="text-6xl font-extrabold text-orange-50 leading-none mb-1 select-none">01</div>
               <h3 className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight">Personal details</h3>
-              <p className="text-sm text-gray-500 mb-2 leading-relaxed">Your real name is for verification only and stays completely private.</p>
-
-              {/* Google Sign up */}
-              <div className="my-6">
-                <GoogleAuthButton
-                  mode="signup"
-                  accountType="explorer"
-                  onError={(err) => setError(err)}
-                />
-                <div className="relative flex items-center gap-4 mt-6 mb-2">
-                  <div className="flex-1 h-px bg-gray-200" />
-                  <span className="text-xs text-gray-400 font-medium">or register with email</span>
-                  <div className="flex-1 h-px bg-gray-200" />
-                </div>
-              </div>
-
-              <p className="text-xs text-gray-400 mb-6">All fields are required</p>
+              <p className="text-sm text-gray-500 mb-6 leading-relaxed">Your real name is for verification only and stays completely private. All fields are required.</p>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
@@ -324,7 +326,7 @@ useEffect(() => {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Age <span className="text-red-400">*</span></label>
-                  <input type="number" placeholder="24" min="16" max="99" value={formData.age || ''} onChange={e => update('age', parseInt(e.target.value))} className={inputClass} />
+                  <input type="number" placeholder="24" min="16" max="99" value={formData.age || ''} onChange={e => update('age', parseInt(e.target.value) || 0)} className={inputClass} />
                 </div>
               </div>
 
@@ -483,7 +485,7 @@ useEffect(() => {
                   I agree to Paddymeet&apos;s{' '}
                   <Link href="/terms" className="text-orange-500 font-semibold" onClick={e => e.stopPropagation()}>Terms of Use</Link>
                   {' '}and{' '}
-                  <Link href="/privacy" className="text-orange-500 font-semibold" onClick={e => e.stopPropagation()}>Privacy Policy</Link>.
+                  <Link href="/privacy-policy" className="text-orange-500 font-semibold" onClick={e => e.stopPropagation()}>Privacy Policy</Link>.
                   I understand only my username and avatar are visible to others.
                 </p>
               </div>
@@ -561,6 +563,12 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
         setError(data.error)
         setLoading(false)
       } else {
+        // Sign in client-side to ensure session cookies are established
+        const supabase = createClient()
+        await supabase.auth.signInWithPassword({
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+        })
         setSubmitted(true)
       }
     } catch {
@@ -572,7 +580,7 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
   return (
     <div className="min-h-screen flex pt-16">
       {/* Left panel */}
-      <div className="w-96 flex-shrink-0 bg-blue-50 border-r border-blue-100 sticky top-16 h-[calc(100vh-64px)] flex flex-col justify-between p-10 overflow-hidden">
+      <div className="hidden lg:flex w-96 flex-shrink-0 bg-blue-50 border-r border-blue-100 sticky top-16 h-[calc(100vh-64px)] flex-col justify-between p-10 overflow-hidden">
         <div className="relative z-10">
           <button onClick={onBack} className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-blue-500 transition-colors mb-8">← Back</button>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 border border-blue-200 rounded-full text-xs font-bold text-blue-600 uppercase tracking-wider mb-5">Organiser Sign Up</div>
@@ -605,27 +613,11 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
 
       {/* Right — form */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-lg mx-auto px-12 py-16">
+        <div className="max-w-lg mx-auto px-6 md:px-12 py-10 md:py-16">
           {!submitted ? (
             <>
               <h3 className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight">Tell us about your organisation</h3>
-              <p className="text-sm text-gray-500 mb-2 leading-relaxed">This information will be used to verify your identity and set up your account.</p>
-
-              {/* Google Sign up */}
-              <div className="my-6">
-                <GoogleAuthButton
-                  mode="signup"
-                  accountType="organiser"
-                  onError={(err) => setError(err)}
-                />
-                <div className="relative flex items-center gap-4 mt-6 mb-2">
-                  <div className="flex-1 h-px bg-gray-200" />
-                  <span className="text-xs text-gray-400 font-medium">or fill out organisation form</span>
-                  <div className="flex-1 h-px bg-gray-200" />
-                </div>
-              </div>
-
-              <p className="text-xs text-gray-400 mb-6">All fields marked with * are required</p>
+              <p className="text-sm text-gray-500 mb-6 leading-relaxed">This information will be used to verify your identity and set up your account. All fields marked with * are required.</p>
 
               <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Organisation name <span className="text-red-400">*</span></label>

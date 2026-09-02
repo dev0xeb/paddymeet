@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { ArrowRight, Eye, EyeOff, Check, Shield, Users, Mic } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 
 const REMEMBER_KEY = 'pm_device_trusted'
 const REMEMBER_DAYS = 30
@@ -34,7 +33,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [otp, setOtp] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberDevice, setRememberDevice] = useState(false)
+  const [rememberDevice, setRememberDevice] = useState(true)
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
   const [error, setError] = useState('')
@@ -52,7 +51,10 @@ export default function LoginPage() {
     setError('')
 
     const supabase = createClient()
-    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    })
 
     if (authError) {
       setError('Invalid email or password. Please try again.')
@@ -60,7 +62,18 @@ export default function LoginPage() {
       return
     }
 
-    const type = data.user?.user_metadata?.account_type || 'explorer'
+    let type = data.user?.user_metadata?.account_type
+
+    // If metadata is empty, verify against organisers table
+    if (!type) {
+      const { data: org } = await supabase
+        .from('organisers')
+        .select('id')
+        .eq('id', data.user.id)
+        .single()
+      type = org ? 'organiser' : 'explorer'
+    }
+
     setAccountType(type)
 
     // Validate account type matches selected login type
@@ -78,15 +91,15 @@ export default function LoginPage() {
       return
     }
 
-    // Check if device is trusted — skip OTP
+    // Check if device is trusted — skip OTP for 30 days
     if (isDeviceTrusted()) {
       redirectUser(type)
       return
     }
 
-    // Send OTP
+    // Send 6-digit OTP
     await supabase.auth.signInWithOtp({
-      email,
+      email: email.trim().toLowerCase(),
       options: { shouldCreateUser: false },
     })
 
@@ -96,7 +109,7 @@ export default function LoginPage() {
 
   const handleVerifyOtp = async () => {
     if (!otp || otp.length < 6) {
-      setError('Please enter the verification code sent to your email.')
+      setError('Please enter the 6-digit verification code sent to your email.')
       return
     }
     setLoading(true)
@@ -104,13 +117,13 @@ export default function LoginPage() {
 
     const supabase = createClient()
     const { error: verifyError } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
+      email: email.trim().toLowerCase(),
+      token: otp.trim(),
       type: 'email',
     })
 
     if (verifyError) {
-      setError('Invalid or expired code. Please try again.')
+      setError('Invalid or expired 6-digit code. Please try again.')
       setLoading(false)
       return
     }
@@ -124,7 +137,7 @@ export default function LoginPage() {
     setError('')
     const supabase = createClient()
     await supabase.auth.signInWithOtp({
-      email,
+      email: email.trim().toLowerCase(),
       options: { shouldCreateUser: false },
     })
     setResending(false)
@@ -202,21 +215,6 @@ export default function LoginPage() {
                 {loginAs === 'organiser'
                   ? '🎤 Logging in as an Organiser — you\'ll be taken to your organiser dashboard.'
                   : '👥 Logging in as an Explorer — you\'ll be taken to your personal dashboard.'}
-              </div>
-
-              {/* Google Login */}
-              <div className="mb-5">
-                <GoogleAuthButton
-                  mode="login"
-                  accountType={loginAs}
-                  onError={(err) => setError(err)}
-                />
-              </div>
-
-              <div className="relative flex items-center gap-4 mb-5">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span className="text-xs text-gray-400 font-medium">or continue with email</span>
-                <div className="flex-1 h-px bg-gray-200" />
               </div>
 
               <div className="mb-4">
@@ -308,28 +306,28 @@ export default function LoginPage() {
                   Check your email
                 </h1>
                 <p className="text-gray-500 text-sm leading-relaxed">
-                  We sent a verification code to<br />
+                  We sent a 6-digit verification code to<br />
                   <span className="font-bold text-gray-700">{email}</span>
                 </p>
               </div>
 
               <div className="mb-5">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                  Verification code
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 text-center">
+                  6-Digit Verification Code
                 </label>
                 <input
                   type="text"
                   inputMode="numeric"
-                  maxLength={8}
-                  placeholder="00000000"
+                  maxLength={6}
+                  placeholder="000000"
                   value={otp}
-                  onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                  onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   onKeyDown={e => e.key === 'Enter' && handleVerifyOtp()}
-                  className={inputClass + ' text-center text-2xl font-bold tracking-widest'}
+                  className={inputClass + ' text-center text-3xl font-mono font-bold tracking-[0.3em] py-4'}
                 />
               </div>
 
-              {/* Remember device */}
+              {/* Remember device for 30 days */}
               <div
                 onClick={() => setRememberDevice(!rememberDevice)}
                 className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl mb-5 cursor-pointer hover:border-gray-300 transition-colors"
@@ -343,7 +341,7 @@ export default function LoginPage() {
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-gray-700">Don&apos;t ask again on this device</div>
-                  <div className="text-xs text-gray-400 mt-0.5">Skip the code for 30 days</div>
+                  <div className="text-xs text-gray-400 mt-0.5">Skip code verification for 30 days</div>
                 </div>
               </div>
 

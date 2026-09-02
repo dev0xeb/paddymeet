@@ -18,7 +18,10 @@ export async function middleware(request: NextRequest) {
   const isProtectedUserRoute =
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/organiser') ||
-    pathname.startsWith('/tickets')
+    pathname.startsWith('/tickets') ||
+    pathname.startsWith('/groups') ||
+    pathname.startsWith('/referrals') ||
+    pathname.startsWith('/trust-score')
 
   const isProtectedAdminRoute =
     pathname.startsWith('/admin') && !pathname.startsWith('/admin-login')
