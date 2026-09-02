@@ -1,13 +1,14 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import Link from 'next/link'
 import {
   ArrowDownRight, ArrowRight, BellRing, CalendarDays, Check,
-  CheckCircle2, ChevronDown, CircleDollarSign, Compass, CreditCard,
-  EyeOff, FileSpreadsheet, Flame, KeyRound, MapPin, Menu, MessageCircle,
-  Plus, QrCode, Radio, ScanLine, Send, ShieldCheck, Sparkles, Star,
-  TrendingUp, UserCheck, Users, WalletCards, X, Zap
+  CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign,
+  Compass, CreditCard, EyeOff, FileSpreadsheet, Flame, KeyRound,
+  MapPin, Menu, MessageCircle, MessageSquare, Plus, QrCode, Radio,
+  ScanLine, Send, ShieldCheck, Sparkles, Star, TrendingUp,
+  UserCheck, Users, WalletCards, X, Zap
 } from 'lucide-react'
 
 const orange = '#FF5B1E'
@@ -63,72 +64,119 @@ function SectionHead({ eyebrow, title, copy, number }: { eyebrow: string; title:
   )
 }
 
-function TiltPass({ topEvent }: { topEvent?: LiveEvent }) {
-  const [transform, setTransform] = useState('rotateX(3deg) rotateY(-8deg)')
-
+/**
+ * Primary Featured Event Showcase Card with Embedded Dummy Chat Interface
+ * (Client item: Replace event image with dummy chat interface inside event visual)
+ */
+function PrimaryEventShowcase({ topEvent }: { topEvent?: LiveEvent }) {
   const formattedDate = topEvent?.event_date
-    ? new Date(topEvent.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
-    : '29 / 08 / 26'
+    ? new Date(topEvent.event_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()
+    : 'SAT · 29 AUG'
+
+  const lowestPrice =
+    topEvent?.is_free
+      ? 'FREE'
+      : topEvent?.ticket_types && topEvent.ticket_types.length > 0
+      ? `₦${Math.min(...topEvent.ticket_types.map((t) => t.price)).toLocaleString()}`
+      : '₦18,500'
 
   return (
-    <div
-      className="pass-stage"
-      onMouseMove={(e) => {
-        const r = e.currentTarget.getBoundingClientRect()
-        const x = (e.clientX - r.left) / r.width - 0.5
-        const y = (e.clientY - r.top) / r.height - 0.5
-        setTransform(`rotateX(${y * -10 + 3}deg) rotateY(${x * 16 - 8}deg)`)
-      }}
-      onMouseLeave={() => setTransform('rotateX(3deg) rotateY(-8deg)')}
-    >
-      <div className="pass-glow" />
-      <div className="pass-card" style={{ transform }}>
-        <div className="pass-top">
-          <span>PADDYMEET / LIVE PASS</span>
-          <span>PM–{topEvent?.id?.slice(0, 4).toUpperCase() || '0429'}</span>
+    <div className="primary-showcase-stage">
+      <div className="primary-event-card">
+        
+        {/* Header Bar */}
+        <div className="card-header-bar">
+          <span className="flex items-center gap-1.5 text-orange-400">
+            <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+            FEATURED EVENT / LIVE PASS
+          </span>
+          <span className="text-gray-400 font-mono">
+            PM–{topEvent?.id?.slice(0, 4).toUpperCase() || '0429'}
+          </span>
         </div>
-        <div className="pass-art">
-          <img
-            src={topEvent?.cover_image_url || '/manus-storage/paddymeet-hero_e7298a92.jpg'}
-            alt={topEvent?.title || 'Crowd at a Lagos night event'}
-          />
-          <div className="pass-art-overlay" />
-          <div className="pass-art-copy">
-            <small>THE NEXT NIGHT OUT</small>
-            <strong>{topEvent?.title || 'ODYSSEY AFTER DARK'}</strong>
+
+        {/* Event Title & Price */}
+        <div className="card-event-info">
+          <div>
+            <h3>{topEvent?.title || 'Odyssey After Dark'}</h3>
+            <p>
+              <MapPin className="w-3.5 h-3.5 text-orange-400" />
+              <span>{topEvent?.venue_name || 'Terra Kulture'} · {topEvent?.city || 'Lagos'}</span>
+            </p>
+          </div>
+          <div className="card-price-pill">
+            {lowestPrice}
           </div>
         </div>
-        <div className="pass-meta">
-          <div>
-            <span>VENUE</span>
-            <b>{topEvent?.venue_name || 'Terra Kulture'}</b>
+
+        {/* Embedded Dummy Chat Interface (Directly Inside Event Visual) */}
+        <div className="event-chat-container">
+          <div className="event-chat-header">
+            <span className="flex items-center gap-1.5 font-bold text-gray-300">
+              <MessageSquare className="w-3 h-3 text-purple-400" />
+              SQUAD FORMATION CHAT
+            </span>
+            <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+              <CheckCircle2 className="w-2.5 h-2.5" />
+              3/4 confirmed
+            </span>
           </div>
-          <div>
-            <span>DATE</span>
-            <b>{formattedDate}</b>
-          </div>
-          <div>
-            <span>CITY</span>
-            <b>{topEvent?.city?.toUpperCase() || 'LAGOS, NG'}</b>
-          </div>
-        </div>
-        <div className="pass-divider">
-          <span /><i>SCANNABLE / VERIFIED</i><span />
-        </div>
-        <div className="pass-bottom">
-          <div className="pass-qr"><QrCode size={54} /></div>
-          <div>
-            <small>SQUAD INVENTORY</small>
-            <strong>3 seats left</strong>
-            <div className="avatars">
-              <span>F</span><span>M</span><span>+</span>
+
+          {/* Chat Bubble 1 */}
+          <div className="chat-bubble-row">
+            <div className="chat-avatar-badge chat-avatar-badge--1">T</div>
+            <div className="chat-bubble-content">
+              <small>
+                <UserCheck className="w-2.5 h-2.5 text-orange-400" />
+                TUNDE · LEKKI
+              </small>
+              <p>Just reserved our 4-person table on Pay & Share!</p>
             </div>
           </div>
-          <ShieldCheck className="pass-shield" size={24} />
+
+          {/* Chat Bubble 2 */}
+          <div className="chat-bubble-row">
+            <div className="chat-avatar-badge chat-avatar-badge--2">A</div>
+            <div className="chat-bubble-content">
+              <small>
+                <ShieldCheck className="w-2.5 h-2.5 text-purple-400" />
+                AMAKA · VI
+              </small>
+              <p>Paid my exact ₦40k split. Who is handling the ride?</p>
+            </div>
+          </div>
+
+          {/* Chat Bubble 3 (System Confirmation) */}
+          <div className="chat-bubble-row">
+            <div className="chat-avatar-badge chat-avatar-badge--3">
+              <Check className="w-3 h-3 text-white" />
+            </div>
+            <div className="chat-bubble-content chat-bubble-content--verified">
+              <small>
+                <Zap className="w-2.5 h-2.5 text-emerald-400" />
+                PADDYMEET CONCIERGE
+              </small>
+              <p>All splits cleared. 4 encrypted QR passes issued to squad members.</p>
+            </div>
+          </div>
         </div>
+
+        {/* Footer Action */}
+        <div className="card-footer-action">
+          <div className="card-squad-status">
+            <Users className="w-4 h-4 text-emerald-400" />
+            <span>{formattedDate} · 1 spot remaining</span>
+          </div>
+          <Link
+            href={topEvent?.id ? `/events/${topEvent.id}` : '/events'}
+            className="button button--small"
+          >
+            <span>Join Squad</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
       </div>
-      <div className="float-chip float-chip--top"><Radio size={13} /> 218 squads active</div>
-      <div className="float-chip float-chip--bottom"><CheckCircle2 size={13} /> Trust verified</div>
     </div>
   )
 }
@@ -164,10 +212,18 @@ function EventCard({ event, index }: { event: LiveEvent; index: number }) {
       <div className="event-image">
         <img src={imageSrc} alt={event.title} />
         <div className="event-overlay" />
-        <span className={`event-tag event-tag--${tone}`}>{tag}</span>
-        <button className="save-button" aria-label={`Save ${event.title}`}><Star size={16} /></button>
+        <span className={`event-tag event-tag--${tone}`}>
+          <Sparkles className="w-2.5 h-2.5" />
+          {tag}
+        </span>
+        <button className="save-button" aria-label={`Save ${event.title}`}>
+          <Star size={15} />
+        </button>
         <div className="event-title">
-          <small>{formattedDate}</small>
+          <small>
+            <CalendarDays className="w-2.5 h-2.5 text-orange-400" />
+            {formattedDate}
+          </small>
           <h3>{event.title}</h3>
         </div>
       </div>
@@ -177,14 +233,20 @@ function EventCard({ event, index }: { event: LiveEvent; index: number }) {
           <span>{event.venue_name || event.city}</span>
         </div>
         <div className="event-row">
-          <span className="group-count"><Users size={14} /> 3 social groups forming</span>
+          <span className="group-count">
+            <Users size={14} />
+            <span>3 squads forming</span>
+          </span>
           <strong>{lowestPrice}</strong>
         </div>
         <div className="event-footer">
-          <span><ShieldCheck size={13} /> 10 min hold</span>
-          <Link href={`/events/${event.id}`} className="hover:text-[#FF5B1E] flex items-center gap-1">
-            <span>Join Squad</span>
-            <ArrowRight size={17} />
+          <span>
+            <ShieldCheck size={13} className="text-emerald-400" />
+            <span>10 min hold</span>
+          </span>
+          <Link href={`/events/${event.id}`} className="hover:text-[#FF5B1E] flex items-center gap-1 font-semibold text-orange-400">
+            <span>Get Ticket</span>
+            <ArrowRight size={15} />
           </Link>
         </div>
       </div>
@@ -212,7 +274,7 @@ function SquadRoom() {
         </div>
         <div className="squad-sub">
           <span><Users size={13} /> VIP Balcony Crew</span>
-          <b>TRUST SCORE 85+</b>
+          <b><CheckCircle2 size={10} /> TRUST SCORE 85+</b>
         </div>
         <div className="chat-stream">
           {messages.map((msg, i) => (
@@ -294,10 +356,6 @@ function SplitFlow() {
   )
 }
 
-function Share2Icon() {
-  return <Send size={17} />
-}
-
 export default function LandingClientPage({ user, profile, liveEvents = [] }: Props) {
   const [open, setOpen] = useState(false)
   const [vibe, setVibe] = useState('All energy')
@@ -305,6 +363,7 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
   const [energy, setEnergy] = useState('Rave & Afrobeats')
   const [crewType, setCrewType] = useState('Open social crew')
   const [friends, setFriends] = useState(5)
+  const carouselRef = useRef<HTMLDivElement>(null)
 
   const fallbackEvents: LiveEvent[] = [
     {
@@ -337,6 +396,26 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
       vibe: 'Beach day',
       ticket_types: [{ price: 12000 }],
     },
+    {
+      id: 'e4',
+      title: 'Afrobeats & Suya Nights',
+      event_type: 'Afrobeats',
+      city: 'Lagos',
+      event_date: '2026-09-12',
+      venue_name: 'Terra Kulture · VI',
+      vibe: 'Afrobeats',
+      ticket_types: [{ price: 15000 }],
+    },
+    {
+      id: 'e5',
+      title: 'Capital Sunset Sessions',
+      event_type: 'Rooftop',
+      city: 'Abuja',
+      event_date: '2026-09-19',
+      venue_name: 'Sky Lounge · Maitama',
+      vibe: 'Rooftop',
+      ticket_types: [{ price: 20000 }],
+    },
   ]
 
   const displayList = liveEvents && liveEvents.length > 0 ? liveEvents : fallbackEvents
@@ -353,6 +432,14 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
 
   const finalEventList = filteredEvents.length > 0 ? filteredEvents : displayList
   const topUpcomingEvent = displayList[0]
+
+  // Carousel Navigation Handler
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = direction === 'left' ? -360 : 360
+      carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    }
+  }
 
   const reward = friends >= 5 ? '10% off your next 3 tickets' : friends >= 3 ? '5% off your next ticket' : 'A better night, loading'
   const vibes = useMemo(
@@ -383,7 +470,8 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
         <span className="live-dot" /> LIVE NOW{' '}
         <span className="activity-copy">142 squads forming in VI & Lekki right now</span>
         <Link href="/events" className="activity-action">
-          open activity feed <ArrowRight size={12} />
+          <span>open activity feed</span>
+          <ArrowRight size={12} />
         </Link>
       </div>
 
@@ -399,14 +487,19 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
               </Link>
             ))}
             <a href="#organisers">For Organisers</a>
-            {open && <div className="mobile-nav-city"><Sparkles size={14} /> Lagos / Abuja</div>}
+            {open && (
+              <div className="mobile-nav-city flex items-center gap-1 text-orange-400">
+                <Sparkles size={14} /> Lagos / Abuja
+              </div>
+            )}
           </div>
 
           <div className="nav-actions">
             <span className="nav-live"><Radio size={14} /> 142 active</span>
             <Link href="/login" className="login">Log in</Link>
             <Link href="/signup" className="button button--small">
-              Get early access <ArrowRight size={14} />
+              <span>Get early access</span>
+              <ArrowRight size={14} />
             </Link>
           </div>
 
@@ -419,8 +512,8 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
       {/* Main Content Sections */}
       <main>
         
-        {/* Section 0: Hero Section */}
-        <section className="hero section-pad">
+        {/* Section 0: Fullscreen Primary Event Showcase Stage (Client item 29:29 & 33:29) */}
+        <section className="hero-fullscreen">
           <div className="hero-copy">
             <div className="kicker">
               <Sparkles size={15} /> THE NEXT-GEN NIGHTLIFE PLATFORM
@@ -467,7 +560,8 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
               </div>
 
               <Link className="button matcher-button" href={`/events?city=${encodeURIComponent(city)}&vibe=${encodeURIComponent(energy)}`}>
-                Find my squad <ArrowRight size={17} />
+                <span>Find my squad</span>
+                <ArrowRight size={17} />
               </Link>
             </div>
 
@@ -479,23 +573,24 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
             </div>
           </div>
 
-          <TiltPass topEvent={topUpcomingEvent} />
+          {/* Primary Event Card with Embedded Dummy Chat (Client item 33:29) */}
+          <PrimaryEventShowcase topEvent={topUpcomingEvent} />
         </section>
 
-        {/* Live Ticker */}
+        {/* Live Ticker with Vector Icons */}
         <section className="ticker">
           <div className="ticker-track">
-            <span>LAGOS / ABUJA</span><i>✦</i>
-            <span>FIND YOUR CREW</span><i>✦</i>
-            <span>PAY YOUR SHARE</span><i>✦</i>
-            <span>ARRIVE TOGETHER</span><i>✦</i>
-            <span>LAGOS / ABUJA</span><i>✦</i>
-            <span>FIND YOUR CREW</span><i>✦</i>
+            <span>LAGOS / ABUJA <Sparkles className="w-3.5 h-3.5 text-orange-400 inline ml-2" /></span>
+            <span>FIND YOUR CREW <Users className="w-3.5 h-3.5 text-purple-400 inline ml-2" /></span>
+            <span>PAY YOUR SHARE <CreditCard className="w-3.5 h-3.5 text-emerald-400 inline ml-2" /></span>
+            <span>ARRIVE TOGETHER <ShieldCheck className="w-3.5 h-3.5 text-gold inline ml-2" /></span>
+            <span>LAGOS / ABUJA <Sparkles className="w-3.5 h-3.5 text-orange-400 inline ml-2" /></span>
+            <span>FIND YOUR CREW <Users className="w-3.5 h-3.5 text-purple-400 inline ml-2" /></span>
           </div>
         </section>
 
-        {/* Section 01: Events Section */}
-        <section id="events" className="section-pad events-section">
+        {/* Section 01: Horizontally Swiping Events Showcase Below Hero (Client item 29:29 & 31:48) */}
+        <section id="events" className="section-pad events-section-wrap">
           <SectionHead
             number="01"
             eyebrow="Curated by energy, not just dates"
@@ -511,22 +606,41 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
                 onClick={() => setVibe(label)}
               >
                 <I size={15} />
-                {label}
+                <span>{label}</span>
               </button>
             ))}
           </div>
 
-          <div className="event-grid">
-            {finalEventList.slice(0, 3).map((e, idx) => (
-              <EventCard event={e} index={idx} key={e.id || e.title} />
-            ))}
+          {/* Horizontal Swiping Event Carousel (Client item 31:48) */}
+          <div className="carousel-container">
+            <div className="carousel-track" ref={carouselRef}>
+              {finalEventList.map((e, idx) => (
+                <EventCard event={e} index={idx} key={e.id || e.title} />
+              ))}
+            </div>
           </div>
 
-          <div className="section-foot">
-            <span>{finalEventList.length < 10 ? `0${finalEventList.length}` : finalEventList.length} live upcoming events in Lagos & Abuja</span>
-            <Link href="/events">
-              See all live events <ArrowRight size={15} />
-            </Link>
+          {/* Carousel Controls & Pagination */}
+          <div className="carousel-controls">
+            <span className="text-xs text-gray-400 tracking-wider font-semibold">
+              {finalEventList.length < 10 ? `0${finalEventList.length}` : finalEventList.length} LIVE UPCOMING EVENTS IN LAGOS & ABUJA
+            </span>
+            <div className="carousel-arrows">
+              <button
+                onClick={() => scrollCarousel('left')}
+                className="carousel-arrow-btn"
+                aria-label="Previous events"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                onClick={() => scrollCarousel('right')}
+                className="carousel-arrow-btn"
+                aria-label="Next events"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
           </div>
         </section>
 
@@ -612,7 +726,7 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
           </div>
         </section>
 
-        {/* Section 05: Organisers Section */}
+        {/* Section 05: Organisers Section with Engagement Metrics (Client item 34:21) */}
         <section id="organisers" className="section-pad organiser-section">
           <div className="organiser-copy">
             <SectionHead
@@ -622,7 +736,8 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
               copy="PaddyMeet gives promoters, DJs, venues, and festival teams a direct line to the people who want the next drop."
             />
             <Link className="button button--outline" href="/for-organisers">
-              Open organiser studio <ArrowDownRight size={16} />
+              <span>Open organiser studio</span>
+              <ArrowDownRight size={16} />
             </Link>
           </div>
 
@@ -631,7 +746,7 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
               <div className="studio-card-top">
                 <BellRing size={17} />
                 <span>FOLLOWER DROP</span>
-                <b>LIVE</b>
+                <b><CheckCircle2 size={11} /> LIVE</b>
               </div>
               <strong>2,418</strong>
               <p>people waiting for your next event</p>
@@ -641,9 +756,9 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
             </div>
 
             <div className="studio-card">
-              <IconBadge tone="gold"><CircleDollarSign size={17} /></IconBadge>
-              <strong>₦0 delay</strong>
-              <p>automated payouts to Nigerian bank accounts</p>
+              <IconBadge tone="gold"><Users size={17} /></IconBadge>
+              <strong>3,840+</strong>
+              <p>squads formed across Lagos & Abuja</p>
             </div>
 
             <div className="studio-card">
@@ -652,13 +767,18 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
               <p>guest manifest for your gate team</p>
             </div>
 
-            <div className="studio-card studio-card--wide studio-card--sales">
+            {/* Engagement Metrics replacing Live Sales (Client item 34:21) */}
+            <div className="studio-card studio-card--wide studio-card--engagement">
               <div>
-                <span>LIVE SALES / GTB · ACCESS · KUDA</span>
-                <strong>₦4.82m</strong>
+                <span className="text-xs font-bold text-gray-400 tracking-wider">ORGANISER & ATTENDEE ENGAGEMENT</span>
+                <strong>94.2%</strong>
+                <p className="text-xs text-gray-400">social squad completion & repeat attendance rate</p>
               </div>
-              <TrendingUp size={40} />
-              <small>+18.4% this week</small>
+              <TrendingUp size={38} className="text-emerald-400" />
+              <small>
+                <CheckCircle2 size={12} className="text-emerald-400" />
+                +18.4% community growth this week
+              </small>
             </div>
           </div>
         </section>
@@ -696,7 +816,7 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
 
           <div className="referral-widget">
             <div className="widget-label">
-              <Share2Icon />
+              <Send size={15} />
               <span>REFERRAL CALCULATOR</span>
             </div>
             <h3>How many friends are coming?</h3>
@@ -740,10 +860,12 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
             <p>Good plans are better when everyone can say yes.</p>
             <div className="cta-actions">
               <Link className="button" href="/events">
-                Explore live events <ArrowRight size={17} />
+                <span>Explore live events</span>
+                <ArrowRight size={17} />
               </Link>
               <Link className="button button--outline" href="/for-organisers">
-                <Plus size={17} /> Host an event
+                <Plus size={17} />
+                <span>Host an event</span>
               </Link>
             </div>
           </div>
@@ -788,7 +910,7 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
           <span>© 2026 PaddyMeet, Lagos / Abuja</span>
           <span>Instagram · X · TikTok · LinkedIn</span>
           <span>
-            Built for the next good night <span style={{ color: orange }}>ϟ</span>
+            Built for the next good night <Zap size={13} className="text-orange-500 inline ml-1" />
           </span>
         </div>
       </footer>
