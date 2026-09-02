@@ -481,8 +481,8 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
         <section className="section-pad hero">
           <div className="hero-copy">
             <div className="kicker mb-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-ping inline-block mr-1.5" />
-              <Sparkles size={14} className="text-orange-400" /> NOW LIVE IN LAGOS & ABUJA
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-ping inline-block mr-2" />
+              NOW LIVE IN LAGOS & ABUJA
             </div>
             <h1>
               Your next<br />
