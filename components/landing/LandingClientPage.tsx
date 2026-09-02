@@ -477,8 +477,8 @@ export default function LandingClientPage({ user, profile, liveEvents = [] }: Pr
       {/* Main Content Sections */}
       <main>
         
-        {/* Section 0: Fullscreen Primary Event Showcase Stage */}
-        <section className="hero-fullscreen">
+        {/* Hero Section */}
+        <section className="section-pad hero">
           <div className="hero-copy">
             <div className="kicker mb-3">
               <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-ping inline-block mr-1.5" />
