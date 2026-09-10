@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { sendTicketEmail } from '@/lib/email'
+import { generateTicketCode } from '@/lib/ticketCode'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface AttendeeInput {
@@ -17,16 +18,43 @@ export async function POST(request: NextRequest) {
     reservation_id,
   } = body
 
-  // Verify payment with Paystack
-  const verifyResponse = await fetch(
-    `https://api.paystack.co/transaction/verify/${reference}`,
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-      },
+  // DEV-ONLY: NEXT_PUBLIC_SKIP_PAYSTACK=true lets the checkout modal skip the
+  // real Paystack widget and call this route with a TEST-BYPASS- reference
+  // instead. The flag is re-checked here independently of the client, so a
+  // crafted TEST-BYPASS- reference against a deployment that hasn't set this
+  // flag falls straight through to the real Paystack verification below and
+  // fails like any other bogus reference.
+  const skipPaystack = process.env.NEXT_PUBLIC_SKIP_PAYSTACK === 'true' && reference?.startsWith('TEST-BYPASS-')
+
+  let verifyData: { status: boolean; data: { status: string; amount: number } }
+
+  if (skipPaystack) {
+    const { data: bypassTicketType } = await supabase
+      .from('ticket_types')
+      .select('price, is_group_ticket')
+      .eq('id', ticket_type_id)
+      .eq('event_id', event_id)
+      .maybeSingle()
+
+    const price = bypassTicketType?.price || 0
+    const testAmount = bypassTicketType?.is_group_ticket ? price : price * quantity
+
+    verifyData = {
+      status: true,
+      data: { status: 'success', amount: Math.round(testAmount * 100) },
     }
-  )
-  const verifyData = await verifyResponse.json()
+  } else {
+    // Verify payment with Paystack
+    const verifyResponse = await fetch(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        },
+      }
+    )
+    verifyData = await verifyResponse.json()
+  }
 
   if (!verifyData.status || verifyData.data.status !== 'success') {
     return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
@@ -117,7 +145,7 @@ export async function POST(request: NextRequest) {
       ticket_type_id,
       event_id,
       user_id,
-      ticket_code: `PM-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+      ticket_code: generateTicketCode('PM'),
       status: 'active',
       attendee_name: attendee?.name || buyer_name || null,
       attendee_email: attendee?.email || null,
@@ -162,8 +190,8 @@ export async function POST(request: NextRequest) {
         .select('id')
         .eq('group_id', group.id)
         .eq('user_id', user_id)
-        .single()
-      if (!existing) {
+        .limit(1)
+      if ((existing?.length ?? 0) === 0) {
         await supabase.from('group_members').insert({
           group_id: group.id,
           user_id,

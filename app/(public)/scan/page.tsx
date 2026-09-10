@@ -20,12 +20,11 @@ interface Stats {
 
 interface ScanResult {
   valid: boolean
-  status: 'valid' | 'already_used' | 'refunded' | 'cancelled' | 'not_found' | 'wrong_event'
+  status: 'valid' | 'used' | 'refunded' | 'cancelled' | 'not_found' | 'wrong_event' | 'not_yet_open'
   reason?: string
   ticket_code?: string
   attendee_name?: string
   ticket_type?: string
-  scanned_at?: string
   checked_in_at?: string
 }
 
@@ -77,7 +76,7 @@ export default function StaffScannerPage() {
       const res = await fetch('/api/scanner/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticket_code: code.trim(), event_id: event.id }),
+        body: JSON.stringify({ ticket_code: code.trim(), event_id: event.id, passkey }),
       })
       const data = await res.json()
 
@@ -253,9 +252,9 @@ export default function StaffScannerPage() {
               </div>
             )}
 
-            {lastResult.scanned_at && (
+            {lastResult.status === 'used' && lastResult.checked_in_at && (
               <p className="text-xs text-red-300/80 mt-2">
-                Already checked in at {new Date(lastResult.scanned_at).toLocaleTimeString()}
+                Already checked in at {new Date(lastResult.checked_in_at).toLocaleTimeString()}
               </p>
             )}
 

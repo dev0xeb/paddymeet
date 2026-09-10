@@ -12,13 +12,13 @@ interface Event {
 
 interface ScanResult {
   valid: boolean
-  status: 'valid' | 'used' | 'invalid' | 'cancelled' | 'wrong_event'
+  status: 'valid' | 'used' | 'not_found' | 'cancelled' | 'refunded' | 'wrong_event' | 'not_yet_open'
   reason?: string
   attendee_name?: string
   ticket_type?: string
   event_title?: string
   ticket_code?: string
-  marked_used_at?: string
+  checked_in_at?: string
 }
 
 interface Props {
@@ -115,7 +115,7 @@ export default function QRScanner({ events }: Props) {
       const data = await res.json()
       setResult(data)
     } catch {
-      setResult({ valid: false, status: 'invalid', reason: 'Network error. Please try again.' })
+      setResult({ valid: false, status: 'not_found', reason: 'Network error. Please try again.' })
     }
     setLoading(false)
   }
@@ -139,9 +139,11 @@ export default function QRScanner({ events }: Props) {
   const resultConfig = {
     valid: { bg: 'bg-green-50 border-green-200', icon: Check, iconBg: 'bg-green-500', text: 'text-green-700', label: '✓ Valid Ticket' },
     used: { bg: 'bg-orange-50 border-orange-200', icon: AlertCircle, iconBg: 'bg-orange-500', text: 'text-orange-700', label: '⚠ Already Used' },
-    invalid: { bg: 'bg-red-50 border-red-200', icon: X, iconBg: 'bg-red-500', text: 'text-red-700', label: '✗ Invalid Ticket' },
+    not_found: { bg: 'bg-red-50 border-red-200', icon: X, iconBg: 'bg-red-500', text: 'text-red-700', label: '✗ Invalid Ticket' },
     cancelled: { bg: 'bg-red-50 border-red-200', icon: X, iconBg: 'bg-red-500', text: 'text-red-700', label: '✗ Cancelled' },
+    refunded: { bg: 'bg-red-50 border-red-200', icon: X, iconBg: 'bg-red-500', text: 'text-red-700', label: '✗ Refunded' },
     wrong_event: { bg: 'bg-yellow-50 border-yellow-200', icon: AlertCircle, iconBg: 'bg-yellow-500', text: 'text-yellow-700', label: '⚠ Wrong Event' },
+    not_yet_open: { bg: 'bg-yellow-50 border-yellow-200', icon: AlertCircle, iconBg: 'bg-yellow-500', text: 'text-yellow-700', label: '⚠ Too Early' },
   }
 
   return (
@@ -206,11 +208,10 @@ export default function QRScanner({ events }: Props) {
             <div className={`border-2 rounded-2xl p-5 mb-5 ${resultConfig[result.status].bg}`}>
               <div className="flex items-center gap-3 mb-3">
                 <div className={`w-10 h-10 rounded-xl ${resultConfig[result.status].iconBg} flex items-center justify-center flex-shrink-0`}>
-                  {result.status === 'valid'
-                    ? <Check className="w-5 h-5 text-white" />
-                    : result.status === 'used' || result.status === 'wrong_event'
-                    ? <AlertCircle className="w-5 h-5 text-white" />
-                    : <X className="w-5 h-5 text-white" />}
+                  {(() => {
+                    const Icon = resultConfig[result.status].icon
+                    return <Icon className="w-5 h-5 text-white" />
+                  })()}
                 </div>
                 <div>
                   <div className={`text-base font-extrabold ${resultConfig[result.status].text}`}>
@@ -242,11 +243,11 @@ export default function QRScanner({ events }: Props) {
                       <span className="font-bold text-gray-900">{result.event_title}</span>
                     </div>
                   )}
-                  {result.status === 'used' && result.marked_used_at && (
+                  {result.status === 'used' && result.checked_in_at && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Checked in at</span>
                       <span className="font-bold text-gray-900">
-                        {new Date(result.marked_used_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(result.checked_in_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   )}

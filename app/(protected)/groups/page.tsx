@@ -37,9 +37,9 @@ export default async function MyGroupsPage() {
       .single(),
     supabase
       .from('group_members')
-      .select('*, groups(*, events(id, title, event_date, start_time, venue_name, city, event_type, vibe, image_url), ticket_types(name, price, is_group_ticket, group_size, group_deadline))')
+      .select('*, groups(*, events(id, title, event_date, start_time, venue_name, city, event_type, vibe, cover_image_url), ticket_types(name, price, is_group_ticket, group_size, group_deadline))')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false }),
+      .order('joined_at', { ascending: false }),
     supabase
       .from('events')
       .select('id, title, event_date, start_time, venue_name, city, vibe, ticket_types(id, name, price, is_group_ticket, group_size)')

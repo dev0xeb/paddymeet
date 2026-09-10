@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { sendTicketEmail } from '@/lib/email'
+import { generateTicketCode } from '@/lib/ticketCode'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface AttendeeInput {
@@ -10,8 +11,36 @@ interface AttendeeInput {
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const body = await request.json()
   const { event_id, ticket_type_id, quantity, user_id, buyer_name, buyer_phone, attendees } = body
+
+  if (user_id !== user.id) {
+    return NextResponse.json({ error: 'You can only claim tickets for your own account' }, { status: 403 })
+  }
+
+  if (!event_id || !ticket_type_id || !quantity) {
+    return NextResponse.json({ error: 'event_id, ticket_type_id and quantity are required' }, { status: 400 })
+  }
+
+  // This route bypasses Paystack entirely, so it must independently verify
+  // the ticket is actually free — otherwise it's an unauthenticated way to
+  // mint paid tickets for nothing.
+  const { data: ticketType } = await supabase
+    .from('ticket_types')
+    .select('price')
+    .eq('id', ticket_type_id)
+    .eq('event_id', event_id)
+    .maybeSingle()
+
+  if (!ticketType || ticketType.price > 0) {
+    return NextResponse.json({ error: 'This ticket type requires payment and cannot be claimed for free' }, { status: 400 })
+  }
 
   const attendeeList: AttendeeInput[] = attendees && attendees.length > 0
     ? attendees
@@ -25,7 +54,7 @@ export async function POST(request: NextRequest) {
       ticket_type_id,
       event_id,
       user_id,
-      ticket_code: `PM-FREE-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+      ticket_code: generateTicketCode('PM-FREE'),
       status: 'active',
       attendee_name: attendee?.name || buyer_name || null,
       attendee_email: attendee?.email || null,
@@ -56,8 +85,8 @@ export async function POST(request: NextRequest) {
         .select('id')
         .eq('group_id', group.id)
         .eq('user_id', user_id)
-        .single()
-      if (!existing) {
+        .limit(1)
+      if ((existing?.length ?? 0) === 0) {
         await supabase.from('group_members').insert({
           group_id: group.id,
           user_id,

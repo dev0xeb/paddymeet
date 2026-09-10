@@ -94,3 +94,65 @@ export async function sendTicketEmail(data: TicketEmailData) {
     return { success: false, error }
   }
 }
+
+interface CheckInEmailData {
+  to: string
+  recipientName: string
+  eventTitle: string
+  ticketCode: string
+  ticketTypeName: string
+  checkedInAt: string
+}
+
+export async function sendCheckInEmail(data: CheckInEmailData) {
+  const { to, recipientName, eventTitle, ticketCode, ticketTypeName, checkedInAt } = data
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: `You're checked in to ${eventTitle}!`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; background: #f9fafb; padding: 32px 0;">
+          <div style="background: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid #f0f0f0;">
+
+            <div style="background: linear-gradient(135deg, #16a34a, #22c55e); padding: 32px 24px; text-align: center;">
+              <div style="font-size: 24px; font-weight: 900; color: white; letter-spacing: -0.5px;">
+                paddy<span style="color: #1f2937;">meet</span>
+              </div>
+            </div>
+
+            <div style="padding: 32px 24px;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="width: 56px; height: 56px; background: #f0fdf4; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 12px;">✅</div>
+                <h1 style="font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 4px;">You're checked in, ${recipientName}!</h1>
+                <p style="font-size: 14px; color: #6b7280; margin: 0;">Have a great time at ${eventTitle}</p>
+              </div>
+
+              <div style="background: #f9fafb; border: 1px solid #f0f0f0; border-radius: 16px; padding: 16px 20px; margin-bottom: 20px;">
+                <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Ticket</div>
+                <div style="font-size: 14px; font-weight: 800; color: #111827; font-family: monospace; letter-spacing: 1px; margin-bottom: 10px;">${ticketCode}</div>
+                <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Tier</div>
+                <div style="font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 10px;">${ticketTypeName}</div>
+                <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Checked in at</div>
+                <div style="font-size: 14px; font-weight: 700; color: #111827;">${new Date(checkedInAt).toLocaleString()}</div>
+              </div>
+
+              <p style="font-size: 12px; color: #9ca3af; text-align: center; margin: 0;">
+                This ticket has now been used for entry and cannot be scanned again. If you didn't check in and think this is a mistake, contact the event organiser right away.
+              </p>
+            </div>
+          </div>
+
+          <p style="text-align: center; font-size: 11px; color: #9ca3af; margin-top: 16px;">
+            Paddymeet Inc · 14 Bode Thomas Street, Surulere, Lagos
+          </p>
+        </div>
+      `,
+    })
+    return { success: true, result }
+  } catch (error) {
+    console.error('Check-in email send error:', error)
+    return { success: false, error }
+  }
+}

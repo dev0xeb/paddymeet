@@ -245,18 +245,26 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
     setLoading(true)
     setError('')
 
-    const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY
-    if (!publicKey) {
-      setError('Payment configuration error.')
-      setLoading(false)
-      return
-    }
+    // DEV-ONLY: set NEXT_PUBLIC_SKIP_PAYSTACK=true to click through checkout
+    // without a real card. Never leave this set in a deployed environment —
+    // the server independently checks the same flag before honoring a
+    // TEST-BYPASS- reference, so it's inert unless explicitly enabled there too.
+    const skipPaystack = process.env.NEXT_PUBLIC_SKIP_PAYSTACK === 'true'
 
-    const pw = window as unknown as PaystackWindow
-    if (!pw.PaystackPop) {
-      setError('Payment system not ready. Please try again.')
-      setLoading(false)
-      return
+    if (!skipPaystack) {
+      const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY
+      if (!publicKey) {
+        setError('Payment configuration error.')
+        setLoading(false)
+        return
+      }
+
+      const pw = window as unknown as PaystackWindow
+      if (!pw.PaystackPop) {
+        setError('Payment system not ready. Please try again.')
+        setLoading(false)
+        return
+      }
     }
 
     // 1. Temporarily reserve tickets to prevent overselling (SRS §7 & §21)
@@ -288,10 +296,17 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
       return
     }
 
+    if (skipPaystack) {
+      setStep('processing')
+      verifyPayment(`TEST-BYPASS-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, activeResId)
+      return
+    }
+
     const ref = `PM-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+    const pw = window as unknown as PaystackWindow
 
     const handler = pw.PaystackPop.setup({
-      key: publicKey,
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
       email: user.email,
       amount: total * 100,
       currency: 'NGN',

@@ -40,9 +40,9 @@ export async function GET(
     // 2. Fetch all tickets for this event
     const { data: tickets, error: ticketError } = await adminClient
       .from('tickets')
-      .select('id, ticket_code, attendee_name, attendee_email, attendee_phone, status, attended, attendance_marked_at, created_at, ticket_types(name, price), users(full_name, email, phone)')
+      .select('id, ticket_code, attendee_name, attendee_email, attendee_phone, status, attended, attendance_marked_at, purchased_at, ticket_types(name, price), users(full_name, email, phone)')
       .eq('event_id', id)
-      .order('created_at', { ascending: false })
+      .order('purchased_at', { ascending: false })
 
     if (ticketError) {
       return NextResponse.json({ error: ticketError.message }, { status: 500 })
@@ -74,7 +74,7 @@ export async function GET(
       const status = t.status || 'active'
       const checkedIn = t.attended ? 'YES' : 'NO'
       const checkinTime = t.attendance_marked_at ? new Date(t.attendance_marked_at).toLocaleString() : '—'
-      const purchaseTime = t.created_at ? new Date(t.created_at).toLocaleString() : '—'
+      const purchaseTime = t.purchased_at ? new Date(t.purchased_at).toLocaleString() : '—'
 
       // Escape quotes and commas
       const escape = (val: string | number) => `"${String(val).replace(/"/g, '""')}"`

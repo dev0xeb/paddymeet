@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase-admin'
 import { sendTicketEmail } from '@/lib/email'
+import { generateTicketCode } from '@/lib/ticketCode'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -231,7 +232,7 @@ async function processTicketTypeGroups(
       ticket_type_id: ticketTypeId,
       event_id: eventId,
       user_id: m.user_id,
-      ticket_code: `PM-GRP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+      ticket_code: generateTicketCode('PM-GRP'),
       status: 'active',
       attendee_name: m.attendee_name || null,
       attendee_phone: m.attendee_phone || null,

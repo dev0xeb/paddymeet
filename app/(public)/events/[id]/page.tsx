@@ -11,6 +11,7 @@ import BuyTicketButton from '@/components/tickets/BuyTicketButton'
 import TicketSelector from '@/components/tickets/TicketSelector'
 import TicketGroupBrowser from '@/components/TicketGroupBrowser'
 import FollowOrganiserButton from '@/components/FollowOrganiserButton'
+import EventChatRoom from '@/components/EventChatRoom'
 
 interface TicketType {
   id: string
@@ -80,6 +81,18 @@ export default async function EventDetailPage({
     'from-blue-900 via-indigo-900 to-purple-900',
   ]
   const gradient = gradients[id.charCodeAt(0) % gradients.length]
+
+  // Check if user has a ticket or is the organiser
+  const { data: userTicket } = user ? await supabase
+    .from('tickets')
+    .select('id')
+    .eq('event_id', id)
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .maybeSingle() : { data: null }
+
+  const isOrganiser = user && event.organiser_id === user.id
+  const hasAccess = !!userTicket || !!isOrganiser
 
   let referralDiscount = 0
 if (user) {
@@ -311,107 +324,16 @@ const userData = user ? { id: user.id, email: user.email || '', referral_discoun
               </div>
             )}
 
-            {/* Groups section */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-extrabold text-gray-900">Groups</h2>
-                {socialGroups && socialGroups.length > 0 && (
-                  <span className="text-xs text-gray-400">{socialGroups.length} group{socialGroups.length !== 1 ? 's' : ''}</span>
-                )}
-              </div>
-
-              <div className="border-2 border-orange-200 bg-orange-50 rounded-2xl p-4 mb-3">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="text-sm font-extrabold text-gray-900">{event.title} — Everyone</span>
-                  <span className="px-2 py-0.5 bg-orange-100 text-orange-600 border border-orange-200 text-xs font-bold rounded-full">Main Group</span>
-                  <span className="px-2 py-0.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full">Open to all</span>
-                </div>
-                <p className="text-xs text-gray-500 leading-relaxed mb-3">
-                  The main chat for everyone attending this event. Coordinate, meet people, discover groups.
-                </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex">
-                      {['bg-orange-400', 'bg-pink-500', 'bg-purple-500', 'bg-blue-500'].map((c, i) => (
-                        <div key={i} className={`w-6 h-6 rounded-full ${c} border-2 border-white -ml-1.5 first:ml-0`} />
-                      ))}
-                    </div>
-                    <span className="text-xs text-gray-500 font-medium">
-                      {memberCount ? `${memberCount} member${memberCount === 1 ? '' : 's'}` : 'Be the first to join'}
-                    </span>
-                  </div>
-
-                  {userData && mainGroup ? (
-                    <OpenGroupButton
-                      groupId={mainGroup.id}
-                      groupName={mainGroup.name}
-                      eventTitle={event.title}
-                    />
-                  ) : !userData ? (
-                    <Link href="/login" className="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-full hover:bg-orange-600 transition-colors">
-                      Log in to chat
-                    </Link>
-                  ) : null}
-                </div>
-              </div>
-
-              {/* Social and ticket groups */}
-              {socialGroups && socialGroups.length > 0 ? (
-                <div className="space-y-3 mb-3">
-                  {socialGroups.map((group: { id: string, name: string, description: string, vibe: string, group_type: string, max_members: number, gender_preference: string, min_trust_score: number, member_count: number }) => (
-                    <div key={group.id} className="border-2 border-gray-200 rounded-2xl p-4">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-sm font-extrabold text-gray-900">{group.name}</span>
-                        <span className={`px-2 py-0.5 text-xs font-bold rounded-full border ${
-                          group.group_type === 'ticket'
-                            ? 'bg-blue-50 text-blue-600 border-blue-200'
-                            : 'bg-purple-50 text-purple-600 border-purple-200'
-                        }`}>
-                          {group.group_type === 'ticket' ? 'Ticket Group' : 'Social Group'}
-                        </span>
-                        {group.vibe && (
-                          <span className="px-2 py-0.5 bg-orange-50 text-orange-500 border border-orange-200 text-xs font-bold rounded-full">{group.vibe}</span>
-                        )}
-                      </div>
-                      {group.description && (
-                        <p className="text-xs text-gray-500 leading-relaxed mb-2">{group.description}</p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 text-xs text-gray-400">
-                          <span className="flex items-center gap-1"><Users className="w-3 h-3" />{group.member_count || 0}/{group.max_members}</span>
-                          {group.gender_preference !== 'any' && <span className="capitalize">{group.gender_preference}</span>}
-                          {group.min_trust_score > 0 && <span>Trust ≥ {group.min_trust_score}</span>}
-                        </div>
-                        {userData ? (
-                          <OpenGroupButton groupId={group.id} groupName={group.name} eventTitle={event.title} />
-                        ) : (
-                          <Link href="/login" className="text-xs font-bold text-orange-500 hover:underline">Log in to chat</Link>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-
-              {/* Create group or empty state */}
-              {userData ? (
-                <div className="flex items-center justify-between p-4 border-2 border-dashed border-gray-200 rounded-2xl">
-                  <div>
-                    <div className="text-sm font-bold text-gray-700 mb-0.5">Create your own group</div>
-                    <div className="text-xs text-gray-400">Social or ticket-based groups for this event</div>
-                  </div>
-                  <CreateGroupModal
-                    eventId={event.id}
-                    eventTitle={event.title}
-                  />
-                </div>
-              ) : (
-                <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-2xl">
-                  <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-400 mb-1">Log in to create or join groups</p>
-                  <Link href="/login" className="text-xs font-bold text-orange-500 hover:underline">Log in</Link>
-                </div>
-              )}
+            {/* Live 2-Tier Event Chat & Open Squads */}
+            <div id="chat-lounge" className="mb-6">
+              <EventChatRoom
+                eventId={event.id}
+                eventTitle={event.title}
+                mainGroupId={mainGroup?.id || `main-${event.id}`}
+                hasTicket={hasAccess}
+                currentUserId={user?.id}
+                currentUsername={profile?.username || 'Explorer'}
+              />
             </div>
 
             {/* House rules */}

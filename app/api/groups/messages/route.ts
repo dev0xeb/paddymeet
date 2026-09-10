@@ -1,0 +1,207 @@
+import { createClient } from '@/lib/supabase-server'
+import { NextRequest, NextResponse } from 'next/server'
+
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
+
+/**
+ * A user may read/write a group's messages if they:
+ * - are the event's organiser, or
+ * - hold an active ticket for the event (main/ticket/social rooms), or
+ * - are a member of the group (required for squad sub-rooms).
+ */
+async function canAccessGroup(
+  supabase: SupabaseServerClient,
+  userId: string,
+  groupId: string
+): Promise<boolean> {
+  const { data: group } = await supabase
+    .from('groups')
+    .select('event_id, group_type')
+    .eq('id', groupId)
+    .maybeSingle()
+
+  if (!group) return false
+
+  const { data: event } = await supabase
+    .from('events')
+    .select('organiser_id')
+    .eq('id', group.event_id)
+    .maybeSingle()
+
+  if (event?.organiser_id === userId) return true
+
+  if (group.group_type === 'squad') {
+    // Array select, not .maybeSingle() — that errors (and reads as "no
+    // access") if a group somehow ends up with more than one membership
+    // row for the same user, which has happened in practice.
+    const { data: membership } = await supabase
+      .from('group_members')
+      .select('id')
+      .eq('group_id', groupId)
+      .eq('user_id', userId)
+      .limit(1)
+    return (membership?.length ?? 0) > 0
+  }
+
+  const { data: ticket } = await supabase
+    .from('tickets')
+    .select('id')
+    .eq('event_id', group.event_id)
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  return !!ticket
+}
+
+/**
+ * GET /api/groups/messages?group_id=...
+ * Fetch messages for a specific group/squad with sender details and media attachments.
+ */
+export async function GET(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { searchParams } = new URL(request.url)
+  const groupId = searchParams.get('group_id')
+
+  if (!groupId) {
+    return NextResponse.json({ error: 'group_id is required' }, { status: 400 })
+  }
+
+  if (!(await canAccessGroup(supabase, user.id, groupId))) {
+    return NextResponse.json({ error: 'You do not have access to this chat room' }, { status: 403 })
+  }
+
+  const { data: messages, error } = await supabase
+    .from('group_messages')
+    .select(`
+      id,
+      group_id,
+      user_id,
+      message,
+      created_at
+    `)
+    .eq('group_id', groupId)
+    .order('created_at', { ascending: true })
+    .limit(100)
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // Fetch senders' profile info
+  const userIds = [...new Set(messages.map((m) => m.user_id))]
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, username, full_name, tier, avatar_url')
+    .in('id', userIds)
+
+  const userMap = new Map((users || []).map((u) => [u.id, u]))
+
+  const formattedMessages = messages.map((m) => {
+    const sender = userMap.get(m.user_id)
+    
+    // Parse media metadata if embedded in message or separate fields
+    let mediaUrl: string | undefined
+    let mediaType: 'image' | 'video' | undefined
+    let textContent = m.message || ''
+
+    if (textContent.startsWith('[MEDIA_IMAGE]:')) {
+      mediaType = 'image'
+      const parts = textContent.replace('[MEDIA_IMAGE]:', '').split('|CAPTION:')
+      mediaUrl = parts[0]?.trim()
+      textContent = parts[1]?.trim() || ''
+    } else if (textContent.startsWith('[MEDIA_VIDEO]:')) {
+      mediaType = 'video'
+      const parts = textContent.replace('[MEDIA_VIDEO]:', '').split('|CAPTION:')
+      mediaUrl = parts[0]?.trim()
+      textContent = parts[1]?.trim() || ''
+    }
+
+    return {
+      id: m.id,
+      groupId: m.group_id,
+      userId: m.user_id,
+      text: textContent,
+      mediaUrl,
+      mediaType,
+      createdAt: m.created_at,
+      sender: {
+        username: sender?.username || 'Explorer',
+        fullName: sender?.full_name || 'Explorer',
+        tier: sender?.tier || 'Explorer',
+        avatarUrl: sender?.avatar_url,
+      },
+    }
+  })
+
+  return NextResponse.json({ messages: formattedMessages })
+}
+
+/**
+ * POST /api/groups/messages
+ * Send a message or media attachment to a group.
+ */
+export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = await request.json()
+  const { group_id, message, media_url, media_type } = body
+
+  if (!group_id) {
+    return NextResponse.json({ error: 'group_id is required' }, { status: 400 })
+  }
+
+  if (!message?.trim() && !media_url) {
+    return NextResponse.json({ error: 'Message or media is required' }, { status: 400 })
+  }
+
+  if (!(await canAccessGroup(supabase, user.id, group_id))) {
+    return NextResponse.json({ error: 'You do not have access to this chat room' }, { status: 403 })
+  }
+
+  // Format message payload with media tag
+  let finalMessageContent = message?.trim() || ''
+  if (media_url && media_type === 'image') {
+    finalMessageContent = `[MEDIA_IMAGE]:${media_url}${message?.trim() ? `|CAPTION:${message.trim()}` : ''}`
+  } else if (media_url && media_type === 'video') {
+    finalMessageContent = `[MEDIA_VIDEO]:${media_url}${message?.trim() ? `|CAPTION:${message.trim()}` : ''}`
+  }
+
+  const { data: newMessage, error } = await supabase
+    .from('group_messages')
+    .insert({
+      group_id,
+      user_id: user.id,
+      message: finalMessageContent,
+    })
+    .select()
+    .single()
+
+  if (error || !newMessage) {
+    return NextResponse.json({ error: error?.message || 'Failed to send message' }, { status: 500 })
+  }
+
+  return NextResponse.json({
+    success: true,
+    message: {
+      id: newMessage.id,
+      groupId: newMessage.group_id,
+      userId: newMessage.user_id,
+      text: message?.trim() || '',
+      mediaUrl: media_url,
+      mediaType: media_type,
+      createdAt: newMessage.created_at,
+    }
+  })
+}

@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase-admin'
 import { sendTicketEmail } from '@/lib/email'
+import { generateTicketCode } from '@/lib/ticketCode'
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
         ticket_type_id,
         event_id,
         user_id: user_id || null,
-        ticket_code: `PM-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+        ticket_code: generateTicketCode('PM'),
         status: 'active',
         attendee_name: attendee?.name || buyer_name || null,
         attendee_email: attendee?.email || data.customer?.email || null,
@@ -215,8 +216,8 @@ export async function POST(request: NextRequest) {
             .select('id')
             .eq('group_id', group.id)
             .eq('user_id', user_id)
-            .maybeSingle()
-          if (!existing) {
+            .limit(1)
+          if ((existing?.length ?? 0) === 0) {
             await adminClient.from('group_members').insert({
               group_id: group.id,
               user_id,
@@ -401,7 +402,7 @@ async function handleGroupPayment(
         ticket_type_id: ticketType?.id,
         event_id: group.event_id,
         user_id: m.user_id,
-        ticket_code: `PM-GRP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+        ticket_code: generateTicketCode('PM-GRP'),
         status: 'active',
         attendee_name: m.attendee_name,
         attendee_phone: m.attendee_phone,
@@ -410,6 +411,13 @@ async function handleGroupPayment(
     if (ticketsToCreate.length > 0) {
       const { data: createdTickets } = await adminClient.from('tickets').insert(ticketsToCreate).select()
       await adminClient.from('groups').update({ status: 'completed' }).eq('id', groupId)
+
+      if (ticketType?.id) {
+        await adminClient.rpc('increment_tickets_sold', {
+          ticket_type_id: ticketType.id,
+          amount: ticketsToCreate.length,
+        })
+      }
 
       if (createdTickets) {
         for (let i = 0; i < createdTickets.length; i++) {

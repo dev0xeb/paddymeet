@@ -31,9 +31,9 @@ export default async function TicketsPage() {
 
   const { data: tickets } = await supabase
     .from('tickets')
-    .select('*, ticket_types(name, price, is_group_ticket, group_size), events(id, title, event_date, start_time, venue_name, city, event_type, vibe, image_url)')
+    .select('*, ticket_types(name, price, is_group_ticket, group_size), events(id, title, event_date, start_time, venue_name, city, event_type, vibe, cover_image_url)')
     .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+    .order('purchased_at', { ascending: false })
 
   const activeTickets = tickets?.filter(t => t.status === 'active') || []
   const pastTickets = tickets?.filter(t => t.status !== 'active') || []

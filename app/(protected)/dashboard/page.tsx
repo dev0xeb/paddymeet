@@ -39,7 +39,7 @@ export default async function DashboardPage() {
     { data: upcomingLiveEvents }
   ] = await Promise.all([
     supabase.from('users').select('*, user_interests(*)').eq('id', user.id).single(),
-    supabase.from('tickets').select('*, ticket_types(name, price, is_group_ticket, group_size), events(*)').eq('user_id', user.id).order('created_at', { ascending: false }),
+    supabase.from('tickets').select('*, ticket_types(name, price, is_group_ticket, group_size), events(*)').eq('user_id', user.id).order('purchased_at', { ascending: false }),
     supabase.from('group_members').select('*, groups(*, events(id, title, event_date, city, venue_name), ticket_types(name, price, is_group_ticket))').eq('user_id', user.id).limit(4),
     supabase.from('promo_codes').select('*').eq('is_active', true).limit(3),
     supabase.from('users').select('id', { count: 'exact', head: true }).eq('referred_by', user.id),

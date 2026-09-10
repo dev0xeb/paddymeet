@@ -13,10 +13,14 @@ export async function POST(request: NextRequest) {
     const cleanKey = passkey.trim().toUpperCase()
     const adminClient = createAdminClient()
 
-    // Match by scanner_passkey, id prefix, or event code
-    let { data: event, error } = await adminClient
+    const eventColumns = 'id, title, event_date, start_time, venue_name, city, is_approved, is_live'
+
+    // Match by dedicated scanner passkey (this column may not exist yet on
+    // every deployment — see migration 005_scanner_passkey.sql — in which
+    // case this query safely resolves to no match rather than erroring).
+    let { data: event } = await adminClient
       .from('events')
-      .select('id, title, event_date, start_time, venue_name, city, is_approved, is_live, scanner_passkey')
+      .select(eventColumns)
       .eq('scanner_passkey', cleanKey)
       .maybeSingle()
 
@@ -24,7 +28,7 @@ export async function POST(request: NextRequest) {
       // Allow event ID direct matching for organizers testing
       const { data: eventById } = await adminClient
         .from('events')
-        .select('id, title, event_date, start_time, venue_name, city, is_approved, is_live, scanner_passkey')
+        .select(eventColumns)
         .eq('id', passkey.trim())
         .maybeSingle()
 

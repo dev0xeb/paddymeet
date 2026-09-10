@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { sendTicketEmail } from '@/lib/email'
+import { generateTicketCode } from '@/lib/ticketCode'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface AttendeeInput {
@@ -140,7 +141,7 @@ export async function POST(
       ticket_type_id: ticketType?.id,
       event_id: group.event_id,
       user_id: m.user_id,
-      ticket_code: `PM-GRP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+      ticket_code: generateTicketCode('PM-GRP'),
       status: 'active',
       attendee_name: m.attendee_name,
       attendee_phone: m.attendee_phone,
@@ -152,6 +153,13 @@ export async function POST(
       .select()
 
     await supabase.from('groups').update({ status: 'completed' }).eq('id', groupId)
+
+    if (ticketType?.id) {
+      await supabase.rpc('increment_tickets_sold', {
+        ticket_type_id: ticketType.id,
+        amount: ticketsToCreate.length,
+      })
+    }
 
     // Link tickets back to their member rows and send emails
     if (createdTickets && allPaidMembers) {
