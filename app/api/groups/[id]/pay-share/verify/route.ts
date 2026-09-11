@@ -22,9 +22,25 @@ export async function POST(
   const { reference, spots, attendees } = body
   const spotCount: number = spots || 1
 
+  const { data: group } = await supabase
+    .from('groups')
+    .select('*, ticket_types(*), events(title, event_date, start_time, venue_name)')
+    .eq('id', groupId)
+    .single()
+
+  if (!group) return NextResponse.json({ error: 'Group not found' }, { status: 404 })
+
+  const expectedAmount = (group.amount_per_member || 0) * spotCount
+
   // Verify payment with Paystack (skip for free group tickets where reference === 'FREE')
   let amountPaid = 0
-  if (reference !== 'FREE') {
+  if (reference === 'FREE') {
+    // A "FREE" reference is only legitimate if this group is actually free —
+    // otherwise it's an unauthenticated way to skip payment on a paid group.
+    if (expectedAmount > 0) {
+      return NextResponse.json({ error: 'This group requires payment.' }, { status: 400 })
+    }
+  } else {
     const verifyResponse = await fetch(
       `https://api.paystack.co/transaction/verify/${reference}`,
       { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
@@ -35,15 +51,15 @@ export async function POST(
       return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
     }
     amountPaid = verifyData.data.amount / 100
+
+    // Never trust the client for the amount — recompute what this many
+    // spots should actually cost from the group's own stored per-member price.
+    if (Math.abs(amountPaid - expectedAmount) > 1) {
+      return NextResponse.json({
+        error: `Payment amount does not match the group's price. If you were charged, contact support with reference ${reference}.`,
+      }, { status: 400 })
+    }
   }
-
-  const { data: group } = await supabase
-    .from('groups')
-    .select('*, ticket_types(*), events(title, event_date, start_time, venue_name)')
-    .eq('id', groupId)
-    .single()
-
-  if (!group) return NextResponse.json({ error: 'Group not found' }, { status: 404 })
 
   // Idempotency check: if webhook already fulfilled this group share payment
   if (reference !== 'FREE') {

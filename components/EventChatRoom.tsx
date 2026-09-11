@@ -22,7 +22,7 @@ import {
   MapPin,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { uploadChatMedia } from '@/lib/chatMedia'
+import { uploadChatMedia, parseChatMessage } from '@/lib/chatMedia'
 
 export interface ChatMessage {
   id: string
@@ -157,21 +157,7 @@ export default function EventChatRoom({
           }
 
           // Parse media
-          let mediaUrl: string | undefined
-          let mediaType: 'image' | 'video' | undefined
-          let textContent = newRow.message || ''
-
-          if (textContent.startsWith('[MEDIA_IMAGE]:')) {
-            mediaType = 'image'
-            const parts = textContent.replace('[MEDIA_IMAGE]:', '').split('|CAPTION:')
-            mediaUrl = parts[0]?.trim()
-            textContent = parts[1]?.trim() || ''
-          } else if (textContent.startsWith('[MEDIA_VIDEO]:')) {
-            mediaType = 'video'
-            const parts = textContent.replace('[MEDIA_VIDEO]:', '').split('|CAPTION:')
-            mediaUrl = parts[0]?.trim()
-            textContent = parts[1]?.trim() || ''
-          }
+          const { text: textContent, mediaUrl, mediaType } = parseChatMessage(newRow.message)
 
           // Fetch sender profile if not current user
           let senderUsername = currentUsername || 'Explorer'

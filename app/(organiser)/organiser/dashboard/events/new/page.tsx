@@ -277,7 +277,7 @@ export default function SubmitEventPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Age restriction</label>
-                <select value={eventData.age_restriction} onChange={e => update('age_restriction', parseInt(e.target.value))} className={inputClass + ' appearance-none'}>
+                <select value={eventData.age_restriction} onChange={e => update('age_restriction', parseInt(e.target.value) || 0)} className={inputClass + ' appearance-none'}>
                   <option value={0}>All ages</option>
                   <option value={18}>18+</option>
                   <option value={21}>21+</option>
@@ -286,7 +286,7 @@ export default function SubmitEventPage() {
               </div>
               <div>
                 <label className={labelClass}>Expected capacity</label>
-                <input type="number" placeholder="e.g. 500" value={eventData.capacity || ''} onChange={e => update('capacity', parseInt(e.target.value))} className={inputClass} />
+                <input type="number" placeholder="e.g. 500" value={eventData.capacity || ''} onChange={e => update('capacity', parseInt(e.target.value) || 0)} className={inputClass} />
               </div>
             </div>
 
@@ -410,7 +410,7 @@ export default function SubmitEventPage() {
                       </div>
                       <div>
                         <label className={labelClass}>Price (₦) <span className="text-red-400">*</span></label>
-                        <input type="number" placeholder="e.g. 15000" value={ticket.price || ''} onChange={e => updateTicket(i, 'price', parseInt(e.target.value))} className={inputClass} />
+                        <input type="number" placeholder="e.g. 15000" value={ticket.price || ''} onChange={e => updateTicket(i, 'price', parseInt(e.target.value) || 0)} className={inputClass} />
                       </div>
                     </div>
 
@@ -422,7 +422,7 @@ export default function SubmitEventPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className={labelClass}>Quantity <span className="text-red-400">*</span></label>
-                        <input type="number" placeholder="e.g. 100" value={ticket.quantity || ''} onChange={e => updateTicket(i, 'quantity', parseInt(e.target.value))} className={inputClass} />
+                        <input type="number" placeholder="e.g. 100" value={ticket.quantity || ''} onChange={e => updateTicket(i, 'quantity', parseInt(e.target.value) || 0)} className={inputClass} />
                       </div>
                       <div>
                         <label className={labelClass}>Group ticket?</label>
@@ -437,7 +437,7 @@ export default function SubmitEventPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className={labelClass}>Group size</label>
-                          <input type="number" placeholder="e.g. 5" min="2" max="20" value={ticket.group_size || ''} onChange={e => updateTicket(i, 'group_size', parseInt(e.target.value))} className={inputClass} />
+                          <input type="number" placeholder="e.g. 5" min="2" max="20" value={ticket.group_size || ''} onChange={e => updateTicket(i, 'group_size', parseInt(e.target.value) || 2)} className={inputClass} />
                         </div>
                         <div>
                           <label className={labelClass}>Group sales close</label>

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
+import { parseChatMessage, encodeChatMessage } from '@/lib/chatMedia'
 import { NextRequest, NextResponse } from 'next/server'
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
@@ -43,15 +44,19 @@ async function canAccessGroup(
     return (membership?.length ?? 0) > 0
   }
 
+  // Array select, not .maybeSingle() — a buyer of quantity > 1 has multiple
+  // active ticket rows for the same event, and .maybeSingle() errors (read
+  // as "no access") on more than one match. Same fix as the membership
+  // check above.
   const { data: ticket } = await supabase
     .from('tickets')
     .select('id')
     .eq('event_id', group.event_id)
     .eq('user_id', userId)
     .eq('status', 'active')
-    .maybeSingle()
+    .limit(1)
 
-  return !!ticket
+  return (ticket?.length ?? 0) > 0
 }
 
 /**
@@ -105,23 +110,7 @@ export async function GET(request: NextRequest) {
 
   const formattedMessages = messages.map((m) => {
     const sender = userMap.get(m.user_id)
-    
-    // Parse media metadata if embedded in message or separate fields
-    let mediaUrl: string | undefined
-    let mediaType: 'image' | 'video' | undefined
-    let textContent = m.message || ''
-
-    if (textContent.startsWith('[MEDIA_IMAGE]:')) {
-      mediaType = 'image'
-      const parts = textContent.replace('[MEDIA_IMAGE]:', '').split('|CAPTION:')
-      mediaUrl = parts[0]?.trim()
-      textContent = parts[1]?.trim() || ''
-    } else if (textContent.startsWith('[MEDIA_VIDEO]:')) {
-      mediaType = 'video'
-      const parts = textContent.replace('[MEDIA_VIDEO]:', '').split('|CAPTION:')
-      mediaUrl = parts[0]?.trim()
-      textContent = parts[1]?.trim() || ''
-    }
+    const { text: textContent, mediaUrl, mediaType } = parseChatMessage(m.message)
 
     return {
       id: m.id,
@@ -171,12 +160,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Format message payload with media tag
-  let finalMessageContent = message?.trim() || ''
-  if (media_url && media_type === 'image') {
-    finalMessageContent = `[MEDIA_IMAGE]:${media_url}${message?.trim() ? `|CAPTION:${message.trim()}` : ''}`
-  } else if (media_url && media_type === 'video') {
-    finalMessageContent = `[MEDIA_VIDEO]:${media_url}${message?.trim() ? `|CAPTION:${message.trim()}` : ''}`
-  }
+  const finalMessageContent = encodeChatMessage(message?.trim() || '', media_url, media_type)
 
   const { data: newMessage, error } = await supabase
     .from('group_messages')

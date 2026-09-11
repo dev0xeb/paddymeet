@@ -12,16 +12,19 @@ export async function POST(request: NextRequest) {
   if (!name?.trim()) return NextResponse.json({ error: 'Group name is required' }, { status: 400 })
   if (!event_id) return NextResponse.json({ error: 'Event ID is required' }, { status: 400 })
 
-  // Check user has a ticket for this event
+  // Check user has a ticket for this event. A buyer of quantity > 1 has
+  // multiple matching rows, so this must be an array check, not .single()/
+  // .maybeSingle() — those error (and read as "no ticket") on more than
+  // one match.
   const { data: ticket } = await supabase
     .from('tickets')
     .select('id')
     .eq('event_id', event_id)
     .eq('user_id', user.id)
     .eq('status', 'active')
-    .single()
+    .limit(1)
 
-  if (!ticket) {
+  if ((ticket?.length ?? 0) === 0) {
     return NextResponse.json({ error: 'You need a ticket to create a group for this event' }, { status: 403 })
   }
 
@@ -34,9 +37,9 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
       .eq('ticket_type_id', ticket_type_id)
       .eq('status', 'active')
-      .single()
+      .limit(1)
 
-    if (!specificTicket) {
+    if ((specificTicket?.length ?? 0) === 0) {
       return NextResponse.json({ error: 'You need the specified ticket type to create this group' }, { status: 403 })
     }
   }

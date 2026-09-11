@@ -98,13 +98,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Event ID and Squad Name are required' }, { status: 400 })
   }
 
-  // Verify user has ticket or access
-  const { data: ticket } = await supabase
+  // Verify user has ticket or access. Array check, not .maybeSingle() —
+  // a buyer of quantity > 1 has multiple ticket rows for this event, and
+  // .maybeSingle() errors (read as "no ticket") on more than one match.
+  const { data: tickets } = await supabase
     .from('tickets')
     .select('id')
     .eq('event_id', event_id)
     .eq('user_id', user.id)
-    .maybeSingle()
+    .limit(1)
+  const ticket = (tickets?.length ?? 0) > 0
 
   // Create squad group
   const squadName = name.trim()

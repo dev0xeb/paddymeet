@@ -1,6 +1,8 @@
 import { createAdminClient } from '@/lib/supabase-admin'
 import { sendTicketEmail } from '@/lib/email'
 import { generateTicketCode } from '@/lib/ticketCode'
+import { awardReferralDiscount } from '@/lib/referral'
+import { computeOrderTotal } from '@/lib/pricing'
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 
@@ -92,7 +94,6 @@ export async function POST(request: NextRequest) {
       ticket_type_id,
       quantity = 1,
       user_id,
-      discount_applied = 0,
       promo_code = null,
       buyer_name = null,
       buyer_phone = null,
@@ -104,53 +105,71 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, warning: 'Missing event_id or ticket_type_id' }, { status: 200 })
     }
 
-    // Create or update order
-    const { data: order, error: orderError } = await adminClient
-      .from('orders')
-      .insert({
-        user_id: user_id || null,
-        event_id,
-        amount: amountPaid,
-        service_fee: Math.round(amountPaid * 0.05),
-        total_paid: amountPaid,
-        payment_method: 'paystack',
-        payment_reference: reference,
-        payment_status: 'completed',
-        discount_applied: discount_applied || 0,
-        promo_code_used: promo_code || null,
-        buyer_name: buyer_name || data.customer?.first_name ? `${data.customer?.first_name || ''} ${data.customer?.last_name || ''}`.trim() : null,
-        buyer_phone: buyer_phone || data.customer?.phone || null,
-      })
-      .select()
+    // Never trust the payment metadata for the amount — recompute what
+    // this purchase should actually cost from the database.
+    const { data: ticketType } = await adminClient
+      .from('ticket_types')
+      .select('price, is_group_ticket, quantity, quantity_sold')
+      .eq('id', ticket_type_id)
+      .eq('event_id', event_id)
       .single()
 
-    if (orderError) {
-      console.error('Webhook order creation error:', orderError)
-      return NextResponse.json({ error: orderError.message }, { status: 500 })
+    if (!ticketType) {
+      console.error(`Webhook: ticket type ${ticket_type_id} not found for event ${event_id}, reference ${reference}`)
+      return NextResponse.json({ received: true, warning: 'Ticket type not found' }, { status: 200 })
     }
 
-    // Reset referral discount if applied
-    if (user_id && discount_applied > 0) {
-      await adminClient
-        .from('users')
-        .update({ referral_discount_percent: 0 })
-        .eq('id', user_id)
-    }
+    const { data: buyerProfile } = user_id
+      ? await adminClient.from('users').select('referral_discount_percent, email').eq('id', user_id).single()
+      : { data: null }
+    const referralDiscountPercent = buyerProfile?.referral_discount_percent || 0
 
-    // Increment promo code usage
+    let validPromo: { code: string; discount_type: string; discount_value: number } | null = null
     if (promo_code) {
       const { data: promo } = await adminClient
         .from('promo_codes')
-        .select('uses_count')
+        .select('code, discount_type, discount_value, max_uses, uses_count, is_active, expires_at')
         .eq('code', promo_code)
-        .single()
+        .maybeSingle()
 
-      if (promo) {
-        await adminClient
-          .from('promo_codes')
-          .update({ uses_count: (promo.uses_count || 0) + 1 })
-          .eq('code', promo_code)
-      }
+      const isValid = !!promo
+        && promo.is_active
+        && (!promo.expires_at || new Date(promo.expires_at) > new Date())
+        && (!promo.max_uses || promo.uses_count < promo.max_uses)
+
+      if (isValid) validPromo = promo
+    }
+
+    const expected = computeOrderTotal({
+      price: ticketType.price,
+      quantity,
+      isGroupTicket: ticketType.is_group_ticket,
+      referralDiscountPercent,
+      promo: validPromo,
+    })
+
+    if (Math.abs(amountPaid - expected.total) > 1) {
+      console.error(`Webhook amount mismatch for reference ${reference}: expected ${expected.total}, got ${amountPaid}`)
+      return NextResponse.json({ received: true, warning: 'Amount mismatch — no tickets issued' }, { status: 200 })
+    }
+
+    // Atomic capacity check — same guarded-update pattern as /api/tickets/verify.
+    const currentSold = ticketType.quantity_sold || 0
+    if (currentSold + quantity > ticketType.quantity) {
+      console.error(`Webhook: ticket type ${ticket_type_id} sold out, reference ${reference}`)
+      return NextResponse.json({ received: true, warning: 'Sold out — no tickets issued' }, { status: 200 })
+    }
+
+    const { data: capacityRows } = await adminClient
+      .from('ticket_types')
+      .update({ quantity_sold: currentSold + quantity })
+      .eq('id', ticket_type_id)
+      .eq('quantity_sold', currentSold)
+      .select('id')
+
+    if (!capacityRows || capacityRows.length === 0) {
+      console.error(`Webhook: lost capacity race for ${ticket_type_id}, reference ${reference}`)
+      return NextResponse.json({ received: true, warning: 'Capacity race lost — no tickets issued' }, { status: 200 })
     }
 
     const attendeeList: AttendeeInput[] = attendees && attendees.length > 0
@@ -184,14 +203,63 @@ export async function POST(request: NextRequest) {
 
     if (ticketError) {
       console.error('Webhook ticket creation error:', ticketError)
+      // Give back the capacity we just reserved — no tickets were actually created.
+      await adminClient
+        .from('ticket_types')
+        .update({ quantity_sold: currentSold })
+        .eq('id', ticket_type_id)
+        .eq('quantity_sold', currentSold + quantity)
       return NextResponse.json({ error: ticketError.message }, { status: 500 })
     }
 
-    // Increment tickets sold
-    await adminClient.rpc('increment_tickets_sold', {
-      ticket_type_id,
-      amount: quantity,
-    })
+    // Only record the order as completed once tickets genuinely exist for it.
+    const { data: order, error: orderError } = await adminClient
+      .from('orders')
+      .insert({
+        user_id: user_id || null,
+        event_id,
+        amount: amountPaid,
+        service_fee: expected.serviceFee,
+        total_paid: amountPaid,
+        payment_method: 'paystack',
+        payment_reference: reference,
+        payment_status: 'completed',
+        discount_applied: referralDiscountPercent,
+        promo_code_used: validPromo?.code || null,
+        buyer_name: buyer_name || data.customer?.first_name ? `${data.customer?.first_name || ''} ${data.customer?.last_name || ''}`.trim() : null,
+        buyer_phone: buyer_phone || data.customer?.phone || null,
+      })
+      .select()
+      .single()
+
+    if (orderError) {
+      console.error('Webhook order creation error:', orderError)
+      return NextResponse.json({ error: orderError.message }, { status: 500 })
+    }
+
+    // Reset referral discount if applied
+    if (user_id && referralDiscountPercent > 0) {
+      await adminClient
+        .from('users')
+        .update({ referral_discount_percent: 0 })
+        .eq('id', user_id)
+    }
+
+    // Increment promo code usage — guarded against concurrent redemptions.
+    if (validPromo) {
+      const { data: promoRow } = await adminClient
+        .from('promo_codes')
+        .select('uses_count')
+        .eq('code', validPromo.code)
+        .single()
+      if (promoRow) {
+        await adminClient
+          .from('promo_codes')
+          .update({ uses_count: (promoRow.uses_count || 0) + 1 })
+          .eq('code', validPromo.code)
+          .eq('uses_count', promoRow.uses_count)
+      }
+    }
 
     // Convert temporary reservation to completed status
     if (metadata.reservation_id && !metadata.reservation_id.startsWith('res-soft-')) {
@@ -310,6 +378,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Referral discount trigger — check if this is the user's first ticket.
+    // Direct /verify and claim-free both do this; a payment fulfilled here
+    // (the real, async Paystack webhook path) was previously missing it,
+    // so a referred user paying via a real card never triggered their
+    // referrer's reward.
+    if (user_id) {
+      await awardReferralDiscount(adminClient, user_id)
+    }
+
     return NextResponse.json({ success: true, order_id: order.id }, { status: 200 })
   } catch (error) {
     console.error('Webhook processing error:', error)
@@ -335,6 +412,17 @@ async function handleGroupPayment(
     .single()
 
   if (!group) return
+
+  // Never trust the payment metadata for the amount — recompute what this
+  // many spots should actually cost from the group's own stored per-member
+  // price, and refuse to grant paid spots if the real Paystack-confirmed
+  // amount doesn't match (e.g. a client that tampered with the amount sent
+  // to Paystack while keeping expensive-group metadata).
+  const expectedAmount = (group.amount_per_member || 0) * spotCount
+  if (Math.abs(amountPaid - expectedAmount) > 1) {
+    console.error(`Group payment amount mismatch for group ${groupId}, reference ${reference}: expected ${expectedAmount}, got ${amountPaid}`)
+    return
+  }
 
   const amountPerSpot = amountPaid > 0 ? Math.round(amountPaid / spotCount) : 0
   const attendeeList: AttendeeInput[] = metadata.attendees && metadata.attendees.length === spotCount

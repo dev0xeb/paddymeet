@@ -34,44 +34,40 @@ export default async function EventDetailPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: event } = await supabase
-    .from('events')
-    .select('*, ticket_types(*), organisers(org_name, contact_name)')
-    .eq('id', id)
-    .eq('is_approved', true)
-    .single()
+  // These don't depend on each other, so run them together instead of
+  // one-at-a-time — this is the main content page, so the latency adds up.
+  const [
+    { data: event },
+    { data: profile },
+    { data: mainGroup },
+    { data: userTickets },
+    { data: userProfile },
+  ] = await Promise.all([
+    supabase
+      .from('events')
+      .select('*, ticket_types(*), organisers(org_name, contact_name)')
+      .eq('id', id)
+      .eq('is_approved', true)
+      .single(),
+    user
+      ? supabase.from('users').select('username, tier').eq('id', user.id).single()
+      : Promise.resolve({ data: null }),
+    supabase.from('groups').select('id, name').eq('event_id', id).eq('group_type', 'main').single(),
+    user
+      ? supabase.from('tickets').select('id').eq('event_id', id).eq('user_id', user.id).eq('status', 'active').limit(1)
+      : Promise.resolve({ data: null }),
+    user
+      ? supabase.from('users').select('referral_discount_percent').eq('id', user.id).single()
+      : Promise.resolve({ data: null }),
+  ])
 
   if (!event) notFound()
-
-  const { data: profile } = user ? await supabase
-    .from('users')
-    .select('username, tier')
-    .eq('id', user.id)
-    .single() : { data: null }
-
-  // Fetch the main group for this event
-  const { data: mainGroup } = await supabase
-    .from('groups')
-    .select('id, name')
-    .eq('event_id', id)
-    .eq('group_type', 'main')
-    .single()
-
 
   // Get group member count
   const { count: memberCount } = await supabase
     .from('group_members')
     .select('*', { count: 'exact', head: true })
     .eq('group_id', mainGroup?.id || '')
-
-  // Fetch social and ticket groups
-  const { data: socialGroups } = await supabase
-    .from('groups')
-    .select('*, group_members(count)')
-    .eq('event_id', id)
-    .in('group_type', ['social', 'ticket'])
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
 
   const gradients = [
     'from-purple-900 via-pink-900 to-orange-900',
@@ -83,28 +79,11 @@ export default async function EventDetailPage({
   const gradient = gradients[id.charCodeAt(0) % gradients.length]
 
   // Check if user has a ticket or is the organiser
-  const { data: userTicket } = user ? await supabase
-    .from('tickets')
-    .select('id')
-    .eq('event_id', id)
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .maybeSingle() : { data: null }
-
   const isOrganiser = user && event.organiser_id === user.id
-  const hasAccess = !!userTicket || !!isOrganiser
+  const hasAccess = (userTickets?.length ?? 0) > 0 || !!isOrganiser
 
-  let referralDiscount = 0
-if (user) {
-  const { data: userProfile } = await supabase
-    .from('users')
-    .select('referral_discount_percent')
-    .eq('id', user.id)
-    .single()
-  referralDiscount = userProfile?.referral_discount_percent || 0
-}
-
-const userData = user ? { id: user.id, email: user.email || '', referral_discount_percent: referralDiscount } : null
+  const referralDiscount = userProfile?.referral_discount_percent || 0
+  const userData = user ? { id: user.id, email: user.email || '', referral_discount_percent: referralDiscount } : null
 
   const eventData = {
     id: event.id,

@@ -45,13 +45,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `This squad is already full (${maxCapacity}/${maxCapacity} spots taken).` }, { status: 400 })
   }
 
-  // 4. Check if user holds a ticket for this event
-  const { data: ticket } = await supabase
+  // 4. Check if user holds a ticket for this event. Array check, not
+  // .maybeSingle() — a buyer of quantity > 1 has multiple ticket rows for
+  // this event, and .maybeSingle() errors (read as "no ticket") on more
+  // than one match.
+  const { data: tickets } = await supabase
     .from('tickets')
     .select('id')
     .eq('event_id', squad.event_id)
     .eq('user_id', user.id)
-    .maybeSingle()
+    .limit(1)
+  const ticket = (tickets?.length ?? 0) > 0
 
   // 5. Insert membership
   const { error: joinError } = await supabase

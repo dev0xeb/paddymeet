@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Plus, Minus, Check, ArrowRight, Ticket, Download, FileText, User as UserIcon } from 'lucide-react'
 import { downloadTicketImage, downloadTicketPDF } from '@/lib/ticketImage'
+import { computeOrderTotal } from '@/lib/pricing'
 
 interface TicketType {
   id: string
@@ -64,7 +65,6 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const [confirmedTickets, setConfirmedTickets] = useState<ConfirmedTicket[]>([])
   const [downloadingCode, setDownloadingCode] = useState<string | null>(null)
   const [savedCode, setSavedCode] = useState<string | null>(null)
-  const paystackReady = useRef(false)
 
   // Buyer + attendee details
   const [buyerName, setBuyerName] = useState('')
@@ -81,19 +81,19 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const [reservationTimeLeft, setReservationTimeLeft] = useState<number | null>(null)
 
   const discountPercent = user.referral_discount_percent || 0
-  const subtotal = ticketType.is_group_ticket ? ticketType.price : ticketType.price * quantity
-  const referralDiscountAmount = Math.round(subtotal * (discountPercent / 100))
-
-  const promoDiscountAmount = promoApplied
-    ? promoApplied.discount_type === 'percentage'
-      ? Math.round(subtotal * (promoApplied.discount_value / 100))
-      : Math.min(promoApplied.discount_value, subtotal)
-    : 0
-
-  const totalDiscount = referralDiscountAmount + promoDiscountAmount
-  const discountedSubtotal = Math.max(0, subtotal - totalDiscount)
-  const serviceFee = Math.round(discountedSubtotal * 0.05)
-  const total = discountedSubtotal + serviceFee
+  const {
+    subtotal,
+    referralDiscountAmount,
+    promoDiscountAmount,
+    serviceFee,
+    total,
+  } = computeOrderTotal({
+    price: ticketType.price,
+    quantity,
+    isGroupTicket: ticketType.is_group_ticket,
+    referralDiscountPercent: discountPercent,
+    promo: promoApplied,
+  })
 
   const extraAttendeeCount = ticketType.is_group_ticket ? Math.max(0, ticketType.group_size - 1) : Math.max(0, quantity - 1)
 
@@ -110,19 +110,11 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   // Load Paystack script once on mount
   useEffect(() => {
     const pw = window as unknown as PaystackWindow
-    if (pw.PaystackPop) {
-      paystackReady.current = true
-      return
-    }
-    const existing = document.getElementById('paystack-script')
-    if (existing) {
-      existing.addEventListener('load', () => { paystackReady.current = true })
-      return
-    }
+    if (pw.PaystackPop) return
+    if (document.getElementById('paystack-script')) return
     const script = document.createElement('script')
     script.id = 'paystack-script'
     script.src = 'https://js.paystack.co/v1/inline.js'
-    script.onload = () => { paystackReady.current = true }
     document.head.appendChild(script)
   }, [])
 
