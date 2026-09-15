@@ -14,7 +14,7 @@ export default async function ScannerPage() {
     .eq('id', user.id)
     .single()
 
-  if (!organiser) redirect('/dashboard')
+  if (!organiser) redirect('/login')
 
   // Get organiser's live events for selection
   const { data: events } = await supabase

@@ -245,19 +245,30 @@ export async function POST(request: NextRequest) {
         .eq('id', user_id)
     }
 
-    // Increment promo code usage — guarded against concurrent redemptions.
+    // Increment promo code usage with a guarded (compare-and-swap) update,
+    // retrying against the fresh value on a CAS miss so a concurrent
+    // redemption doesn't silently drop this one's count. See the matching
+    // comment in app/api/tickets/verify/route.ts.
     if (validPromo) {
-      const { data: promoRow } = await adminClient
-        .from('promo_codes')
-        .select('uses_count')
-        .eq('code', validPromo.code)
-        .single()
-      if (promoRow) {
-        await adminClient
+      let promoIncremented = false
+      for (let attempt = 0; attempt < 3 && !promoIncremented; attempt++) {
+        const { data: promoRow } = await adminClient
           .from('promo_codes')
-          .update({ uses_count: (promoRow.uses_count || 0) + 1 })
+          .select('uses_count')
           .eq('code', validPromo.code)
-          .eq('uses_count', promoRow.uses_count)
+          .single()
+        if (!promoRow) break
+        const currentUses = promoRow.uses_count || 0
+        const { data: updatedPromoRows } = await adminClient
+          .from('promo_codes')
+          .update({ uses_count: currentUses + 1 })
+          .eq('code', validPromo.code)
+          .eq('uses_count', currentUses)
+          .select('code')
+        if (updatedPromoRows && updatedPromoRows.length > 0) promoIncremented = true
+      }
+      if (!promoIncremented) {
+        console.error(`Failed to increment uses_count for promo ${validPromo.code} after retries — redemption not counted.`)
       }
     }
 

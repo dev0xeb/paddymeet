@@ -160,20 +160,20 @@ export default async function TrustScorePage() {
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 mb-8 space-y-6">
           <div>
             <h3 className="text-base font-extrabold text-slate-900 mb-1">Score Composition Breakdown</h3>
-            <p className="text-xs text-slate-500">How your 85 points are calculated in real time</p>
+            <p className="text-xs text-slate-500">How your {trustScore} points are calculated in real time</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50 flex items-start gap-3.5">
               <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 font-bold text-xs">
-                +20
+                +{identityPts}
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-bold text-slate-900">Identity & Profile Verification</div>
                 <div className="text-xs text-slate-500 mt-0.5">Full name, verified phone number (+234), and active state.</div>
-                <div className="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Fully Completed
+                <div className={`text-[11px] font-semibold mt-1 flex items-center gap-1 ${isProfileComplete ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  <CheckCircle2 className="w-3 h-3" /> {isProfileComplete ? 'Fully Completed' : 'Incomplete — add your phone, city & state'}
                 </div>
               </div>
             </div>

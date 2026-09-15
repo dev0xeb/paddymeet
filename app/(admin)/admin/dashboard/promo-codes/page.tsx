@@ -144,9 +144,13 @@ export default function AdminPromoCodesPage() {
   // Metrics
   const activeCount = codes.filter(c => c.is_active).length
   const totalUses = codes.reduce((sum, c) => sum + (c.uses_count || 0), 0)
-  const avgDiscount = codes.length > 0
-    ? Math.round(codes.reduce((sum, c) => sum + (c.discount_type === 'percentage' ? c.discount_value : 10), 0) / codes.length)
+  // Only percentage-type codes go into this average — mixing in
+  // fixed-amount codes (a ₦ value) under a "%" label would misrepresent it.
+  const percentageCodes = codes.filter(c => c.discount_type === 'percentage')
+  const avgDiscount = percentageCodes.length > 0
+    ? Math.round(percentageCodes.reduce((sum, c) => sum + c.discount_value, 0) / percentageCodes.length)
     : 0
+  const campaignHealthPct = codes.length > 0 ? Math.round((activeCount / codes.length) * 100) : 0
 
   const inputClass = "w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-orange-500 transition-all"
 
@@ -207,8 +211,8 @@ export default function AdminPromoCodesPage() {
           {[
             { label: 'Active Promo Codes', value: activeCount.toString(), subtext: `${codes.length} total created`, icon: Tag, color: 'emerald' },
             { label: 'Total Redemptions', value: totalUses.toString(), subtext: 'Applied across checkouts', icon: Users, color: 'blue' },
-            { label: 'Avg Discount Value', value: `${avgDiscount}%`, subtext: 'Standard campaign savings', icon: Percent, color: 'orange' },
-            { label: 'Campaign Health', value: '100% Active', subtext: 'Real-time gateway sync', icon: CheckCircle2, color: 'purple' },
+            { label: 'Avg Discount Value', value: `${avgDiscount}%`, subtext: `Across ${percentageCodes.length} percentage code${percentageCodes.length === 1 ? '' : 's'}`, icon: Percent, color: 'orange' },
+            { label: 'Campaign Health', value: `${campaignHealthPct}% Active`, subtext: `${activeCount} of ${codes.length} codes active`, icon: CheckCircle2, color: 'purple' },
           ].map(({ label, value, subtext, icon: Icon, color }) => (
             <div key={label} className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">

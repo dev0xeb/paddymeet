@@ -25,8 +25,8 @@ export async function PUT(request: NextRequest) {
   const body = await request.json()
 
   const allowedFields = [
-    'org_name', 'contact_name', 'phone', 'description',
-    'website', 'social_link', 'bank_name', 'account_number', 'account_name'
+    'org_name', 'contact_name', 'phone', 'description', 'website', 'social_link',
+    'bank_code', 'bank_name', 'bank_account_number', 'bank_account_name',
   ]
 
   const updates: Record<string, string> = {}

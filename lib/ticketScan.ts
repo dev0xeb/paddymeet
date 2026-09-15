@@ -112,11 +112,29 @@ export async function validateAndCheckInTicket({
     }
   }
 
+  // Guarded update — only succeeds if the ticket's status is still what we
+  // just read. Two near-simultaneous scans of the same ticket (two door
+  // scanners, or a double-tap/retry on a flaky connection) would otherwise
+  // both pass the "already used" check above and both mark it used,
+  // letting two people in on one ticket.
   const checkedInAt = new Date().toISOString()
-  await supabase
+  const { data: checkInRows } = await supabase
     .from('tickets')
     .update({ status: 'used', attended: true, attendance_marked_at: checkedInAt })
     .eq('id', ticket.id)
+    .eq('status', ticket.status)
+    .select('id')
+
+  if (!checkInRows || checkInRows.length === 0) {
+    return {
+      valid: false,
+      status: 'used',
+      reason: 'Ticket already used',
+      attendee_name: attendeeName,
+      ticket_type: ticketType?.name,
+      event_title: event?.title,
+    }
+  }
 
   if (ticketUser?.email) {
     sendCheckInEmail({

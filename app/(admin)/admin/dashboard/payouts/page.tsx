@@ -32,7 +32,7 @@ export default async function AdminPayoutsPage() {
   ] = await Promise.all([
     adminClient
       .from('orders')
-      .select('*, events(title, organiser_id, organisers(org_name, bank_name, account_number, account_name, is_verified))')
+      .select('*, events(title, organiser_id, organisers(org_name, bank_name, bank_account_number, bank_account_name, is_verified))')
       .eq('payment_status', 'completed')
       .order('created_at', { ascending: false }),
     adminClient
@@ -77,8 +77,8 @@ export default async function AdminPayoutsPage() {
         gross: 0,
         orders: 0,
         bank_name: organiser.bank_name || '—',
-        account_number: organiser.account_number || '—',
-        account_name: organiser.account_name || '—',
+        account_number: organiser.bank_account_number || '—',
+        account_name: organiser.bank_account_name || '—',
         is_verified: organiser.is_verified ?? false,
         organiser_id: id,
       }
@@ -255,7 +255,7 @@ export default async function AdminPayoutsPage() {
               {payouts.map((payout) => {
                 const org = Array.isArray(payout.organisers) ? payout.organisers[0] : payout.organisers
                 const isPaid = payout.status === 'paid'
-                const isHold = payout.status === 'held' || payout.status === 'on_hold'
+                const isHold = payout.status === 'hold'
 
                 return (
                   <div key={payout.id} className="flex items-center justify-between py-3.5 hover:bg-slate-50/60 transition-colors">

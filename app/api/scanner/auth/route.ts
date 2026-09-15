@@ -15,25 +15,18 @@ export async function POST(request: NextRequest) {
 
     const eventColumns = 'id, title, event_date, start_time, venue_name, city, is_approved, is_live'
 
-    // Match by dedicated scanner passkey (this column may not exist yet on
-    // every deployment — see migration 005_scanner_passkey.sql — in which
-    // case this query safely resolves to no match rather than erroring).
-    let { data: event } = await adminClient
+    // Match by dedicated scanner passkey only. This used to also accept the
+    // raw event ID as a passkey — but an event's ID is public (it's the
+    // event page URL), so that fallback let anyone who viewed a public
+    // event page authenticate as its door scanner and check tickets in.
+    // If this event was created before migration 005_scanner_passkey.sql
+    // was applied (or before that migration's backfill ran), it has no
+    // passkey yet and simply can't be scanned into until it gets one.
+    const { data: event } = await adminClient
       .from('events')
       .select(eventColumns)
       .eq('scanner_passkey', cleanKey)
       .maybeSingle()
-
-    if (!event) {
-      // Allow event ID direct matching for organizers testing
-      const { data: eventById } = await adminClient
-        .from('events')
-        .select(eventColumns)
-        .eq('id', passkey.trim())
-        .maybeSingle()
-
-      event = eventById
-    }
 
     if (!event) {
       return NextResponse.json({ error: 'Invalid scanner passkey. Please check with the event organizer.' }, { status: 404 })

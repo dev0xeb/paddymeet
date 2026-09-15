@@ -34,13 +34,34 @@ export async function POST(request: NextRequest) {
   // mint paid tickets for nothing.
   const { data: ticketType } = await supabase
     .from('ticket_types')
-    .select('price')
+    .select('price, quantity, quantity_sold')
     .eq('id', ticket_type_id)
     .eq('event_id', event_id)
     .maybeSingle()
 
   if (!ticketType || ticketType.price > 0) {
     return NextResponse.json({ error: 'This ticket type requires payment and cannot be claimed for free' }, { status: 400 })
+  }
+
+  // Atomic capacity check — same guarded-update pattern as the paid path
+  // (app/api/tickets/verify/route.ts) so two concurrent claims can't both
+  // succeed past the last free ticket.
+  const currentSold = ticketType.quantity_sold || 0
+  if (currentSold + quantity > ticketType.quantity) {
+    return NextResponse.json({ error: 'No free tickets remaining for this ticket type.' }, { status: 409 })
+  }
+
+  const { data: capacityRows, error: capacityError } = await supabase
+    .from('ticket_types')
+    .update({ quantity_sold: currentSold + quantity })
+    .eq('id', ticket_type_id)
+    .eq('quantity_sold', currentSold)
+    .select('id')
+
+  if (capacityError || !capacityRows || capacityRows.length === 0) {
+    return NextResponse.json({
+      error: 'These free tickets were just claimed by someone else. Please try again.',
+    }, { status: 409 })
   }
 
   const attendeeList: AttendeeInput[] = attendees && attendees.length > 0
@@ -69,6 +90,12 @@ export async function POST(request: NextRequest) {
     .select()
 
   if (error) {
+    // Give back the capacity we just reserved — no tickets were actually created.
+    await supabase
+      .from('ticket_types')
+      .update({ quantity_sold: currentSold })
+      .eq('id', ticket_type_id)
+      .eq('quantity_sold', currentSold + quantity)
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 

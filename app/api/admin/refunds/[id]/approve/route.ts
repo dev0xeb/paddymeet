@@ -35,8 +35,10 @@ export async function POST(
       return NextResponse.json({ error: 'Refund request not found' }, { status: 404 })
     }
 
-    // 2. Mark refund as approved
-    await adminClient
+    // 2. Mark refund as approved — guarded so a double-click, retry, or two
+    // admin tabs acting on the same request can't both fall through and
+    // both void the ticket / decrement capacity a second time.
+    const { data: approvalRows } = await adminClient
       .from('refund_requests')
       .update({
         status: 'approved',
@@ -44,16 +46,27 @@ export async function POST(
         processed_at: new Date().toISOString(),
       })
       .eq('id', id)
+      .eq('status', 'pending')
+      .select('id')
 
-    // 3. Invalidate ticket immediately
+    if (!approvalRows || approvalRows.length === 0) {
+      return NextResponse.json({ error: 'This refund request has already been processed.' }, { status: 409 })
+    }
+
+    // 3. Invalidate ticket immediately — guarded against a ticket that's
+    // somehow already refunded (e.g. two separate refund_requests for the
+    // same ticket both getting approved), so capacity isn't given back twice.
     if (refundReq.ticket_id) {
-      await adminClient
+      const { data: ticketRows } = await adminClient
         .from('tickets')
         .update({ status: 'refunded' })
         .eq('id', refundReq.ticket_id)
+        .neq('status', 'refunded')
+        .select('id')
 
-      // 4. Return seat to available capacity
-      if (refundReq.tickets?.ticket_type_id) {
+      // 4. Return seat to available capacity — only if this request is the
+      // one that actually flipped the ticket to refunded.
+      if (ticketRows && ticketRows.length > 0 && refundReq.tickets?.ticket_type_id) {
         const { data: tt } = await adminClient
           .from('ticket_types')
           .select('quantity_sold')

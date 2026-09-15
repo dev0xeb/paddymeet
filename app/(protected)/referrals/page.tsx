@@ -33,12 +33,15 @@ export default async function ReferralsPage() {
     .eq('id', user.id)
     .single()
 
-  // If referral_code doesn't exist, generate and persist one
+  // If referral_code doesn't exist, generate and persist one.
+  // Deterministic from username + user id (matches the dashboard page's
+  // generator) so two concurrent first-loads always compute the same code
+  // instead of racing to persist two different ones.
   let referralCode = profile?.referral_code
   if (!referralCode && user) {
-    const rawUsername = (profile?.username || 'PADDY').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)
-    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase()
-    referralCode = `PADDY-${rawUsername}-${randomSuffix}`
+    const cleanUser = (profile?.username || 'USER').replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
+    const idPrefix = user.id.substring(0, 4).toUpperCase()
+    referralCode = `PADDY-${cleanUser}-${idPrefix}`
 
     await supabase
       .from('users')

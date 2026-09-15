@@ -182,7 +182,7 @@ export default async function OrganiserManageEventPage({
                         {t.quantity_sold || 0}/{t.quantity} sold
                       </div>
                       <div className="h-1.5 w-16 bg-gray-200 rounded-full overflow-hidden flex-shrink-0">
-                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, ((t.quantity_sold || 0) / t.quantity) * 100)}%` }} />
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${t.quantity > 0 ? Math.min(100, ((t.quantity_sold || 0) / t.quantity) * 100) : 0}%` }} />
                       </div>
                     </div>
                   ))}
@@ -288,6 +288,19 @@ export default async function OrganiserManageEventPage({
                 </div>
               </div>
             )}
+
+            {/* Gate scanner passkey */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Gate Scanner Passkey</h2>
+              {event.scanner_passkey ? (
+                <>
+                  <div className="text-2xl font-extrabold text-gray-900 tracking-[0.15em] mb-2">{event.scanner_passkey}</div>
+                  <p className="text-xs text-gray-500 leading-relaxed">Give this code to your door staff at <span className="font-mono">/scan</span> to check attendees in. Do not share it publicly — anyone with it can check tickets in for this event.</p>
+                </>
+              ) : (
+                <p className="text-xs text-gray-500 leading-relaxed">A gate passkey hasn&rsquo;t been generated for this event yet. Contact Paddymeet support.</p>
+              )}
+            </div>
 
             {/* Quick links */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5">

@@ -17,7 +17,7 @@ export default async function AdminUserDetailPage({
   const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/admin/login')
+  if (!user) redirect('/admin-login')
 
   const adminClient = createAdminClient()
   const { data: admin } = await adminClient

@@ -236,21 +236,34 @@ export async function POST(request: NextRequest) {
       .eq('id', user_id)
   }
 
-  // Increment promo code usage — guarded the same way as the ticket
-  // capacity update, so concurrent redemptions of a near-limit code can't
-  // both succeed and push usage past max_uses.
+  // Increment promo code usage with a guarded (compare-and-swap) update so
+  // two concurrent redemptions reading the same uses_count don't clobber
+  // each other. A CAS miss means another request updated the row between
+  // our read and write — retry against the fresh value instead of silently
+  // dropping the redemption, so uses_count stays accurate. This still
+  // can't retroactively undo a redemption already priced into a completed
+  // payment (the promo's validity was decided before Paystack was
+  // charged); it only makes sure every successful redemption is counted.
   if (validPromo) {
-    const { data: promoRow } = await supabase
-      .from('promo_codes')
-      .select('uses_count')
-      .eq('code', validPromo.code)
-      .single()
-    if (promoRow) {
-      await supabase
+    let promoIncremented = false
+    for (let attempt = 0; attempt < 3 && !promoIncremented; attempt++) {
+      const { data: promoRow } = await supabase
         .from('promo_codes')
-        .update({ uses_count: (promoRow.uses_count || 0) + 1 })
+        .select('uses_count')
         .eq('code', validPromo.code)
-        .eq('uses_count', promoRow.uses_count)
+        .single()
+      if (!promoRow) break
+      const currentUses = promoRow.uses_count || 0
+      const { data: updatedPromoRows } = await supabase
+        .from('promo_codes')
+        .update({ uses_count: currentUses + 1 })
+        .eq('code', validPromo.code)
+        .eq('uses_count', currentUses)
+        .select('code')
+      if (updatedPromoRows && updatedPromoRows.length > 0) promoIncremented = true
+    }
+    if (!promoIncremented) {
+      console.error(`Failed to increment uses_count for promo ${validPromo.code} after retries — redemption not counted.`)
     }
   }
 

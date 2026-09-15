@@ -15,7 +15,7 @@ export default async function AdminUsersPage({
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/admin/login')
+  if (!user) redirect('/admin-login')
 
   const adminClient = createAdminClient()
   const { data: admin } = await adminClient
@@ -24,7 +24,7 @@ export default async function AdminUsersPage({
     .eq('id', user.id)
     .single()
 
-  if (!admin) redirect('/admin/login')
+  if (!admin) redirect('/admin-login')
 
   const params = await searchParams
   const search = params.search || ''

@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
     .select('id')
     .eq('event_id', squad.event_id)
     .eq('user_id', user.id)
+    .eq('status', 'active')
     .limit(1)
   const ticket = (tickets?.length ?? 0) > 0
 

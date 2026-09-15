@@ -19,38 +19,19 @@ export async function POST(request: NextRequest) {
 
     // Re-verify the passkey on every scan — the frontend only checks it once
     // at login, but the API must not trust that a caller who knows an
-    // event_id is actually an authorized scanner for it.
-    //
-    // Two separate lookups on purpose: `scanner_passkey` may not exist on
-    // this schema yet (see migration 005_scanner_passkey.sql) — selecting
-    // it in the same query as `id` would fail the whole query and lock out
-    // the event-ID fallback too. Selecting `id` alone never fails, and the
-    // second query's failure (if the column is missing) safely resolves to
-    // "no match" instead of an error.
-    const { data: eventById } = await adminClient
+    // event_id is actually an authorized scanner for it. This used to also
+    // accept the raw event ID as a valid passkey — but an event's ID is
+    // public (it's the event page URL), so that let anyone who viewed a
+    // public event page check tickets in for it. Passkey match only, now.
+    const cleanPasskey = passkey.trim().toUpperCase()
+    const { data: eventByPasskey } = await adminClient
       .from('events')
       .select('id')
       .eq('id', event_id)
+      .eq('scanner_passkey', cleanPasskey)
       .maybeSingle()
 
-    if (!eventById) {
-      return NextResponse.json({ error: 'Event not found.' }, { status: 404 })
-    }
-
-    const cleanPasskey = passkey.trim().toUpperCase()
-    let passkeyValid = eventById.id.toUpperCase() === cleanPasskey
-
-    if (!passkeyValid) {
-      const { data: eventByPasskey } = await adminClient
-        .from('events')
-        .select('id')
-        .eq('id', event_id)
-        .eq('scanner_passkey', cleanPasskey)
-        .maybeSingle()
-      passkeyValid = !!eventByPasskey
-    }
-
-    if (!passkeyValid) {
+    if (!eventByPasskey) {
       return NextResponse.json({ error: 'Invalid scanner passkey for this event.' }, { status: 401 })
     }
 

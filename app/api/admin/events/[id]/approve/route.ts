@@ -18,6 +18,7 @@ export async function POST(
     .select('department')
     .eq('id', user.id)
     .single()
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const searchParams = request.nextUrl.searchParams
   const autoVerifyHost = searchParams.get('autoVerifyHost') === 'true'
@@ -25,12 +26,22 @@ export async function POST(
   // Fetch event and organiser
   const { data: event } = await adminClient
     .from('events')
-    .select('id, title, city, state, event_date, event_type, vibe, organiser_id, organisers(id, org_name, is_verified)')
+    .select('id, title, city, state, event_date, event_type, vibe, organiser_id, is_approved, organisers(id, org_name, is_verified)')
     .eq('id', id)
     .single()
 
   if (!event) {
     return NextResponse.json({ error: 'Event not found' }, { status: 404 })
+  }
+
+  // Already approved — a repeat call (double-click, retry, or a second
+  // admin) must not re-blast "new event" notifications to the whole city.
+  if (event.is_approved) {
+    const isJson = request.headers.get('accept')?.includes('application/json') || request.nextUrl.searchParams.has('autoVerifyHost')
+    if (isJson) {
+      return NextResponse.json({ success: true, message: 'Event is already approved and live' })
+    }
+    return NextResponse.redirect(new URL('/admin/dashboard/events', request.url))
   }
 
   const organiser = event.organisers as unknown as { id: string, org_name: string, is_verified: boolean } | null
@@ -62,15 +73,18 @@ export async function POST(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
-  // Auto-create the main event group if it doesn't already exist
-  const { data: existingMainGroup } = await adminClient
+  // Auto-create the main event group if it doesn't already exist. Array
+  // check, not .single() — .single() errors (read as "doesn't exist") the
+  // moment more than one main group ever exists for this event, which
+  // would silently create yet another duplicate instead of stopping.
+  const { data: existingMainGroups } = await adminClient
     .from('groups')
     .select('id')
     .eq('event_id', id)
     .eq('group_type', 'main')
-    .single()
+    .limit(1)
 
-  if (!existingMainGroup && event) {
+  if ((existingMainGroups?.length ?? 0) === 0 && event) {
     await adminClient.from('groups').insert({
       event_id: id,
       name: `${event.title} — Everyone`,

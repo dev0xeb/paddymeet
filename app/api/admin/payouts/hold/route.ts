@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       organiser_id,
       amount,
       orders_count,
-      status: 'on_hold',
+      status: 'hold',
       note: note || null,
       paid_by: user.id,
     })

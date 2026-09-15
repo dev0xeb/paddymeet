@@ -18,17 +18,19 @@ export async function GET(
       .select('*', { count: 'exact', head: true })
       .eq('organiser_id', organiserId)
 
-    // 2. Check if current user is following
+    // 2. Check if current user is following. Array check, not .maybeSingle()
+    // — .maybeSingle() errors (read as "not following") the moment more
+    // than one row ever matches, instead of just returning the first one.
     let isFollowing = false
     if (user) {
-      const { data: followRecord } = await adminClient
+      const { data: followRecords } = await adminClient
         .from('follows')
         .select('id')
         .eq('organiser_id', organiserId)
         .eq('user_id', user.id)
-        .maybeSingle()
+        .limit(1)
 
-      isFollowing = !!followRecord
+      isFollowing = (followRecords?.length ?? 0) > 0
     }
 
     return NextResponse.json({
@@ -56,17 +58,22 @@ export async function POST(
 
     const adminClient = createAdminClient()
 
-    // Check if already following
-    const { data: existingFollow } = await adminClient
+    // Check if already following. Array check, not .maybeSingle() — see
+    // the matching comment in the GET handler above.
+    const { data: existingFollows } = await adminClient
       .from('follows')
       .select('id')
       .eq('organiser_id', organiserId)
       .eq('user_id', user.id)
-      .maybeSingle()
+      .limit(1)
+    const existingFollow = existingFollows?.[0]
 
     if (existingFollow) {
       // Unfollow
-      await adminClient.from('follows').delete().eq('id', existingFollow.id)
+      const { error: deleteError } = await adminClient.from('follows').delete().eq('id', existingFollow.id)
+      if (deleteError) {
+        return NextResponse.json({ error: deleteError.message }, { status: 400 })
+      }
 
       const { count: followerCount } = await adminClient
         .from('follows')
@@ -80,10 +87,13 @@ export async function POST(
       })
     } else {
       // Follow
-      await adminClient.from('follows').insert({
+      const { error: insertError } = await adminClient.from('follows').insert({
         user_id: user.id,
         organiser_id: organiserId,
       })
+      if (insertError) {
+        return NextResponse.json({ error: insertError.message }, { status: 400 })
+      }
 
       const { count: followerCount } = await adminClient
         .from('follows')

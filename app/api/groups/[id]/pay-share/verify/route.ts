@@ -93,10 +93,22 @@ export async function POST(
     ? attendees
     : Array.from({ length: spotCount }, () => ({ name: '', email: '', phone: '' }))
 
+  // group_members is unique on (group_id, user_id, seat_number), not just
+  // (group_id, user_id) — a single payer can hold several spots, so each
+  // row for this purchase needs its own seat number, continuing on from
+  // any seats this user already holds in the group.
+  const { data: existingSeats } = await supabase
+    .from('group_members')
+    .select('seat_number')
+    .eq('group_id', groupId)
+    .eq('user_id', user.id)
+  const nextSeat = (existingSeats || []).reduce((max, s) => Math.max(max, s.seat_number || 1), 0) + 1
+
   // Insert one paid group_members row per spot
-  const memberRows = attendeeList.map((a) => ({
+  const memberRows = attendeeList.map((a, i) => ({
     group_id: groupId,
     user_id: user.id,
+    seat_number: nextSeat + i,
     role: group.creator_id === user.id ? 'admin' : 'member',
     payment_status: 'paid',
     amount_paid: amountPerSpot,
@@ -146,6 +158,29 @@ export async function POST(
   const groupCompleted = totalPaidNow >= group.max_members
 
   if (groupCompleted) {
+    // Guard against two near-simultaneous last payments both entering this
+    // branch: only the request that actually flips the group from
+    // 'recruiting' to 'completed' issues tickets. Without this, both
+    // requests would independently fetch every paid member and insert a
+    // full duplicate set of tickets (and duplicate confirmation emails)
+    // for the whole group.
+    const { data: completionRows } = await supabase
+      .from('groups')
+      .update({ status: 'completed' })
+      .eq('id', groupId)
+      .eq('status', 'recruiting')
+      .select('id')
+
+    if (!completionRows || completionRows.length === 0) {
+      // Another concurrent request already completed this group and is
+      // issuing tickets to every paid member, this one included.
+      return NextResponse.json({
+        success: true,
+        group_completed: true,
+        members_paid: totalPaidNow,
+      })
+    }
+
     // Group is full — issue tickets to every paid member
     const { data: allPaidMembers } = await supabase
       .from('group_members')
@@ -168,8 +203,6 @@ export async function POST(
       .insert(ticketsToCreate)
       .select()
 
-    await supabase.from('groups').update({ status: 'completed' }).eq('id', groupId)
-
     if (ticketType?.id) {
       await supabase.rpc('increment_tickets_sold', {
         ticket_type_id: ticketType.id,
@@ -177,11 +210,16 @@ export async function POST(
       })
     }
 
-    // Link tickets back to their member rows and send emails
+    // Link tickets back to their member rows and send emails. Paired by
+    // array index (ticketsToCreate was built by mapping allPaidMembers 1:1
+    // in the same order), not by user_id — a single payer can hold several
+    // seats now, so user_id alone can't identify which ticket is whose.
+    const ticketCodeByMemberId: Record<string, string> = {}
     if (createdTickets && allPaidMembers) {
       for (let i = 0; i < createdTickets.length; i++) {
         const ticket = createdTickets[i]
         const member = allPaidMembers[i]
+        ticketCodeByMemberId[member.id] = ticket.ticket_code
 
         await supabase.from('group_members').update({ ticket_id: ticket.id }).eq('id', member.id)
 
@@ -213,8 +251,8 @@ export async function POST(
     return NextResponse.json({
       success: true,
       group_completed: true,
-      tickets: insertedMembers.map((m, i) => ({
-        ticket_code: createdTickets?.find(t => t.user_id === m.user_id)?.ticket_code,
+      tickets: insertedMembers.map((m) => ({
+        ticket_code: ticketCodeByMemberId[m.id],
         attendee_name: m.attendee_name,
       })),
     })

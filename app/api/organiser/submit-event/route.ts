@@ -22,6 +22,39 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { eventData, ticketTypes } = body
 
+  if (!eventData?.title || !eventData?.event_type || !eventData?.event_date || !eventData?.start_time || !eventData?.venue_name || !eventData?.city || !eventData?.state) {
+    return NextResponse.json({ error: 'Missing required event fields' }, { status: 400 })
+  }
+
+  if (eventData.end_time && eventData.end_time <= eventData.start_time) {
+    return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 })
+  }
+
+  if (eventData.capacity !== undefined && eventData.capacity !== null && (typeof eventData.capacity !== 'number' || eventData.capacity < 0)) {
+    return NextResponse.json({ error: 'Capacity must be a positive number' }, { status: 400 })
+  }
+
+  if (eventData.age_restriction !== undefined && (typeof eventData.age_restriction !== 'number' || eventData.age_restriction < 0)) {
+    return NextResponse.json({ error: 'Age restriction must be a positive number' }, { status: 400 })
+  }
+
+  if (!eventData.is_free) {
+    if (!Array.isArray(ticketTypes) || ticketTypes.length === 0) {
+      return NextResponse.json({ error: 'At least one ticket type is required for a paid event' }, { status: 400 })
+    }
+    for (const ticket of ticketTypes) {
+      if (typeof ticket.price !== 'number' || ticket.price < 0) {
+        return NextResponse.json({ error: `Ticket type "${ticket.name || ''}" has an invalid price` }, { status: 400 })
+      }
+      if (typeof ticket.quantity !== 'number' || ticket.quantity < 1) {
+        return NextResponse.json({ error: `Ticket type "${ticket.name || ''}" has an invalid quantity` }, { status: 400 })
+      }
+      if (ticket.is_group_ticket && (typeof ticket.group_size !== 'number' || ticket.group_size < 2)) {
+        return NextResponse.json({ error: `Group ticket "${ticket.name || ''}" must have a group size of at least 2` }, { status: 400 })
+      }
+    }
+  }
+
   const { data: event, error: eventError } = await supabase
     .from('events')
     .insert({
@@ -54,6 +87,16 @@ export async function POST(request: NextRequest) {
   if (eventError) {
     return NextResponse.json({ error: eventError.message }, { status: 400 })
   }
+
+  // Best-effort: give the event a gate-scanner passkey. Existing events were
+  // backfilled by migration 005_scanner_passkey.sql, but nothing generates
+  // one for events created afterward — without this, a newly created event
+  // would have no way to ever get real scanner credentials. A collision on
+  // the UNIQUE constraint is astronomically unlikely (16^6 space); if it
+  // ever happens, or if the column doesn't exist yet on this database, this
+  // silently no-ops rather than failing event creation over it.
+  const scannerPasskey = Array.from({ length: 6 }, () => '0123456789ABCDEF'[Math.floor(Math.random() * 16)]).join('')
+  await supabase.from('events').update({ scanner_passkey: scannerPasskey }).eq('id', event.id)
 
   // Auto-create free ticket type for free events
   if (eventData.is_free) {

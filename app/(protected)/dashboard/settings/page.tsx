@@ -166,11 +166,21 @@ export default function UserSettingsPage() {
       }
 
       // Update interests
-      await supabase.from('user_interests').delete().eq('user_id', user.id)
+      const { error: deleteInterestsError } = await supabase.from('user_interests').delete().eq('user_id', user.id)
+      if (deleteInterestsError) {
+        setError(deleteInterestsError.message)
+        setSaving(false)
+        return
+      }
       if (interests.length > 0) {
-        await supabase
+        const { error: interestsError } = await supabase
           .from('user_interests')
           .insert(interests.map((interest) => ({ user_id: user.id, interest })))
+        if (interestsError) {
+          setError(interestsError.message)
+          setSaving(false)
+          return
+        }
       }
 
       setSaved(true)

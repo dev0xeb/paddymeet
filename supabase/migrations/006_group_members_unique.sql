@@ -19,7 +19,7 @@ USING public.group_members b
 WHERE a.group_id = b.group_id
   AND a.user_id = b.user_id
   AND a.id <> b.id
-  AND (a.joined_at, a.id) > (b.joined_at, b.id);
+  AND (a.created_at, a.id) > (b.created_at, b.id);
 
 ALTER TABLE public.group_members
   ADD CONSTRAINT group_members_group_user_unique UNIQUE (group_id, user_id);

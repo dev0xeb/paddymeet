@@ -35,6 +35,7 @@ export default async function DashboardPage() {
     { data: profile },
     { data: tickets },
     { data: groupMembers },
+    { count: groupsCount },
     { data: activePromos },
     { count: referralsCount },
     { data: upcomingLiveEvents }
@@ -42,6 +43,7 @@ export default async function DashboardPage() {
     supabase.from('users').select('*, user_interests(*)').eq('id', user.id).single(),
     supabase.from('tickets').select('*, ticket_types(name, price, is_group_ticket, group_size), events(*)').eq('user_id', user.id).order('purchased_at', { ascending: false }),
     supabase.from('group_members').select('*, groups(*, events(id, title, event_date, city, venue_name), ticket_types(name, price, is_group_ticket))').eq('user_id', user.id).limit(4),
+    supabase.from('group_members').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
     supabase.from('promo_codes').select('*').eq('is_active', true).limit(3),
     supabase.from('users').select('id', { count: 'exact', head: true }).eq('referred_by', user.id),
     supabase.from('events').select('*, ticket_types(name, price, quantity, quantity_sold), organisers(org_name, is_verified)').eq('is_approved', true).eq('is_live', true).order('event_date', { ascending: true })
@@ -85,7 +87,7 @@ export default async function DashboardPage() {
   const progress = tierProgress[tier] || 25
   const currentTierTheme = tierColors[tier] || tierColors.Newbie
   const groupsList = groupMembers || []
-  const activeGroupsCount = groupsList.length
+  const activeGroupsCount = groupsCount ?? groupsList.length
   const liveEvents = upcomingLiveEvents || []
 
   return (

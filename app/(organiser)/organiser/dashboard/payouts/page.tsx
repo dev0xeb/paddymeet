@@ -12,12 +12,13 @@ export default async function OrganiserPayoutsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: organiser } = await supabase
-    .from('organisers')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  const [{ data: organiser }, { data: settings }] = await Promise.all([
+    supabase.from('organisers').select('*').eq('id', user.id).single(),
+    supabase.from('platform_settings').select('platform_fee_percent').eq('id', 1).single(),
+  ])
   if (!organiser) redirect('/login')
+
+  const platformFeePercent = Number(settings?.platform_fee_percent) || 5.0
 
   const { data: events } = await supabase
     .from('events')
@@ -33,7 +34,7 @@ export default async function OrganiserPayoutsPage() {
 
   const grossRevenue = allOrders?.reduce((sum, o) => sum + (o.total_paid || 0), 0) || 0
   const totalFees = allOrders?.reduce((sum, o) => sum + (o.service_fee || 0), 0) || 0
-  const paddymeetCommission = grossRevenue * 0.1
+  const paddymeetCommission = grossRevenue * (platformFeePercent / 100)
   const netRevenue = grossRevenue - totalFees - paddymeetCommission
 
   // Get payouts history
@@ -44,10 +45,10 @@ export default async function OrganiserPayoutsPage() {
     .order('created_at', { ascending: false })
     .limit(20)
 
-  const totalPaid = payouts?.filter(p => p.status === 'completed').reduce((sum, p) => sum + (p.amount || 0), 0) || 0
+  const totalPaid = payouts?.filter(p => p.status === 'paid').reduce((sum, p) => sum + (p.amount || 0), 0) || 0
   const pendingPayout = netRevenue - totalPaid
 
-  const hasBankDetails = organiser.bank_name && organiser.account_number && organiser.account_name
+  const hasBankDetails = organiser.bank_name && organiser.bank_account_number && organiser.bank_account_name
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -114,12 +115,12 @@ export default async function OrganiserPayoutsPage() {
                   {payouts.map((payout) => (
                     <div key={payout.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        payout.status === 'completed' ? 'bg-green-50' :
-                        payout.status === 'pending' ? 'bg-orange-50' : 'bg-red-50'
+                        payout.status === 'paid' ? 'bg-green-50' :
+                        payout.status === 'pending' || payout.status === 'processing' ? 'bg-orange-50' : 'bg-red-50'
                       }`}>
-                        {payout.status === 'completed'
+                        {payout.status === 'paid'
                           ? <CheckCircle className="w-5 h-5 text-green-500" />
-                          : payout.status === 'pending'
+                          : payout.status === 'pending' || payout.status === 'processing'
                           ? <Clock className="w-5 h-5 text-orange-500" />
                           : <AlertCircle className="w-5 h-5 text-red-400" />
                         }
@@ -130,13 +131,13 @@ export default async function OrganiserPayoutsPage() {
                         </div>
                         <div className="text-xs text-gray-500">
                           {new Date(payout.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                          {payout.reference && <span className="ml-2 font-mono text-gray-400">{payout.reference}</span>}
+                          {payout.payment_reference && <span className="ml-2 font-mono text-gray-400">{payout.payment_reference}</span>}
                         </div>
                       </div>
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold border flex-shrink-0 ${
-                        payout.status === 'completed'
+                        payout.status === 'paid'
                           ? 'bg-green-50 text-green-600 border-green-200'
-                          : payout.status === 'pending'
+                          : payout.status === 'pending' || payout.status === 'processing'
                           ? 'bg-orange-50 text-orange-500 border-orange-200'
                           : 'bg-red-50 text-red-500 border-red-200'
                       }`}>
@@ -173,12 +174,12 @@ export default async function OrganiserPayoutsPage() {
                   </div>
                   <div>
                     <div className="text-xs text-gray-400 mb-0.5">Account name</div>
-                    <div className="text-sm font-bold text-gray-900">{organiser.account_name}</div>
+                    <div className="text-sm font-bold text-gray-900">{organiser.bank_account_name}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-400 mb-0.5">Account number</div>
                     <div className="text-sm font-mono font-bold text-gray-900">
-                      {'•'.repeat(organiser.account_number.length - 4) + organiser.account_number.slice(-4)}
+                      {'•'.repeat(Math.max(0, organiser.bank_account_number.length - 4)) + organiser.bank_account_number.slice(-4)}
                     </div>
                   </div>
                   <Link href="/organiser/dashboard/settings"
@@ -208,7 +209,7 @@ export default async function OrganiserPayoutsPage() {
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0 mt-1.5" />
-                  Paddymeet deducts a 10% commission before paying out.
+                  Paddymeet deducts a {platformFeePercent}% commission before paying out.
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0 mt-1.5" />

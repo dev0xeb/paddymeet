@@ -58,6 +58,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Code and discount value are required' }, { status: 400 })
     }
 
+    const discountValueNum = Number(discount_value)
+    if (!Number.isFinite(discountValueNum) || discountValueNum <= 0) {
+      return NextResponse.json({ error: 'Discount value must be a positive number' }, { status: 400 })
+    }
+    if (discount_type === 'percentage' && discountValueNum > 100) {
+      return NextResponse.json({ error: 'Percentage discount cannot exceed 100' }, { status: 400 })
+    }
+
+    if (max_uses !== undefined && max_uses !== null && max_uses !== '') {
+      const maxUsesNum = Number(max_uses)
+      if (!Number.isInteger(maxUsesNum) || maxUsesNum < 1) {
+        return NextResponse.json({ error: 'Max uses must be a positive whole number' }, { status: 400 })
+      }
+    }
+
+    if (expires_at && new Date(expires_at) <= new Date()) {
+      return NextResponse.json({ error: 'Expiry date must be in the future' }, { status: 400 })
+    }
+
     const cleanCode = code.trim().toUpperCase()
 
     // Check duplicate
@@ -76,7 +95,7 @@ export async function POST(request: NextRequest) {
       .insert({
         code: cleanCode,
         discount_type: discount_type || 'percentage',
-        discount_value: Number(discount_value),
+        discount_value: discountValueNum,
         max_uses: max_uses ? Number(max_uses) : null,
         uses_count: 0,
         expires_at: expires_at ? new Date(expires_at).toISOString() : null,

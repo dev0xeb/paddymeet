@@ -14,10 +14,10 @@ interface OrganiserProfile {
   description: string
   website: string
   social_link: string
-  bank_name: string
   bank_code: string
-  account_number: string
-  account_name: string
+  bank_name: string
+  bank_account_number: string
+  bank_account_name: string
 }
 
 interface Bank {
@@ -74,8 +74,8 @@ export default function OrganiserSettingsPage() {
     Promise.all([getProfile(), getBanks()]).then(([profileData, banksData]) => {
       if (profileData) {
         setProfile(profileData)
-        if (profileData.account_number) setAccountNumber(profileData.account_number)
-        if (profileData.account_name) setVerifiedName(profileData.account_name)
+        if (profileData.bank_account_number) setAccountNumber(profileData.bank_account_number)
+        if (profileData.bank_account_name) setVerifiedName(profileData.bank_account_name)
         if (profileData.bank_code) setSelectedBankCode(profileData.bank_code)
       }
       setBanks(banksData)
@@ -160,10 +160,10 @@ export default function OrganiserSettingsPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          bank_name: selectedBank?.name || '',
           bank_code: selectedBankCode,
-          account_number: accountNumber,
-          account_name: verifiedName,
+          bank_name: selectedBank?.name || '',
+          bank_account_number: accountNumber,
+          bank_account_name: verifiedName,
         }),
       })
       const data = await res.json()

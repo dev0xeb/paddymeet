@@ -44,8 +44,10 @@ export async function POST(
       return NextResponse.json({ error: 'Refund request not found' }, { status: 404 })
     }
 
-    // 2. Update refund request status and store explanatory note
-    await adminClient
+    // 2. Update refund request status and store explanatory note — guarded
+    // so a double-click/retry on an already-processed request doesn't
+    // resend the rejection notification.
+    const { data: rejectionRows } = await adminClient
       .from('refund_requests')
       .update({
         status: 'rejected',
@@ -54,6 +56,12 @@ export async function POST(
         processed_at: new Date().toISOString(),
       })
       .eq('id', id)
+      .eq('status', 'pending')
+      .select('id')
+
+    if (!rejectionRows || rejectionRows.length === 0) {
+      return NextResponse.json({ error: 'This refund request has already been processed.' }, { status: 409 })
+    }
 
     // 3. Notify customer with mandatory explanation
     const eventObj = Array.isArray(refundReq.events) ? refundReq.events[0] : refundReq.events

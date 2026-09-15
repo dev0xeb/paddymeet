@@ -11,11 +11,8 @@ export default function ProcessGroupDeadlinesButton() {
     setLoading(true)
     setResult(null)
     try {
-      const res = await fetch('/api/cron/process-group-deadlines', {
+      const res = await fetch('/api/admin/process-group-deadlines', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET}`,
-        },
       })
       const data = await res.json()
       if (data.success) {

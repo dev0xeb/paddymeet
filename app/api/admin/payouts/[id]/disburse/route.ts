@@ -57,11 +57,24 @@ export async function POST(
       )
     }
 
-    // 3. LAYER 2 IDEMPOTENCY: Optimistically set status to 'processing' to block race conditions
-    await adminClient
+    // 3. LAYER 2 IDEMPOTENCY: guarded update — only succeeds if status is
+    // still whatever we just read. A concurrent request (double-click, two
+    // admin tabs) that already flipped it to 'processing' or 'paid' makes
+    // this update match zero rows, so we stop here instead of both
+    // requests going on to call Paystack.
+    const { data: lockRows, error: lockError } = await adminClient
       .from('payouts')
       .update({ status: 'processing', note: 'Initiating bank disbursement via Paystack...' })
       .eq('id', id)
+      .eq('status', payout.status)
+      .select('id')
+
+    if (lockError || !lockRows || lockRows.length === 0) {
+      return NextResponse.json(
+        { error: 'This payout is already being processed by another request. Duplicate transfer prevented.' },
+        { status: 409 }
+      )
+    }
 
     const paystackSecret = process.env.PAYSTACK_SECRET_KEY
     if (!paystackSecret) {
@@ -135,8 +148,12 @@ export async function POST(
     const transferCode = transferData.data?.transfer_code || transferData.data?.reference || idempotentRef
     const paidAt = new Date().toISOString()
 
-    // 6. Update payout record to 'paid'
-    await adminClient
+    // 6. Update payout record to 'paid'. The Paystack transfer has already
+    // been initiated at this point — if this write fails, the payout is
+    // left at 'processing' (which the Layer 1 guard above treats as
+    // in-flight and blocks from being disbursed again), so log loudly for
+    // manual reconciliation rather than silently losing track of it.
+    const { error: markPaidError } = await adminClient
       .from('payouts')
       .update({
         status: 'paid',
@@ -147,6 +164,10 @@ export async function POST(
         paid_at: paidAt,
       })
       .eq('id', id)
+
+    if (markPaidError) {
+      console.error(`Payout ${id} was disbursed via Paystack (ref ${transferCode}) but failed to be marked 'paid' in the DB:`, markPaidError.message)
+    }
 
     // 7. Notify organiser of successful disbursement
     if (payout.organiser_id) {

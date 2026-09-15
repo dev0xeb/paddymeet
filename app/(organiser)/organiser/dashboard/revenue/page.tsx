@@ -16,12 +16,13 @@ export default async function OrganiserRevenuePage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: organiser } = await supabase
-    .from('organisers')
-    .select('id, org_name')
-    .eq('id', user.id)
-    .single()
+  const [{ data: organiser }, { data: settings }] = await Promise.all([
+    supabase.from('organisers').select('id, org_name').eq('id', user.id).single(),
+    supabase.from('platform_settings').select('platform_fee_percent').eq('id', 1).single(),
+  ])
   if (!organiser) redirect('/login')
+
+  const commissionRate = (Number(settings?.platform_fee_percent) || 5.0) / 100
 
   const params = await searchParams
   const page = parseInt(params.page || '1')
@@ -52,7 +53,7 @@ export default async function OrganiserRevenuePage({
 
   const grossRevenue = allOrders?.reduce((sum, o) => sum + (o.total_paid || 0), 0) || 0
   const totalFees = allOrders?.reduce((sum, o) => sum + (o.service_fee || 0), 0) || 0
-  const paddymeetCommission = grossRevenue * 0.1
+  const paddymeetCommission = grossRevenue * commissionRate
   const netRevenue = grossRevenue - totalFees - paddymeetCommission
 
   // Revenue by event
@@ -64,7 +65,7 @@ export default async function OrganiserRevenuePage({
       ...event,
       revenue,
       fees,
-      net: revenue - fees - revenue * 0.1,
+      net: revenue - fees - revenue * commissionRate,
       orders: eventOrders.length,
     }
   }).sort((a, b) => b.revenue - a.revenue) || []
@@ -226,7 +227,7 @@ export default async function OrganiserRevenuePage({
                 const evTitle = Array.isArray(order.events)
                   ? order.events[0]?.title
                   : (order.events as { title: string } | null)?.title
-                const net = (order.total_paid || 0) - (order.service_fee || 0) - (order.total_paid || 0) * 0.1
+                const net = (order.total_paid || 0) - (order.service_fee || 0) - (order.total_paid || 0) * commissionRate
                 return (
                   <div key={order.id} className="flex flex-col sm:grid sm:grid-cols-4 gap-2 sm:gap-4 px-4 py-4 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
