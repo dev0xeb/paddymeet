@@ -8,6 +8,7 @@ import {
   Building2, Ticket, DollarSign, Trash2
 } from 'lucide-react'
 import AdminDeleteOrganiserButton from '@/components/AdminDeleteOrganiserButton'
+import Logo from '@/components/Logo'
 
 export default async function AdminOrganisersPage({
   searchParams,
@@ -84,7 +85,7 @@ export default async function AdminOrganisersPage({
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 

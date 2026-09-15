@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Users, Mic, ArrowRight, Check, X, Gift } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import Logo from '@/components/Logo'
 
 export default function SignUpPage() {
   return (
@@ -24,7 +25,7 @@ function SignUpPageContent() {
     <div className="min-h-screen bg-white">
       <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 bg-white border-b border-gray-100">
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="color" className="h-7 w-auto" />
         </Link>
         <div className="text-sm text-gray-500 hidden sm:block">
           Already have an account?{' '}

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect } from 'react'
 import { ArrowLeft, RefreshCw } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 export default function Error({
   error,
@@ -19,7 +20,7 @@ export default function Error({
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <nav className="h-16 flex items-center justify-between px-6 bg-white border-b border-gray-100">
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="color" className="h-7 w-auto" />
         </Link>
       </nav>
 

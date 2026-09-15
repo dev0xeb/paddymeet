@@ -9,6 +9,7 @@ import {
   LogOut, ChevronDown, X, CheckCircle
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import Logo from '@/components/Logo'
 
 interface Props {
   orgName?: string
@@ -99,7 +100,7 @@ export default function OrganiserNav({ orgName, contactName }: Props) {
     <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 md:px-6 bg-white border-b border-gray-100">
       <div className="flex items-center gap-3">
         <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="color" className="h-6 w-auto" />
         </Link>
         <span className="hidden sm:block text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
           Organiser

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Search } from 'lucide-react'
 import ScannerReportGenerator from '@/components/admin/ScannerReportGenerator'
+import Logo from '@/components/Logo'
 
 export default async function AdminScannerPage() {
   const supabase = await createClient()
@@ -44,7 +45,7 @@ export default async function AdminScannerPage() {
           <div className="h-5 w-px bg-gray-700" />
           <span className="text-xs font-bold text-pink-400 bg-pink-500/10 px-3 py-1 rounded-full border border-pink-500/20">AI Scanner</span>
         </div>
-        <Link href="/" className="text-lg font-bold text-white tracking-tight">paddy<span className="text-orange-500">meet</span></Link>
+        <Link href="/" className="text-lg font-bold text-white tracking-tight"><Logo theme="white" className="h-6 w-auto" /></Link>
       </nav>
 
       <div className="pt-16 max-w-4xl mx-auto px-4 md:px-6 py-8">

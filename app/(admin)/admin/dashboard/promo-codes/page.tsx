@@ -7,6 +7,7 @@ import {
   Calendar, CheckCircle2, Clock, X, Loader2, Sparkles,
   AlertCircle, Search, Play, Pause, DollarSign, Users
 } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 interface PromoCode {
   id: string
@@ -166,7 +167,7 @@ export default function AdminPromoCodesPage() {
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 

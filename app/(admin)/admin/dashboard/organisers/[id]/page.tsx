@@ -7,6 +7,7 @@ import {
   Mail, Phone, Globe, Ticket, DollarSign,
   Building2, User, MapPin, Clock
 } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 export default async function AdminOrganiserDetailPage({
   params,
@@ -68,7 +69,7 @@ export default async function AdminOrganiserDetailPage({
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 

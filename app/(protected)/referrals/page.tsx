@@ -19,6 +19,7 @@ import {
 import UserAvatarMenu from '@/components/UserAvatarMenu'
 import ReferralCopyButton from '@/components/ReferralCopyButton'
 import NotificationsBell from '@/components/NotificationsBell'
+import Logo from '@/components/Logo'
 
 export default async function ReferralsPage() {
   const supabase = await createClient()
@@ -71,7 +72,7 @@ export default async function ReferralsPage() {
           </Link>
           <div className="h-4 w-px bg-slate-200 hidden sm:block" />
           <Link href="/" className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-1">
-            paddy<span className="text-orange-600">meet</span>
+            <Logo theme="color" className="h-7 w-auto" />
           </Link>
         </div>
 

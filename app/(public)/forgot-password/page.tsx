@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Mail, Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import Logo from '@/components/Logo'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -38,7 +39,7 @@ export default function ForgotPasswordPage() {
           <ArrowLeft className="w-4 h-4" /> Back to Login
         </Link>
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="color" className="h-7 w-auto" />
         </Link>
         <div className="w-24" />
       </nav>

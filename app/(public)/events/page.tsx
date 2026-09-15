@@ -4,6 +4,7 @@ import { Calendar, Grid3X3, List } from 'lucide-react'
 import EventsFilterBar from '@/components/events/EventsFilterBar'
 import { Suspense } from 'react'
 import UserAvatarMenu from '@/components/UserAvatarMenu'
+import Logo from '@/components/Logo'
 
 export default async function EventsPage({
   searchParams,
@@ -53,7 +54,7 @@ export default async function EventsPage({
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-10 bg-white border-b border-gray-100">
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="color" className="h-7 w-auto" />
         </Link>
         <div className="flex items-center gap-3">
           {user && profile ? (
@@ -208,7 +209,7 @@ export default async function EventsPage({
       {/* Footer */}
       <footer className="border-t border-gray-100 bg-white py-8 px-10 mt-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-4">
-          <Link href="/" className="text-lg font-bold text-gray-900">paddy<span className="text-orange-500">meet</span></Link>
+          <Link href="/" className="text-lg font-bold text-gray-900"><Logo theme="color" className="h-6 w-auto" /></Link>
           <div className="flex gap-6">
             {['About','How It Works','For Organisers','Contact'].map(l => (
               <Link key={l} href="/signup" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">{l}</Link>

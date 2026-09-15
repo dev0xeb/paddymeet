@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import UserAvatarMenu from '@/components/UserAvatarMenu'
 import NotificationsBell from '@/components/NotificationsBell'
+import Logo from '@/components/Logo'
 
 const TIER_THRESHOLDS = [
   { tier: 'Newbie', min: 0, max: 49, color: 'text-slate-500 bg-slate-100 border-slate-200' },
@@ -79,7 +80,7 @@ export default async function TrustScorePage() {
           </Link>
           <div className="h-4 w-px bg-slate-200 hidden sm:block" />
           <Link href="/" className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-1">
-            paddy<span className="text-orange-600">meet</span>
+            <Logo theme="color" className="h-7 w-auto" />
           </Link>
         </div>
 

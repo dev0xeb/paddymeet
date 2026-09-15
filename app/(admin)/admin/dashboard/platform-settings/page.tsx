@@ -7,6 +7,7 @@ import {
   AlertTriangle, Loader2, Sparkles, Sliders, RefreshCw, X
 } from 'lucide-react'
 import ProcessGroupDeadlinesButton from '@/components/admin/ProcessGroupDeadlinesButton'
+import Logo from '@/components/Logo'
 
 interface PlatformSettings {
   commission_rate: number
@@ -145,7 +146,7 @@ export default function AdminPlatformSettingsPage() {
           </button>
 
           <Link href="/" className="text-lg font-bold text-white tracking-tight pl-2">
-            paddy<span className="text-orange-500">meet</span>
+            <Logo theme="white" className="h-6 w-auto" />
           </Link>
         </div>
       </nav>

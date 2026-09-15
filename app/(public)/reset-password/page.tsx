@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Eye, EyeOff, Check, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import Logo from '@/components/Logo'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -64,7 +65,7 @@ export default function ResetPasswordPage() {
       <nav className="h-16 flex items-center justify-between px-6 bg-white border-b border-gray-100">
         <div className="w-24" />
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="color" className="h-7 w-auto" />
         </Link>
         <div className="w-24" />
       </nav>

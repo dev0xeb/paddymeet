@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Check, Plus, Trash2, Info, Upload, X, ImageIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import Logo from '@/components/Logo'
 
 type Step = 1 | 2 | 3 | 4
 
@@ -170,7 +171,7 @@ export default function SubmitEventPage() {
           <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Back to Dashboard</span>
         </Link>
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="color" className="h-7 w-auto" />
         </Link>
         <div className="w-8 sm:w-32" />
       </nav>

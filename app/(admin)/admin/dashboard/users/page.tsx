@@ -6,6 +6,7 @@ import {
   ArrowLeft, Search, Shield, MapPin, Calendar,
   MoreHorizontal, UserX, UserCheck, ChevronLeft, ChevronRight
 } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 export default async function AdminUsersPage({
   searchParams,
@@ -71,7 +72,7 @@ export default async function AdminUsersPage({
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 

@@ -7,6 +7,7 @@ import {
   ArrowLeft, DollarSign, CheckCircle, Clock, XCircle, Building2,
   AlertTriangle, ShieldCheck, CreditCard, ChevronRight
 } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 export default async function AdminPayoutsPage() {
   const supabase = await createClient()
@@ -109,7 +110,7 @@ export default async function AdminPayoutsPage() {
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 

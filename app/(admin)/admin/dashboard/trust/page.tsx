@@ -7,6 +7,7 @@ import {
   Users, CheckCircle2, User, Award, ExternalLink
 } from 'lucide-react'
 import TrustScoreEditor from '@/components/admin/TrustScoreEditor'
+import Logo from '@/components/Logo'
 
 export default async function AdminTrustPage({
   searchParams,
@@ -90,7 +91,7 @@ export default async function AdminTrustPage({
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 

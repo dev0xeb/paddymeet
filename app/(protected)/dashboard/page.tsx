@@ -23,6 +23,7 @@ import SupportChat from '@/components/SupportChat'
 import OpenGroupButton from '@/components/OpenGroupButton'
 import ReferralCopyButton from '@/components/ReferralCopyButton'
 import TicketQRModal from '@/components/TicketQRModal'
+import Logo from '@/components/Logo'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -94,7 +95,7 @@ export default async function DashboardPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
         <div className="flex items-center gap-8">
           <Link href="/" className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-1">
-            paddy<span className="text-orange-600">meet</span>
+            <Logo theme="color" className="h-7 w-auto" />
           </Link>
           <div className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
             <Link href="/events" className="hover:text-slate-900 transition-colors">

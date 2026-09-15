@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, CheckCircle, TrendingUp, Users, Shield, Ticket, BarChart2 } from 'lucide-react'
 import type { Metadata } from 'next'
+import Logo from '@/components/Logo'
 
 export const metadata: Metadata = {
   title: 'For Organisers',
@@ -15,7 +16,7 @@ export default function ForOrganisersPage() {
           <ArrowLeft className="w-4 h-4" /> Home
         </Link>
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="color" className="h-7 w-auto" />
         </Link>
         <Link href="/signup" className="px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-colors">
           List Your Event

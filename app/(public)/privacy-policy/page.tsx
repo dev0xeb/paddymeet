@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import type { Metadata } from 'next'
+import Logo from '@/components/Logo'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -15,7 +16,7 @@ export default function PrivacyPage() {
           <ArrowLeft className="w-4 h-4" /> Home
         </Link>
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="color" className="h-7 w-auto" />
         </Link>
         <div className="w-20" />
       </nav>

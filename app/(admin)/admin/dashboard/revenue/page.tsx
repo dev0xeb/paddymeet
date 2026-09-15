@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase-admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, DollarSign, TrendingUp, Percent, Calendar, ShieldCheck, Building2 } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 export default async function AdminRevenuePage() {
   const supabase = await createClient()
@@ -68,7 +69,7 @@ export default async function AdminRevenuePage() {
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 

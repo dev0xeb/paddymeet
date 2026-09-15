@@ -7,6 +7,7 @@ import {
   ShieldCheck, Ticket, Users, ExternalLink
 } from 'lucide-react'
 import AdminFeatureEventButton from '@/components/AdminFeatureEventButton'
+import Logo from '@/components/Logo'
 
 export default async function AdminFeaturedPage() {
   const supabase = await createClient()
@@ -68,7 +69,7 @@ export default async function AdminFeaturedPage() {
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 

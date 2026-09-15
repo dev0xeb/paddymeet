@@ -7,6 +7,7 @@ import {
   User, Building2, Filter, Search, AlertCircle, Shield,
   Phone, Mail, Check, Loader2, Sparkles, RefreshCw, Plus, X
 } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 interface SupportUser {
   id: string
@@ -238,7 +239,7 @@ export default function AdminSupportPage() {
             <Plus className="w-4 h-4" /> New Ticket
           </button>
           <Link href="/" className="text-lg font-bold text-white tracking-tight pl-2">
-            paddy<span className="text-orange-500">meet</span>
+            <Logo theme="white" className="h-6 w-auto" />
           </Link>
         </div>
       </nav>

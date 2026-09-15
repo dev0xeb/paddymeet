@@ -79,19 +79,11 @@ export async function generateTicketCanvas(data: TicketImageData): Promise<HTMLC
   ctx.fillRect(0, 0, width, headerHeight)
   ctx.restore()
 
-  // Logo text
-  ctx.font = 'bold 28px Arial, sans-serif'
-  const logoText1 = 'paddy'
-  const logoText2 = 'meet'
-  const w1 = ctx.measureText(logoText1).width
-  const w2 = ctx.measureText(logoText2).width
-  const totalW = w1 + w2
-  const startX = width / 2 - totalW / 2
-  ctx.textAlign = 'left'
-  ctx.fillStyle = '#ffffff'
-  ctx.fillText(logoText1, startX, headerHeight / 2 + 10)
-  ctx.fillStyle = '#1f2937'
-  ctx.fillText(logoText2, startX + w1, headerHeight / 2 + 10)
+  // Logo — white lockup, sized for the orange/pink header
+  const logoImg = await loadImage('/brand/paddymeet-logo-kit/svg/logo-horizontal-white.svg')
+  const logoHeight = 34
+  const logoWidth = logoHeight * (logoImg.naturalWidth / logoImg.naturalHeight)
+  ctx.drawImage(logoImg, width / 2 - logoWidth / 2, headerHeight / 2 - logoHeight / 2, logoWidth, logoHeight)
 
   let y = headerHeight + 45
 

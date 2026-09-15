@@ -7,6 +7,7 @@ import {
   MapPin, Users, Clock, Filter
 } from 'lucide-react'
 import AdminApproveEventButton from '@/components/AdminApproveEventButton'
+import Logo from '@/components/Logo'
 
 export default async function AdminEventsPage({
   searchParams,
@@ -82,7 +83,7 @@ export default async function AdminEventsPage({
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 

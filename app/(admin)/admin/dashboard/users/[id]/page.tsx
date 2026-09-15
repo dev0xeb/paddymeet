@@ -7,6 +7,7 @@ import {
   UserX, UserCheck, Trash2, Star, Users,
   Clock, CheckCircle, Flag
 } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 export default async function AdminUserDetailPage({
   params,
@@ -67,7 +68,7 @@ export default async function AdminUserDetailPage({
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 

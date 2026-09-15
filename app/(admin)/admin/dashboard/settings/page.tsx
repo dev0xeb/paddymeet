@@ -6,6 +6,7 @@ import {
   ArrowLeft, Plus, Trash2, Shield, Clock, Check, X, Eye, EyeOff,
   UserPlus, Sparkles, AlertCircle, Loader2, RefreshCw, Users, Lock, ChevronRight
 } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 interface AdminMember {
   id: string
@@ -183,7 +184,7 @@ export default function AdminSettingsPage() {
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 

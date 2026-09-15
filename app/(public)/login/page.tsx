@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, Eye, EyeOff, Check, Shield, Users, Mic } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import Logo from '@/components/Logo'
 
 const REMEMBER_KEY = 'pm_device_trusted'
 const REMEMBER_DAYS = 30
@@ -159,7 +160,7 @@ export default function LoginPage() {
       {/* Nav */}
       <nav className="h-16 flex items-center justify-between px-6 md:px-10 border-b border-gray-100">
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="color" className="h-7 w-auto" />
         </Link>
         <div className="text-sm text-gray-500 hidden sm:block">
           Don&apos;t have an account?{' '}

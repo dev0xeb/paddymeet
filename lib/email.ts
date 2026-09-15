@@ -53,7 +53,7 @@ export async function sendTicketEmail(data: TicketEmailData) {
 
             <div style="background: linear-gradient(135deg, #f97316, #ec4899); padding: 32px 24px; text-align: center;">
               <div style="font-size: 24px; font-weight: 900; color: white; letter-spacing: -0.5px;">
-                paddy<span style="color: #1f2937;">meet</span>
+                <img src="https://paddymeet.com/brand/paddymeet-logo-kit/paddymeet-logo-horizontal-white-medium.png" alt="PaddyMeet" height="28" style="height: 28px; width: auto;" />
               </div>
             </div>
 
@@ -118,7 +118,7 @@ export async function sendCheckInEmail(data: CheckInEmailData) {
 
             <div style="background: linear-gradient(135deg, #16a34a, #22c55e); padding: 32px 24px; text-align: center;">
               <div style="font-size: 24px; font-weight: 900; color: white; letter-spacing: -0.5px;">
-                paddy<span style="color: #1f2937;">meet</span>
+                <img src="https://paddymeet.com/brand/paddymeet-logo-kit/paddymeet-logo-horizontal-white-medium.png" alt="PaddyMeet" height="28" style="height: 28px; width: auto;" />
               </div>
             </div>
 

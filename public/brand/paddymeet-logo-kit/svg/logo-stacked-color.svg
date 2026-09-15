@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 180">
+<g transform="translate(120,0)">
+<path d="M50 8C33 8 20 21 20 38c0 22 30 54 30 54s30-32 30-54C80 21 67 8 50 8z" fill="#101828"/>
+<circle cx="40" cy="36" r="9" fill="#FF6900"/>
+<circle cx="58" cy="34" r="9" fill="#FF9043"/>
+<circle cx="49" cy="48" r="9" fill="#FFFFFF"/>
+</g>
+<text x="0" y="150" font-family="Poppins" font-weight="700" font-size="56"><tspan fill="#101828">paddy</tspan><tspan fill="#FF6900">meet</tspan></text>
+</svg>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { X, Download, Check, FileText } from 'lucide-react'
 import QRCode from 'qrcode'
 import { downloadTicketImage, downloadTicketPDF } from '@/lib/ticketImage'
+import Logo from '@/components/Logo'
 
 interface Props {
   ticketCode: string
@@ -79,7 +80,7 @@ export default function TicketQRModal({ ticketCode, eventTitle, ticketTypeName, 
               <div className="bg-white rounded-2xl overflow-hidden border-2 border-gray-100 mb-4">
                 <div className="bg-gradient-to-br from-orange-500 to-pink-500 px-5 py-4 text-center">
                   <div className="text-base font-extrabold text-white tracking-tight">
-                    paddy<span className="text-gray-900">meet</span>
+                    <Logo theme="white" className="h-6 w-auto" />
                   </div>
                 </div>
                 <div className="p-5 text-center">

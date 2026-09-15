@@ -7,6 +7,7 @@ import {
   CheckCircle, Clock, Megaphone, ShieldCheck, Building2,
   AlertCircle, Loader2, Sparkles
 } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 type AudienceType = 'all' | 'organisers' | 'verified_organisers' | 'city' | 'individual'
 type ChannelType = 'push' | 'email' | 'both'
@@ -130,7 +131,7 @@ export default function AdminAnnouncementsPage() {
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          paddy<span className="text-orange-500">meet</span>
+          <Logo theme="white" className="h-6 w-auto" />
         </Link>
       </nav>
 
