@@ -153,19 +153,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, warning: 'Amount mismatch — no tickets issued' }, { status: 200 })
     }
 
-    // Atomic capacity check — same guarded-update pattern as /api/tickets/verify.
-    const currentSold = ticketType.quantity_sold || 0
-    if (currentSold + quantity > ticketType.quantity) {
-      console.error(`Webhook: ticket type ${ticket_type_id} sold out, reference ${reference}`)
-      return NextResponse.json({ received: true, warning: 'Sold out — no tickets issued' }, { status: 200 })
-    }
+    // Atomic capacity check — same guarded-update pattern as /api/tickets/verify,
+    // with the same bounded retry: a single attempt is too fragile, since any
+    // unrelated concurrent write to this row (not just genuine contention for
+    // the last ticket) reports a false conflict.
+    let capacityRows: { id: string }[] | null = null
+    let claimedSold = ticketType.quantity_sold || 0
+    for (let attempt = 0; attempt < 3 && !capacityRows?.length; attempt++) {
+      const { data: freshTicketType } = await adminClient
+        .from('ticket_types')
+        .select('quantity_sold, quantity')
+        .eq('id', ticket_type_id)
+        .single()
+      const currentSold = freshTicketType?.quantity_sold || 0
+      const capacity = freshTicketType?.quantity ?? ticketType.quantity
 
-    const { data: capacityRows } = await adminClient
-      .from('ticket_types')
-      .update({ quantity_sold: currentSold + quantity })
-      .eq('id', ticket_type_id)
-      .eq('quantity_sold', currentSold)
-      .select('id')
+      if (currentSold + quantity > capacity) {
+        console.error(`Webhook: ticket type ${ticket_type_id} sold out, reference ${reference}`)
+        return NextResponse.json({ received: true, warning: 'Sold out — no tickets issued' }, { status: 200 })
+      }
+
+      const result = await adminClient
+        .from('ticket_types')
+        .update({ quantity_sold: currentSold + quantity })
+        .eq('id', ticket_type_id)
+        .eq('quantity_sold', currentSold)
+        .select('id')
+
+      capacityRows = result.data
+      if (capacityRows && capacityRows.length > 0) claimedSold = currentSold
+    }
 
     if (!capacityRows || capacityRows.length === 0) {
       console.error(`Webhook: lost capacity race for ${ticket_type_id}, reference ${reference}`)
@@ -206,9 +223,9 @@ export async function POST(request: NextRequest) {
       // Give back the capacity we just reserved — no tickets were actually created.
       await adminClient
         .from('ticket_types')
-        .update({ quantity_sold: currentSold })
+        .update({ quantity_sold: claimedSold })
         .eq('id', ticket_type_id)
-        .eq('quantity_sold', currentSold + quantity)
+        .eq('quantity_sold', claimedSold + quantity)
       return NextResponse.json({ error: ticketError.message }, { status: 500 })
     }
 

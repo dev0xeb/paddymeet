@@ -150,18 +150,39 @@ export async function POST(request: NextRequest) {
 
   // Atomic capacity check — guarded update so two concurrent purchases
   // can't both succeed past the last ticket. Whoever's update doesn't
-  // match the quantity_sold it read loses the race and is told to retry.
-  const currentSold = ticketType.quantity_sold || 0
-  if (currentSold + quantity > ticketType.quantity) {
-    return NextResponse.json({ error: 'Not enough tickets remaining for this ticket type.' }, { status: 409 })
-  }
+  // match the quantity_sold it read loses the race. A single attempt was
+  // too fragile though: it only takes one unrelated write to this row
+  // between our read and write (any concurrent purchase of this same
+  // ticket type, even one that isn't actually competing for the last
+  // spot) to report a false conflict, so retry against a fresh read a
+  // couple of times before actually giving up.
+  let capacityRows: { id: string }[] | null = null
+  let capacityError: { message: string } | null = null
+  let claimedSold = ticketType.quantity_sold || 0
+  for (let attempt = 0; attempt < 3 && !capacityRows?.length; attempt++) {
+    const { data: freshTicketType } = await supabase
+      .from('ticket_types')
+      .select('quantity_sold, quantity')
+      .eq('id', ticket_type_id)
+      .single()
+    const currentSold = freshTicketType?.quantity_sold || 0
+    const capacity = freshTicketType?.quantity ?? ticketType.quantity
 
-  const { data: capacityRows, error: capacityError } = await supabase
-    .from('ticket_types')
-    .update({ quantity_sold: currentSold + quantity })
-    .eq('id', ticket_type_id)
-    .eq('quantity_sold', currentSold)
-    .select('id')
+    if (currentSold + quantity > capacity) {
+      return NextResponse.json({ error: 'Not enough tickets remaining for this ticket type.' }, { status: 409 })
+    }
+
+    const result = await supabase
+      .from('ticket_types')
+      .update({ quantity_sold: currentSold + quantity })
+      .eq('id', ticket_type_id)
+      .eq('quantity_sold', currentSold)
+      .select('id')
+
+    capacityRows = result.data
+    capacityError = result.error
+    if (capacityRows && capacityRows.length > 0) claimedSold = currentSold
+  }
 
   if (capacityError || !capacityRows || capacityRows.length === 0) {
     // Before treating this as a real sellout, check whether the Paystack
@@ -226,9 +247,9 @@ export async function POST(request: NextRequest) {
     // Give back the capacity we just reserved — no tickets were actually created.
     await supabase
       .from('ticket_types')
-      .update({ quantity_sold: currentSold })
+      .update({ quantity_sold: claimedSold })
       .eq('id', ticket_type_id)
-      .eq('quantity_sold', currentSold + quantity)
+      .eq('quantity_sold', claimedSold + quantity)
     return NextResponse.json({ error: ticketError.message }, { status: 400 })
   }
 
