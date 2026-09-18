@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
       venue_address: eventData.venue_address || null,
       city: eventData.city,
       state: eventData.state,
+      cover_image_url: eventData.cover_image_url || null,
       is_free: eventData.is_free || false,
       cancellation_policy: eventData.cancellation_policy || null,
       house_rules: eventData.house_rules || null,

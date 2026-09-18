@@ -46,7 +46,7 @@ export async function PUT(
   const allowedFields = [
     'title', 'event_type', 'vibe', 'description', 'age_restriction',
     'dress_code', 'capacity', 'event_date', 'start_time', 'end_time',
-    'venue_name', 'venue_address', 'city', 'state',
+    'venue_name', 'venue_address', 'city', 'state', 'cover_image_url',
     'cancellation_policy', 'house_rules', 'website', 'social_link',
   ]
 

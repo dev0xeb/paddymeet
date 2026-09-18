@@ -51,61 +51,79 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const supabase = createClient()
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    })
+    // Everything below is wraped in try/catch/finally so the button can
+    // never get stuck on "Logging in..." forever — any unexpected failure
+    // (a rejected SDK call, a network hiccup) now surfaces an error and
+    // re-enables the form instead of hanging silently.
+    try {
+      const supabase = createClient()
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      })
 
-    if (authError) {
-      setError('Invalid email or password. Please try again.')
+      if (authError) {
+        setError('Invalid email or password. Please try again.')
+        return
+      }
+
+      let type = data.user?.user_metadata?.account_type
+
+      // If metadata is empty, verify against organisers table
+      if (!type) {
+        const { data: org } = await supabase
+          .from('organisers')
+          .select('id')
+          .eq('id', data.user.id)
+          .single()
+        type = org ? 'organiser' : 'explorer'
+      }
+
+      setAccountType(type)
+
+      // Validate account type matches selected login type
+      if (loginAs === 'organiser' && type !== 'organiser') {
+        await supabase.auth.signOut()
+        setError('No organiser account found with these credentials. Try logging in as Explorer.')
+        return
+      }
+
+      if (loginAs === 'explorer' && type === 'organiser') {
+        await supabase.auth.signOut()
+        setError('This is an organiser account. Please use the Organiser tab to log in.')
+        return
+      }
+
+      // Check if device is trusted — skip OTP for 30 days
+      if (isDeviceTrusted()) {
+        redirectUser(type)
+        return
+      }
+
+      // Send 6-digit OTP — this used to be fired-and-forgotten, so a failed
+      // send (e.g. Supabase's rate limit on repeated OTP requests) silently
+      // left the user on a code-entry screen that could never work, or hung
+      // if the SDK call itself rejected.
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: email.trim().toLowerCase(),
+        options: { shouldCreateUser: false },
+      })
+
+      if (otpError) {
+        setError(
+          otpError.status === 429
+            ? 'Too many verification code requests. Please wait a minute and try again.'
+            : 'Could not send your verification code. Please try again.'
+        )
+        return
+      }
+
+      setStep('otp')
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    let type = data.user?.user_metadata?.account_type
-
-    // If metadata is empty, verify against organisers table
-    if (!type) {
-      const { data: org } = await supabase
-        .from('organisers')
-        .select('id')
-        .eq('id', data.user.id)
-        .single()
-      type = org ? 'organiser' : 'explorer'
-    }
-
-    setAccountType(type)
-
-    // Validate account type matches selected login type
-    if (loginAs === 'organiser' && type !== 'organiser') {
-      await supabase.auth.signOut()
-      setError('No organiser account found with these credentials. Try logging in as Explorer.')
-      setLoading(false)
-      return
-    }
-
-    if (loginAs === 'explorer' && type === 'organiser') {
-      await supabase.auth.signOut()
-      setError('This is an organiser account. Please use the Organiser tab to log in.')
-      setLoading(false)
-      return
-    }
-
-    // Check if device is trusted — skip OTP for 30 days
-    if (isDeviceTrusted()) {
-      redirectUser(type)
-      return
-    }
-
-    // Send 6-digit OTP
-    await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
-      options: { shouldCreateUser: false },
-    })
-
-    setLoading(false)
-    setStep('otp')
   }
 
   const handleVerifyOtp = async () => {
@@ -116,32 +134,49 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const supabase = createClient()
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      email: email.trim().toLowerCase(),
-      token: otp.trim(),
-      type: 'email',
-    })
+    try {
+      const supabase = createClient()
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        email: email.trim().toLowerCase(),
+        token: otp.trim(),
+        type: 'email',
+      })
 
-    if (verifyError) {
-      setError('Invalid or expired 6-digit code. Please try again.')
+      if (verifyError) {
+        setError('Invalid or expired 6-digit code. Please try again.')
+        return
+      }
+
+      if (rememberDevice) trustDevice()
+      redirectUser(accountType)
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    if (rememberDevice) trustDevice()
-    redirectUser(accountType)
   }
 
   const handleResendOtp = async () => {
     setResending(true)
     setError('')
-    const supabase = createClient()
-    await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
-      options: { shouldCreateUser: false },
-    })
-    setResending(false)
+    try {
+      const supabase = createClient()
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: email.trim().toLowerCase(),
+        options: { shouldCreateUser: false },
+      })
+      if (otpError) {
+        setError(
+          otpError.status === 429
+            ? 'Too many verification code requests. Please wait a minute and try again.'
+            : 'Could not resend your verification code. Please try again.'
+        )
+      }
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setResending(false)
+    }
   }
 
   const redirectUser = (type: string) => {
