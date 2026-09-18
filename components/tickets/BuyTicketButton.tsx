@@ -21,6 +21,7 @@ interface Event {
   start_time: string
   venue_name: string
   is_free: boolean
+  cover_image_url?: string
 }
 
 interface User {

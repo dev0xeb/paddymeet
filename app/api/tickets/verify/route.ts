@@ -164,6 +164,34 @@ export async function POST(request: NextRequest) {
     .select('id')
 
   if (capacityError || !capacityRows || capacityRows.length === 0) {
+    // Before treating this as a real sellout, check whether the Paystack
+    // webhook — which verifies and fulfills this exact same payment
+    // reference independently of this request — won the race and already
+    // finished creating the tickets. Without this, a customer whose own
+    // payment the webhook already fulfilled could see a scary "claimed by
+    // someone else" error for a purchase that actually succeeded.
+    const { data: winningOrder } = await supabase
+      .from('orders')
+      .select('id, payment_status')
+      .eq('payment_reference', reference)
+      .maybeSingle()
+
+    if (winningOrder && winningOrder.payment_status === 'completed') {
+      const { data: existingTickets } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('event_id', event_id)
+        .eq('user_id', user_id)
+        .order('created_at', { ascending: false })
+        .limit(quantity)
+
+      return NextResponse.json({
+        success: true,
+        order_id: winningOrder.id,
+        tickets: existingTickets || [],
+      })
+    }
+
     return NextResponse.json({
       error: 'These tickets were just claimed by someone else. Please try again — contact support with your payment reference if you were charged.',
     }, { status: 409 })

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { X, Plus, Minus, Check, ArrowRight, Ticket, Download, FileText, User as UserIcon } from 'lucide-react'
 import { downloadTicketImage, downloadTicketPDF } from '@/lib/ticketImage'
 import { computeOrderTotal } from '@/lib/pricing'
@@ -23,6 +24,7 @@ interface Event {
   start_time: string
   venue_name: string
   is_free: boolean
+  cover_image_url?: string
 }
 
 interface User {
@@ -58,6 +60,7 @@ interface ConfirmedTicket {
 type Step = 'select' | 'details' | 'summary' | 'processing' | 'confirmed'
 
 export default function TicketPurchaseModal({ event, ticketType, user, onClose }: Props) {
+  const router = useRouter()
   const [step, setStep] = useState<Step>('select')
   const [quantity, setQuantity] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -117,6 +120,15 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
     script.src = 'https://js.paystack.co/v1/inline.js'
     document.head.appendChild(script)
   }, [])
+
+  // Once the purchase is confirmed, send the buyer back to their dashboard
+  // after a short pause — long enough to see the confirmation and grab
+  // their ticket image/PDF if they want it right away.
+  useEffect(() => {
+    if (step !== 'confirmed') return
+    const timer = setTimeout(() => router.push('/dashboard'), 6000)
+    return () => clearTimeout(timer)
+  }, [step, router])
 
   // 10-minute reservation countdown timer
   useEffect(() => {
@@ -427,9 +439,13 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
           {step === 'select' && (
             <div className="p-6">
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-                  {event.title.charAt(0)}
-                </div>
+                {event.cover_image_url ? (
+                  <img src={event.cover_image_url} alt={event.title} className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                    {event.title.charAt(0)}
+                  </div>
+                )}
                 <div>
                   <div className="text-sm font-bold text-gray-900 truncate">{event.title}</div>
                   <div className="text-xs text-gray-500">
@@ -731,7 +747,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
                 ))}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 mb-3">
                 <button onClick={onClose} className="flex-1 py-3 border-2 border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:border-gray-300 transition-colors">
                   Close
                 </button>
@@ -739,6 +755,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
                   View in Dashboard
                 </a>
               </div>
+              <p className="text-center text-xs text-gray-400">Taking you to your dashboard shortly...</p>
             </div>
           )}
         </div>

@@ -93,6 +93,7 @@ export default async function EventDetailPage({
     start_time: event.start_time,
     venue_name: event.venue_name,
     is_free: event.is_free,
+    cover_image_url: event.cover_image_url,
   }
 
   return (
