@@ -106,7 +106,7 @@ export default function AdminPlatformSettingsPage() {
   return (
     <div className="min-h-screen bg-slate-50 antialiased">
       {/* Top Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-slate-900 border-b border-slate-800">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 bg-slate-900 border-b border-slate-800">
         <div className="flex items-center gap-4">
           <Link
             href="/admin/dashboard"
@@ -114,8 +114,8 @@ export default function AdminPlatformSettingsPage() {
           >
             <ArrowLeft className="w-4 h-4" /> Dashboard
           </Link>
-          <div className="h-5 w-px bg-slate-700" />
-          <span className="text-xs font-semibold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
+          <div className="hidden sm:block h-5 w-px bg-slate-700" />
+          <span className="hidden sm:inline-flex text-xs font-semibold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
             System Control Room
           </span>
         </div>

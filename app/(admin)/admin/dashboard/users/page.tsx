@@ -61,13 +61,13 @@ export default async function AdminUsersPage({
     <div className="min-h-screen bg-gray-50">
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-gray-900 border-b border-gray-800">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 bg-gray-900 border-b border-gray-800">
         <div className="flex items-center gap-4">
           <Link href="/admin/dashboard" className="flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors">
             <ArrowLeft className="w-4 h-4" /> Dashboard
           </Link>
-          <div className="h-5 w-px bg-gray-700" />
-          <span className="text-xs font-bold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
+          <div className="hidden sm:block h-5 w-px bg-gray-700" />
+          <span className="hidden sm:inline-flex text-xs font-bold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
             Users Management
           </span>
         </div>
@@ -76,7 +76,7 @@ export default async function AdminUsersPage({
         </Link>
       </nav>
 
-      <div className="pt-16 max-w-6xl mx-auto px-6 py-8">
+      <div className="pt-16 max-w-6xl mx-auto px-4 sm:px-6 py-8">
 
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
@@ -122,7 +122,7 @@ export default async function AdminUsersPage({
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
 
           {/* Table header */}
-          <div className="grid grid-cols-6 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
+          <div className="hidden sm:grid grid-cols-6 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
             {['User', 'Location', 'Trust Score', 'Tier', 'Joined', 'Actions'].map(h => (
               <div key={h} className="text-xs font-bold text-gray-400 uppercase tracking-wider">{h}</div>
             ))}
@@ -144,7 +144,7 @@ export default async function AdminUsersPage({
                 created_at: string
                 events_attended: number
               }) => (
-                <div key={u.id} className="grid grid-cols-6 gap-4 px-5 py-4 hover:bg-gray-50 transition-colors items-center">
+                <div key={u.id} className="flex flex-col sm:grid sm:grid-cols-6 gap-3 sm:gap-4 px-5 py-4 hover:bg-gray-50 transition-colors sm:items-center">
 
                   {/* User */}
                   <div className="flex items-center gap-3 min-w-0">

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   Users, Tag, Star, Calendar, Ticket, DollarSign, Shield, Bell,
   Settings, BarChart2, Flag, CheckCircle, XCircle,
-  AlertCircle, TrendingUp, Eye, ChevronRight,
+  AlertCircle, TrendingUp, Eye, ChevronRight, Menu,
   Megaphone, Search, UserCheck, Database, Clock, ShieldCheck
 } from 'lucide-react'
 import LogoutButton from '@/components/LogoutButton'
@@ -79,17 +79,23 @@ export default async function AdminDashboardPage() {
     <div className="min-h-screen bg-slate-50 antialiased">
 
       {/* Top Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-slate-900 border-b border-slate-800">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-lg font-bold text-white tracking-tight">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 md:px-6 bg-slate-900 border-b border-slate-800">
+        <div className="flex items-center gap-3 md:gap-4 min-w-0">
+          <label
+            htmlFor="admin-sidebar-toggle"
+            className="md:hidden w-9 h-9 flex-shrink-0 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 cursor-pointer"
+          >
+            <Menu className="w-4 h-4" />
+          </label>
+          <Link href="/" className="text-lg font-bold text-white tracking-tight flex-shrink-0">
             <Logo theme="white" className="h-6 w-auto" />
           </Link>
-          <div className="h-5 w-px bg-slate-700" />
-          <span className="text-xs font-semibold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
+          <div className="hidden sm:block h-5 w-px bg-slate-700" />
+          <span className="hidden sm:inline-flex text-xs font-semibold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
             Admin Portal
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           <Link
             href="/admin/dashboard/events"
             className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:border-slate-600 transition-colors relative"
@@ -102,10 +108,10 @@ export default async function AdminDashboardPage() {
             )}
           </Link>
           <div className="flex items-center gap-2.5 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-full">
-            <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
               {admin.full_name?.charAt(0) || 'A'}
             </div>
-            <div>
+            <div className="hidden sm:block">
               <span className="text-xs font-semibold text-white">{admin.full_name || 'Admin'}</span>
               <span className="ml-2 text-[10px] text-orange-400 font-medium capitalize bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">
                 {admin.department?.replace('_', ' ')}
@@ -117,8 +123,19 @@ export default async function AdminDashboardPage() {
 
       <div className="flex pt-16">
 
-        {/* Sidebar */}
-        <aside className="w-56 fixed top-16 left-0 bottom-0 bg-slate-900 border-r border-slate-800 flex flex-col py-5 px-3">
+        {/* Mobile sidebar toggle — pure CSS checkbox hack, no client JS needed. Must be
+            a direct sibling (in DOM order) of anything using peer-checked: below, since
+            that's a CSS general-sibling-combinator relationship, not a descendant one. */}
+        <input type="checkbox" id="admin-sidebar-toggle" className="peer hidden" />
+
+        {/* Backdrop — dims the page behind the open mobile sidebar, tap to close */}
+        <label
+          htmlFor="admin-sidebar-toggle"
+          className="hidden peer-checked:block md:!hidden fixed inset-0 bg-black/40 z-40"
+        />
+
+        {/* Sidebar — off-canvas on mobile, toggled by the checkbox above; always visible from md up */}
+        <aside className="w-64 md:w-56 fixed top-16 left-0 bottom-0 bg-slate-900 border-r border-slate-800 flex flex-col py-5 px-3 z-50 -translate-x-full peer-checked:translate-x-0 md:translate-x-0 transition-transform duration-200 ease-out">
           <div className="space-y-0.5 flex-1 overflow-y-auto pr-1">
             {visibleNavItems.map(({ icon: Icon, label, href, active, badge }) => (
               <Link
@@ -157,10 +174,10 @@ export default async function AdminDashboardPage() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="ml-56 flex-1 p-8">
+        <main className="md:ml-56 flex-1 p-4 sm:p-6 md:p-8 min-w-0">
 
           {/* Header */}
-          <div className="flex items-start justify-between mb-7">
+          <div className="flex items-start justify-between flex-wrap gap-3 mb-7">
             <div>
               <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">Command Centre</h1>
               <p className="text-xs text-slate-500">Live platform operations and moderation queues</p>

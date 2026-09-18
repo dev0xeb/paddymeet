@@ -74,13 +74,13 @@ export default async function AdminOrganisersPage({
     <div className="min-h-screen bg-gray-50">
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-gray-900 border-b border-gray-800">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 bg-gray-900 border-b border-gray-800">
         <div className="flex items-center gap-4">
           <Link href="/admin/dashboard" className="flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors">
             <ArrowLeft className="w-4 h-4" /> Dashboard
           </Link>
-          <div className="h-5 w-px bg-gray-700" />
-          <span className="text-xs font-bold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
+          <div className="hidden sm:block h-5 w-px bg-gray-700" />
+          <span className="hidden sm:inline-flex text-xs font-bold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
             Organisers Management
           </span>
         </div>
@@ -89,7 +89,7 @@ export default async function AdminOrganisersPage({
         </Link>
       </nav>
 
-      <div className="pt-16 max-w-6xl mx-auto px-6 py-8">
+      <div className="pt-16 max-w-6xl mx-auto px-4 sm:px-6 py-8">
 
         {/* Header */}
         <div className="flex items-start justify-between mb-6">

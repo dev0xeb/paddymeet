@@ -58,13 +58,13 @@ export default async function AdminOrganiserDetailPage({
     <div className="min-h-screen bg-gray-50">
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 bg-gray-900 border-b border-gray-800">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 bg-gray-900 border-b border-gray-800">
         <div className="flex items-center gap-4">
           <Link href="/admin/dashboard/organisers" className="flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors">
             <ArrowLeft className="w-4 h-4" /> Organisers
           </Link>
-          <div className="h-5 w-px bg-gray-700" />
-          <span className="text-xs font-bold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
+          <div className="hidden sm:block h-5 w-px bg-gray-700" />
+          <span className="hidden sm:inline-flex text-xs font-bold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
             Organiser Detail
           </span>
         </div>
@@ -73,8 +73,8 @@ export default async function AdminOrganiserDetailPage({
         </Link>
       </nav>
 
-      <div className="pt-16 max-w-5xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-3 gap-6">
+      <div className="pt-16 max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Left — profile */}
           <div className="space-y-5">
@@ -206,7 +206,7 @@ export default async function AdminOrganiserDetailPage({
           </div>
 
           {/* Right — events and transactions */}
-          <div className="col-span-2 space-y-5">
+          <div className="lg:col-span-2 space-y-5">
 
             {/* Events */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6">

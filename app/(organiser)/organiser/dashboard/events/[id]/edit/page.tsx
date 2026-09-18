@@ -119,7 +119,7 @@ export default function EditEventPage() {
         <div className="w-24" />
       </nav>
 
-      <div className="pt-16 max-w-3xl mx-auto px-6 py-8">
+      <div className="pt-16 max-w-3xl mx-auto px-4 sm:px-6 py-8">
 
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">Edit Event</h1>

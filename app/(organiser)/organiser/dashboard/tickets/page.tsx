@@ -155,7 +155,7 @@ export default async function OrganiserTicketsPage({
 
         {/* Orders table */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="grid grid-cols-5 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
+          <div className="hidden sm:grid grid-cols-5 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
             {['Event', 'Date', 'Amount', 'Service Fee', 'Status'].map(h => (
               <div key={h} className="text-xs font-bold text-gray-400 uppercase tracking-wider">{h}</div>
             ))}
@@ -166,7 +166,7 @@ export default async function OrganiserTicketsPage({
               {orders.map((order) => {
                 const eventTitle = getEventTitle(order.events)
                 return (
-                  <div key={order.id} className="grid grid-cols-5 gap-4 px-5 py-4 hover:bg-gray-50 transition-colors items-center">
+                  <div key={order.id} className="flex flex-col sm:grid sm:grid-cols-5 gap-2 sm:gap-4 px-5 py-4 hover:bg-gray-50 transition-colors sm:items-center">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                         {eventTitle.charAt(0)}
