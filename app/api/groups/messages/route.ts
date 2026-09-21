@@ -31,10 +31,21 @@ async function canAccessGroup(
 
   if (event?.organiser_id === userId) return true
 
-  if (group.group_type === 'squad') {
+  if (group.group_type === 'squad' || group.group_type === 'ticket') {
     // Array select, not .maybeSingle() — that errors (and reads as "no
     // access") if a group somehow ends up with more than one membership
     // row for the same user, which has happened in practice.
+    //
+    // 'ticket' groups (a shared table/group ticket) specifically must be
+    // checked this way rather than falling through to the ticket-ownership
+    // check below: a member of the group doesn't get an actual ticket
+    // issued until the whole table fills up, so checking for an active
+    // ticket here locked every member — including whoever started the
+    // table — out of their own group's chat the entire time they're still
+    // waiting on it to complete. This matches group_chat_access() in
+    // 004_group_messages_rls.sql, which already grants access to any
+    // group_members row here — this app-layer check had drifted from that
+    // RLS policy's own documented intent.
     const { data: membership } = await supabase
       .from('group_members')
       .select('id')
