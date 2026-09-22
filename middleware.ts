@@ -72,9 +72,16 @@ export async function middleware(request: NextRequest) {
   )
 
   try {
-    // 2-second timeout guard against Supabase Auth retry hangs
+    // Timeout guard against Supabase Auth retry hangs — getUser() always
+    // makes a real network round-trip to revalidate the session (that's
+    // what makes it safe to trust in SSR, unlike getSession()), so this
+    // needs real headroom for normal latency, not just protection against
+    // a truly hung request. This was previously 2 seconds, which any
+    // ordinary cold start or network blip could exceed — losing the race
+    // meant a logged-in user got treated as logged out and bounced to
+    // /login on literally any page reload, every time it happened.
     const userPromise = supabase.auth.getUser()
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000))
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000))
     const result: any = await Promise.race([userPromise, timeoutPromise])
 
     const user = result?.data?.user
