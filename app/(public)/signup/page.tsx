@@ -150,7 +150,6 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [captchaChecked, setCaptchaChecked] = useState(false)
   const [termsChecked, setTermsChecked] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
   const [formData, setFormData] = useState({
@@ -208,7 +207,7 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
 
   const step2Valid = !!(formData.state && formData.city)
   const step3Valid = selected.length > 0
-  const step4Valid = captchaChecked && termsChecked
+  const step4Valid = termsChecked
   const canSubmit = !!(step1Valid && step2Valid && step3Valid && step4Valid && !loading)
 
   const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 outline-none focus:border-orange-400 focus:bg-white transition-all"
@@ -478,20 +477,6 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
                 )}
               </div>
 
-              <div onClick={() => setCaptchaChecked(!captchaChecked)}
-                className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl mb-4 cursor-pointer hover:border-gray-300 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${captchaChecked ? 'bg-orange-500 border-orange-500' : 'border-gray-300 bg-white'}`}>
-                    {captchaChecked && <Check className="w-3 h-3 text-white" />}
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">I am not a robot</span>
-                </div>
-                <div className="text-xs text-gray-400 text-right">
-                  <div className="text-lg">🔒</div>
-                  <div>reCAPTCHA</div>
-                </div>
-              </div>
-
               <div onClick={() => setTermsChecked(!termsChecked)}
                 className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl mb-6 cursor-pointer hover:border-gray-300 transition-colors">
                 <div className={`w-4 h-4 rounded border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-all ${termsChecked ? 'bg-orange-500 border-orange-500' : 'border-gray-300 bg-white'}`}>
@@ -506,7 +491,6 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
                 </p>
               </div>
 
-              {!captchaChecked && <p className="text-xs text-red-400 mb-2">Please confirm you are not a robot</p>}
               {!termsChecked && <p className="text-xs text-red-400 mb-4">Please agree to the terms and privacy policy</p>}
               {error && <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 mb-4">{error}</div>}
 
