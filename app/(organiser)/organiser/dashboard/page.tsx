@@ -39,7 +39,7 @@ export default async function OrganiserDashboardPage() {
   const netEstimatedPayout = Math.max(0, totalRevenue - feeAmount)
   const totalTickets = orders?.length || 0
   const liveEvents = events?.filter(e => e.is_live && e.is_approved).length || 0
-  const pendingEvents = events?.filter(e => !e.is_approved).length || 0
+  const pendingEvents = events?.filter(e => !e.is_approved && !e.is_rejected).length || 0
 
   const statusConfig: Record<string, { label: string, color: string, icon: React.ElementType }> = {
     live: { label: 'Live', color: 'text-emerald-700 bg-emerald-50 border-emerald-200/80', icon: CheckCircle2 },
@@ -49,7 +49,8 @@ export default async function OrganiserDashboardPage() {
     ended: { label: 'Ended', color: 'text-slate-600 bg-slate-100 border-slate-200/80', icon: CheckCircle2 },
   }
 
-  const getEventStatus = (event: { is_approved: boolean, is_live: boolean }) => {
+  const getEventStatus = (event: { is_approved: boolean, is_live: boolean, is_rejected: boolean }) => {
+    if (event.is_rejected) return 'rejected'
     if (!event.is_approved) return 'pending'
     if (event.is_live) return 'live'
     return 'ended'
@@ -307,15 +308,22 @@ export default async function OrganiserDashboardPage() {
               {(events?.filter(e => !e.is_approved)?.length ?? 0) > 0 ? (
                 <div className="space-y-3">
                   {events?.filter(e => !e.is_approved).slice(0, 3).map((event) => (
-                    <div key={event.id} className="p-3.5 bg-amber-50/60 border border-amber-200/70 rounded-xl">
+                    <div key={event.id} className={`p-3.5 rounded-xl border ${event.is_rejected ? 'bg-rose-50/60 border-rose-200/70' : 'bg-amber-50/60 border-amber-200/70'}`}>
                       <div className="text-xs font-bold text-slate-900 truncate mb-1">{event.title}</div>
                       <div className="text-[11px] text-slate-500 mb-2">
                         Submitted {new Date(event.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700">
-                        <Clock className="w-3.5 h-3.5 animate-pulse" />
-                        Under review by PaddyMeet Ops
-                      </div>
+                      {event.is_rejected ? (
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-rose-700">
+                          <XCircle className="w-3.5 h-3.5" />
+                          Not approved — edit and resubmit
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700">
+                          <Clock className="w-3.5 h-3.5 animate-pulse" />
+                          Under review by PaddyMeet Ops
+                        </div>
+                      )}
                     </div>
                   ))}
                   <p className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100">

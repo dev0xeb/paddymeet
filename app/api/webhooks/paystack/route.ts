@@ -119,6 +119,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, warning: 'Ticket type not found' }, { status: 200 })
     }
 
+    // Same guard as /api/tickets/verify — this route independently mints
+    // tickets from Paystack's own notification, so it must not trust that
+    // the event was actually approved either.
+    const { data: eventForWebhook } = await adminClient
+      .from('events')
+      .select('is_approved, is_live')
+      .eq('id', event_id)
+      .single()
+
+    if (!eventForWebhook?.is_approved || !eventForWebhook?.is_live) {
+      console.error(`Webhook: event ${event_id} is not approved/live, reference ${reference}`)
+      return NextResponse.json({ received: true, warning: 'Event is not approved for ticket sales' }, { status: 200 })
+    }
+
     const { data: buyerProfile } = user_id
       ? await adminClient.from('users').select('referral_discount_percent, email').eq('id', user_id).single()
       : { data: null }

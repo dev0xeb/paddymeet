@@ -111,6 +111,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Ticket type not found' }, { status: 404 })
   }
 
+  // This is the route that actually mints tickets, so this check must live
+  // here too, not just in /api/tickets/reserve — a request can reach this
+  // point with a "res-soft-" reservation id that skipped the reserve step
+  // entirely. Nothing previously stopped a real payment from completing
+  // for an event admin moderation had never approved.
+  const { data: eventForVerify } = await supabase
+    .from('events')
+    .select('is_approved, is_live')
+    .eq('id', event_id)
+    .single()
+
+  if (!eventForVerify?.is_approved || !eventForVerify?.is_live) {
+    return NextResponse.json({ error: 'This event is not open for ticket sales yet.' }, { status: 400 })
+  }
+
   const { data: buyerProfile } = await supabase
     .from('users')
     .select('referral_discount_percent, email')

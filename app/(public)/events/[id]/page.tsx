@@ -4,6 +4,7 @@ import OpenGroupButton from '@/components/OpenGroupButton'
 import CreateGroupModal from '@/components/CreateGroupModal'
 import UserAvatarMenu from '@/components/UserAvatarMenu'
 import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { MapPin, Calendar, Clock, Users, ArrowLeft } from 'lucide-react'
@@ -38,7 +39,7 @@ export default async function EventDetailPage({
   // These don't depend on each other, so run them together instead of
   // one-at-a-time — this is the main content page, so the latency adds up.
   const [
-    { data: event },
+    { data: publicEvent },
     { data: profile },
     { data: mainGroup },
     { data: userTickets },
@@ -62,6 +63,29 @@ export default async function EventDetailPage({
       : Promise.resolve({ data: null }),
   ])
 
+  let event = publicEvent
+
+  // Not found as a public (approved) event — but an admin previewing a
+  // pending event from the moderation queue, or the organiser previewing
+  // their own not-yet-approved event, still needs to see it. This is what
+  // the admin dashboard's "Preview" button links to, which was 404ing on
+  // every pending event since this query only ever looked for approved
+  // ones.
+  if (!event && user) {
+    const adminClient = createAdminClient()
+    const [{ data: admin }, { data: rawEvent }] = await Promise.all([
+      adminClient.from('admin_team').select('id').eq('id', user.id).maybeSingle(),
+      adminClient
+        .from('events')
+        .select('*, ticket_types(*), organisers(org_name, contact_name)')
+        .eq('id', id)
+        .maybeSingle(),
+    ])
+    if (rawEvent && (admin || rawEvent.organiser_id === user.id)) {
+      event = rawEvent
+    }
+  }
+
   if (!event) notFound()
 
   // Get group member count
@@ -82,6 +106,7 @@ export default async function EventDetailPage({
   // Check if user has a ticket or is the organiser
   const isOrganiser = user && event.organiser_id === user.id
   const hasAccess = (userTickets?.length ?? 0) > 0 || !!isOrganiser
+  const isPreviewOnly = !event.is_approved || !event.is_live
 
   const referralDiscount = userProfile?.referral_discount_percent || 0
   const userData = user ? { id: user.id, email: user.email || '', referral_discount_percent: referralDiscount } : null
@@ -229,14 +254,23 @@ export default async function EventDetailPage({
             {event.ticket_types && event.ticket_types.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
                 <h2 className="text-base font-extrabold text-gray-900 mb-4">Tickets</h2>
+                {isPreviewOnly && (
+                  <div className="flex items-start gap-2.5 p-3.5 bg-amber-50 border border-amber-200 rounded-xl mb-4">
+                    <Clock className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-700 leading-relaxed">
+                      This is a preview — the event isn&apos;t approved and live yet, so ticket purchases are disabled here.
+                    </p>
+                  </div>
+                )}
                 <div className="space-y-3">
                   {event.ticket_types.map((ticket: TicketType) => {
                     const available = ticket.quantity - (ticket.quantity_sold || 0)
                     const soldOut = available <= 0
+                    const canPurchase = !soldOut && !isPreviewOnly
                     return (
                       <div
                         key={ticket.id}
-                        className={`border-2 rounded-2xl p-4 md:p-5 transition-all ${soldOut ? 'border-gray-100 bg-gray-50 opacity-60' : 'border-gray-200 hover:border-orange-300'}`}
+                        className={`border-2 rounded-2xl p-4 md:p-5 transition-all ${!canPurchase ? 'border-gray-100 bg-gray-50 opacity-60' : 'border-gray-200 hover:border-orange-300'}`}
                       >
                         <div className="flex items-start justify-between gap-4 mb-2">
                           <div className="flex-1">
@@ -272,7 +306,7 @@ export default async function EventDetailPage({
                           <span className={`text-xs font-semibold ${available < 20 && !soldOut ? 'text-orange-500' : 'text-gray-400'}`}>
                             {soldOut ? 'No tickets left' : available < 20 ? `Only ${available} left` : `${available} available`}
                           </span>
-                          {!soldOut && (
+                          {canPurchase && (
                             userData ? (
                               <BuyTicketButton
                                 event={eventData}

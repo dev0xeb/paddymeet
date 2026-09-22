@@ -30,6 +30,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Ticket type not found' }, { status: 404 })
     }
 
+    // Reject reservations for an event that isn't actually approved and
+    // live yet — nothing stopped this before, so anyone who knew a pending
+    // event's id could hold (and, via /api/tickets/verify, actually buy) a
+    // ticket for an event admin moderation hadn't approved at all.
+    const { data: eventForReserve } = await adminClient
+      .from('events')
+      .select('is_approved, is_live')
+      .eq('id', event_id)
+      .single()
+
+    if (!eventForReserve?.is_approved || !eventForReserve?.is_live) {
+      return NextResponse.json({ error: 'This event is not open for ticket sales yet.' }, { status: 400 })
+    }
+
     const now = new Date().toISOString()
 
     // 2. Query active pending reservations (not expired)
