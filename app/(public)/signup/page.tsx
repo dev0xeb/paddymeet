@@ -155,7 +155,7 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<string[]>([])
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '',
-    age: 0, username: '', password: '', gender: '',
+    age: 0, username: '', password: '', confirmPassword: '', gender: '',
     state: '', city: '', referralCode: '',
   })
 
@@ -199,11 +199,12 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
 
   const pwChecks = validatePassword(formData.password)
   const passwordValid = pwChecks.minLength && pwChecks.hasNumber && pwChecks.hasSpecial
+  const passwordsMatch = formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword
   const phoneValid = validatePhone(formData.phone)
 
   const step1Valid = !!(formData.firstName && formData.lastName && formData.email &&
     formData.phone && phoneValid && formData.age > 0 && formData.username &&
-    passwordValid && formData.gender)
+    passwordValid && passwordsMatch && formData.gender)
 
   const step2Valid = !!(formData.state && formData.city)
   const step3Valid = selected.length > 0
@@ -340,6 +341,20 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Password <span className="text-red-400">*</span></label>
                 <input type="password" placeholder="Min. 8 characters" value={formData.password} onChange={e => update('password', e.target.value)} className={inputClass} />
                 <PasswordStrength password={formData.password} />
+              </div>
+
+              <div className="mb-8">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Confirm Password <span className="text-red-400">*</span></label>
+                <input
+                  type="password"
+                  placeholder="Re-enter your password"
+                  value={formData.confirmPassword}
+                  onChange={e => update('confirmPassword', e.target.value)}
+                  className={inputClass + (formData.confirmPassword && !passwordsMatch ? ' border-red-300 focus:border-red-400' : '')}
+                />
+                {formData.confirmPassword && !passwordsMatch && (
+                  <p className="text-xs text-red-500 font-medium mt-1.5">Passwords do not match</p>
+                )}
               </div>
 
               <div className="mb-8">
@@ -524,7 +539,7 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<string[]>([])
   const [formData, setFormData] = useState({
     orgName: '', contactName: '', role: '', email: '',
-    phone: '', password: '', website: '', description: '',
+    phone: '', password: '', confirmPassword: '', website: '', description: '',
   })
 
   const update = (field: string, value: string) =>
@@ -538,10 +553,11 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
 
   const pwChecks = validatePassword(formData.password)
   const passwordValid = pwChecks.minLength && pwChecks.hasNumber && pwChecks.hasSpecial
+  const passwordsMatch = formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword
   const phoneValid = validatePhone(formData.phone)
 
   const formValid = !!(formData.orgName && formData.contactName && formData.role &&
-    formData.email && formData.phone && phoneValid && passwordValid &&
+    formData.email && formData.phone && phoneValid && passwordValid && passwordsMatch &&
     formData.description && selected.length > 0 && termsChecked)
 
   const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 outline-none focus:border-blue-400 focus:bg-white transition-all"
@@ -653,6 +669,20 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Password <span className="text-red-400">*</span></label>
                 <input type="password" placeholder="Min. 8 characters" value={formData.password} onChange={e => update('password', e.target.value)} className={inputClass} />
                 <PasswordStrength password={formData.password} />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Confirm Password <span className="text-red-400">*</span></label>
+                <input
+                  type="password"
+                  placeholder="Re-enter your password"
+                  value={formData.confirmPassword}
+                  onChange={e => update('confirmPassword', e.target.value)}
+                  className={inputClass + (formData.confirmPassword && !passwordsMatch ? ' border-red-300 focus:border-red-400' : '')}
+                />
+                {formData.confirmPassword && !passwordsMatch && (
+                  <p className="text-xs text-red-500 font-medium mt-1.5">Passwords do not match</p>
+                )}
               </div>
 
               <div className="mb-4">
