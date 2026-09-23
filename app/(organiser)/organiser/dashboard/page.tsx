@@ -27,17 +27,23 @@ export default async function OrganiserDashboardPage() {
   const netPayoutPercent = Math.max(0, 100 - platformFeePercent)
 
   const eventIds = events?.map(e => e.id) || []
+  // Fetch every completed order, not just a handful — this feeds the
+  // Gross Revenue / Tickets Sold / Estimated Payout totals, which need
+  // the real all-time sum. A "recent orders" list further down the page
+  // just takes the first few of this same set instead of running its own
+  // separately-limited query.
   const { data: orders } = await supabase
     .from('orders')
     .select('*')
     .in('event_id', eventIds.length > 0 ? eventIds : ['00000000-0000-0000-0000-000000000000'])
+    .eq('payment_status', 'completed')
     .order('created_at', { ascending: false })
-    .limit(5)
 
   const totalRevenue = orders?.reduce((sum, o) => sum + (Number(o.total_paid) || 0), 0) || 0
   const feeAmount = totalRevenue * (platformFeePercent / 100)
   const netEstimatedPayout = Math.max(0, totalRevenue - feeAmount)
   const totalTickets = orders?.length || 0
+  const recentOrders = orders?.slice(0, 5) || []
   const liveEvents = events?.filter(e => e.is_live && e.is_approved).length || 0
   const pendingEvents = events?.filter(e => !e.is_approved && !e.is_rejected).length || 0
 
@@ -45,7 +51,7 @@ export default async function OrganiserDashboardPage() {
     live: { label: 'Live', color: 'text-emerald-700 bg-emerald-50 border-emerald-200/80', icon: CheckCircle2 },
     pending: { label: 'Pending Approval', color: 'text-amber-700 bg-amber-50 border-amber-200/80', icon: Clock },
     review: { label: 'In Review', color: 'text-blue-700 bg-blue-50 border-blue-200/80', icon: Eye },
-    rejected: { label: 'Changes Requested', color: 'text-rose-700 bg-rose-50 border-rose-200/80', icon: XCircle },
+    rejected: { label: 'Rejected', color: 'text-rose-700 bg-rose-50 border-rose-200/80', icon: XCircle },
     ended: { label: 'Ended', color: 'text-slate-600 bg-slate-100 border-slate-200/80', icon: CheckCircle2 },
   }
 
@@ -259,9 +265,9 @@ export default async function OrganiserDashboardPage() {
                 </Link>
               </div>
 
-              {orders && orders.length > 0 ? (
+              {recentOrders.length > 0 ? (
                 <div className="divide-y divide-slate-100">
-                  {orders.map((order) => (
+                  {recentOrders.map((order) => (
                     <div key={order.id} className="flex items-center justify-between py-3 px-2">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
@@ -316,7 +322,7 @@ export default async function OrganiserDashboardPage() {
                       {event.is_rejected ? (
                         <div className="flex items-center gap-1.5 text-xs font-medium text-rose-700">
                           <XCircle className="w-3.5 h-3.5" />
-                          Not approved — edit and resubmit
+                          Rejected — please submit a new event
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700">
