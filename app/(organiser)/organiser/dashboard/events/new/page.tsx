@@ -208,13 +208,13 @@ export default function SubmitEventPage() {
 
         {/* Step 1 — Event Info */}
         {step === 1 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+          <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
 
             {/* Cover image upload */}
             <div>
               <label className={labelClass}>Cover image</label>
               {imagePreview ? (
-                <div className="relative rounded-2xl overflow-hidden h-48">
+                <div className="relative rounded-xl overflow-hidden h-48">
                   <Image src={imagePreview} alt="Cover preview" fill className="object-cover" />
                   <button
                     onClick={() => { setImageFile(null); setImagePreview('') }}
@@ -227,8 +227,8 @@ export default function SubmitEventPage() {
                   </div>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-orange-300 hover:bg-orange-50/50 transition-all">
-                  <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">
+                <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-orange-300 hover:bg-orange-50/50 transition-all">
+                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
                     <ImageIcon className="w-5 h-5 text-gray-400" />
                   </div>
                   <div className="text-sm font-bold text-gray-600 mb-1">Upload cover image</div>
@@ -306,7 +306,7 @@ export default function SubmitEventPage() {
 
         {/* Step 2 — Date & Venue */}
         {step === 2 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+          <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Event date <span className="text-red-400">*</span></label>
@@ -372,7 +372,7 @@ export default function SubmitEventPage() {
 
         {/* Step 3 — Tickets */}
         {step === 3 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+          <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
             <div onClick={() => update('is_free', !eventData.is_free)}
               className={`flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all ${eventData.is_free ? 'border-green-300 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
               <div>
@@ -465,7 +465,7 @@ export default function SubmitEventPage() {
 
         {/* Step 4 — Final Details */}
         {step === 4 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+          <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
 
             <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-100 rounded-xl">
               <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />

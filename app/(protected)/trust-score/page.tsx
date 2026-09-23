@@ -115,7 +115,7 @@ export default async function TrustScorePage() {
         </div>
 
         {/* Hero Score Meter */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-slate-900/10 mb-8 border border-slate-700">
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl__TMP__ p-6 sm:p-8 text-white shadow-xl shadow-slate-900/10 mb-8 border border-slate-700">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             
             <div className="space-y-2">
@@ -130,7 +130,7 @@ export default async function TrustScorePage() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center justify-center p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 self-start sm:self-auto min-w-[140px]">
+            <div className="flex flex-col items-center justify-center p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 self-start sm:self-auto min-w-[140px]">
               <div className="text-4xl sm:text-5xl font-extrabold tracking-tight text-orange-400">
                 {trustScore}
               </div>
@@ -157,7 +157,7 @@ export default async function TrustScorePage() {
         </div>
 
         {/* Score Composition Breakdown */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 mb-8 space-y-6">
+        <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 mb-8 space-y-6">
           <div>
             <h3 className="text-base font-extrabold text-slate-900 mb-1">Score Composition Breakdown</h3>
             <p className="text-xs text-slate-500">How your {trustScore} points are calculated in real time</p>
@@ -165,7 +165,7 @@ export default async function TrustScorePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
-            <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50 flex items-start gap-3.5">
+            <div className="p-4 rounded-xl border border-slate-100 bg-slate-50 flex items-start gap-3.5">
               <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 font-bold text-xs">
                 +{identityPts}
               </div>
@@ -178,7 +178,7 @@ export default async function TrustScorePage() {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50 flex items-start gap-3.5">
+            <div className="p-4 rounded-xl border border-slate-100 bg-slate-50 flex items-start gap-3.5">
               <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 font-bold text-xs">
                 +{attendancePts}
               </div>
@@ -191,7 +191,7 @@ export default async function TrustScorePage() {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50 flex items-start gap-3.5">
+            <div className="p-4 rounded-xl border border-slate-100 bg-slate-50 flex items-start gap-3.5">
               <div className="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center flex-shrink-0 font-bold text-xs">
                 +{tableReliabilityPts}
               </div>
@@ -204,7 +204,7 @@ export default async function TrustScorePage() {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50 flex items-start gap-3.5">
+            <div className="p-4 rounded-xl border border-slate-100 bg-slate-50 flex items-start gap-3.5">
               <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0 font-bold text-xs">
                 +{communityPts}
               </div>
@@ -221,7 +221,7 @@ export default async function TrustScorePage() {
         </div>
 
         {/* Tier Roadmap & Privilege Unlocks */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8">
+        <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8">
           <h3 className="text-base font-extrabold text-slate-900 mb-1">Tier Roadmap & Perks</h3>
           <p className="text-xs text-slate-500 mb-6">Unlock exclusive platform privileges as your score increases</p>
 
@@ -260,7 +260,7 @@ export default async function TrustScorePage() {
             ].map((t) => (
               <div
                 key={t.tier}
-                className={`p-4 rounded-2xl border flex items-center justify-between gap-4 transition-all ${
+                className={`p-4 rounded-xl border flex items-center justify-between gap-4 transition-all ${
                   t.current
                     ? 'border-orange-500 bg-orange-50/20 ring-1 ring-orange-500/20'
                     : t.unlocked

@@ -104,7 +104,7 @@ export default async function OrganiserDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           
           {/* Revenue */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Gross Revenue</span>
               <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-emerald-400 shadow-sm">
@@ -120,7 +120,7 @@ export default async function OrganiserDashboardPage() {
           </div>
 
           {/* Tickets Sold */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Tickets Sold</span>
               <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-blue-400 shadow-sm">
@@ -136,7 +136,7 @@ export default async function OrganiserDashboardPage() {
           </div>
 
           {/* Live Events */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Active Events</span>
               <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-orange-400 shadow-sm">
@@ -152,7 +152,7 @@ export default async function OrganiserDashboardPage() {
           </div>
 
           {/* Pending Approval */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Pending Review</span>
               <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-amber-400 shadow-sm">
@@ -175,7 +175,7 @@ export default async function OrganiserDashboardPage() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* My Events Widget */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+            <div className="bg-white border border-slate-200/80 rounded-xl p-5 sm:p-6 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
               <div className="flex items-center justify-between mb-5">
                 <div>
                   <h2 className="text-base font-bold text-slate-900 tracking-tight">My Events</h2>
@@ -251,7 +251,7 @@ export default async function OrganiserDashboardPage() {
             </div>
 
             {/* Recent Orders / Transactions Widget */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+            <div className="bg-white border border-slate-200/80 rounded-xl p-5 sm:p-6 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
               <div className="flex items-center justify-between mb-5">
                 <div>
                   <h2 className="text-base font-bold text-slate-900 tracking-tight">Recent Ticket Sales</h2>
@@ -301,7 +301,7 @@ export default async function OrganiserDashboardPage() {
           <div className="space-y-6">
 
             {/* Moderation / Status Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+            <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-slate-900">Event Moderation</h3>
                 {pendingEvents > 0 && (
@@ -348,7 +348,7 @@ export default async function OrganiserDashboardPage() {
             </div>
 
             {/* Payout Overview Card */}
-            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-2xl p-5 text-white shadow-md relative overflow-hidden border border-slate-800">
+            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-xl p-5 text-white shadow-md relative overflow-hidden border border-slate-800">
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Estimated Payout</span>
@@ -384,7 +384,7 @@ export default async function OrganiserDashboardPage() {
             </div>
 
             {/* Quick Actions Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+            <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
               <h3 className="text-sm font-bold text-slate-900 mb-3">Quick Navigation</h3>
               <div className="space-y-1">
                 {[

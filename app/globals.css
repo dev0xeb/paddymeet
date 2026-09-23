@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* DM Sans is loaded via next/font (app/fonts.ts) and exposed as --font-body
+   on <html>, but nothing outside the homepage (.pm-page, styled separately
+   in landing.css) ever applied it — every other page, including both
+   dashboards, was silently falling back to the browser's default sans
+   stack the whole time. This makes DM Sans the site-wide default. */
+@theme inline {
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+}
+
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }

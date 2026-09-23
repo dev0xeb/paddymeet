@@ -116,13 +116,13 @@ export default async function TicketsPage() {
               return (
                 <div
                   key={ticket.id}
-                  className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-orange-300 transition-all overflow-hidden p-6"
+                  className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-orange-300 transition-all overflow-hidden p-6"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     
                     {/* Left Event Info */}
                     <div className="flex items-start gap-4 min-w-0 flex-1">
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-center flex-shrink-0 shadow-md border border-slate-700">
+                      <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-center flex-shrink-0 shadow-md border border-slate-700">
                         <span className="text-[11px] font-bold text-orange-400 uppercase tracking-wider">
                           {event?.event_date ? new Date(event.event_date).toLocaleDateString('en-GB', { month: 'short' }) : 'TBD'}
                         </span>
@@ -198,8 +198,8 @@ export default async function TicketsPage() {
             })}
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center mb-10 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
-            <div className="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-4 text-orange-600">
+          <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 p-12 text-center mb-10 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+            <div className="w-16 h-16 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-4 text-orange-600">
               <Ticket className="w-8 h-8" />
             </div>
             <h3 className="text-base font-bold text-slate-900 mb-1">No Active Digital Passes</h3>
@@ -225,7 +225,7 @@ export default async function TicketsPage() {
               {pastTickets.map((ticket) => (
                 <div
                   key={ticket.id}
-                  className="bg-white rounded-2xl border border-slate-200/70 p-4 flex items-center justify-between gap-4 opacity-75 hover:opacity-100 transition-opacity"
+                  className="bg-white rounded-xl border border-slate-200/70 p-4 flex items-center justify-between gap-4 opacity-75 hover:opacity-100 transition-opacity"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm flex-shrink-0">

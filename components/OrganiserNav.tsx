@@ -128,7 +128,7 @@ export default function OrganiserNav({ orgName, contactName }: Props) {
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl border border-slate-200/80 shadow-2xl overflow-hidden z-[100]">
+            <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-xl border border-slate-200/80 shadow-2xl overflow-hidden z-[100]">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <span className="text-sm font-bold text-gray-900">Notifications</span>
                 <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ export default function OrganiserNav({ orgName, contactName }: Props) {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl border border-slate-200/80 shadow-2xl overflow-hidden z-[100]">
+            <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-xl border border-slate-200/80 shadow-2xl overflow-hidden z-[100]">
               <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/70">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">

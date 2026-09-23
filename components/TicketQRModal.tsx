@@ -68,7 +68,7 @@ export default function TicketQRModal({ ticketCode, eventTitle, ticketTypeName, 
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
 
-          <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-sm bg-white rounded-xl__TMP__ shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
               <h2 className="text-sm font-extrabold text-gray-900">Your Ticket</h2>
               <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
@@ -77,7 +77,7 @@ export default function TicketQRModal({ ticketCode, eventTitle, ticketTypeName, 
             </div>
 
             <div className="p-6">
-              <div className="bg-white rounded-2xl overflow-hidden border-2 border-gray-100 mb-4">
+              <div className="bg-white rounded-xl overflow-hidden border-2 border-gray-100 mb-4">
                 <div className="bg-gradient-to-br from-orange-500 to-pink-500 px-5 py-4 text-center">
                   <div className="text-base font-extrabold text-white tracking-tight">
                     <Logo theme="white" className="h-6 w-auto" />
@@ -90,7 +90,7 @@ export default function TicketQRModal({ ticketCode, eventTitle, ticketTypeName, 
                     <div className="text-xs font-bold text-orange-500 mb-3">Attendee: {attendeeName}</div>
                   )}
 
-                  <div className="bg-white border-2 border-gray-100 rounded-2xl p-3 inline-block mb-3">
+                  <div className="bg-white border-2 border-gray-100 rounded-xl p-3 inline-block mb-3">
                     {qrDataUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={qrDataUrl} alt="Ticket QR Code" className="w-52 h-52" />

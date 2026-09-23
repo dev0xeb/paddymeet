@@ -117,25 +117,25 @@ export default async function MyGroupsPage() {
         {/* Telemetry Stats Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+          <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Active Squads</div>
             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{activeSquads.length}</div>
             <div className="text-[11px] text-purple-600 font-medium mt-1">Live table groups</div>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+          <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Pending Shares</div>
             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{pendingPayments.length}</div>
             <div className="text-[11px] text-amber-600 font-medium mt-1">Awaiting checkout</div>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+          <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Secured Tables</div>
             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{completedSquads.length}</div>
             <div className="text-[11px] text-emerald-600 font-medium mt-1">100% paid & confirmed</div>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+          <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Trust Rating</div>
             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{profile?.trust_score || 50}</div>
             <div className="text-[11px] text-blue-600 font-medium mt-1">{profile?.tier || 'Explorer'} Tier</div>
@@ -163,13 +163,13 @@ export default async function MyGroupsPage() {
               return (
                 <div
                   key={membership.id}
-                  className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-purple-200 transition-all p-6"
+                  className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-purple-200 transition-all p-6"
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     
                     {/* Left: Squad & Event Info */}
                     <div className="flex items-start gap-4 min-w-0 flex-1">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white font-extrabold text-lg flex items-center justify-center flex-shrink-0 shadow-md shadow-purple-600/20">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white font-extrabold text-lg flex items-center justify-center flex-shrink-0 shadow-md shadow-purple-600/20">
                         {group?.name?.charAt(0)?.toUpperCase() || 'S'}
                       </div>
 
@@ -239,8 +239,8 @@ export default async function MyGroupsPage() {
             })}
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center mb-10 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
-            <div className="w-16 h-16 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center mx-auto mb-4 text-purple-600">
+          <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 p-12 text-center mb-10 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+            <div className="w-16 h-16 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center mx-auto mb-4 text-purple-600">
               <Users className="w-8 h-8" />
             </div>
             <h3 className="text-base font-bold text-slate-900 mb-1">No Squad Groups Yet</h3>

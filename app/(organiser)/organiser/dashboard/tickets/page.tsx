@@ -116,7 +116,7 @@ export default async function OrganiserTicketsPage({
             { label: 'Net revenue', value: `₦${(netRevenue / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'orange' },
             { label: 'Total orders', value: (allOrders?.length ?? 0).toLocaleString(), icon: Users, color: 'purple' },
           ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5">
+            <div key={label} className="bg-white border border-gray-100 rounded-xl p-5">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${
                 color === 'blue' ? 'bg-blue-50' :
                 color === 'green' ? 'bg-green-50' :
@@ -154,7 +154,7 @@ export default async function OrganiserTicketsPage({
         </div>
 
         {/* Orders table */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
           <div className="hidden sm:grid grid-cols-5 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
             {['Event', 'Date', 'Amount', 'Service Fee', 'Status'].map(h => (
               <div key={h} className="text-xs font-bold text-gray-400 uppercase tracking-wider">{h}</div>
@@ -200,7 +200,7 @@ export default async function OrganiserTicketsPage({
             </div>
           ) : (
             <div className="text-center py-12">
-              <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Ticket className="w-5 h-5 text-gray-300" />
               </div>
               <p className="text-sm font-semibold text-gray-400 mb-1">No sales yet</p>

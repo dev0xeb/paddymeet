@@ -73,7 +73,7 @@ export default async function OrganiserManageEventPage({
 
         {/* Event hero */}
         <div
-          className={`h-40 rounded-2xl relative mb-6 overflow-hidden ${event.cover_image_url ? '' : `bg-gradient-to-br ${gradient}`}`}
+          className={`h-40 rounded-xl relative mb-6 overflow-hidden ${event.cover_image_url ? '' : `bg-gradient-to-br ${gradient}`}`}
           style={event.cover_image_url ? { backgroundImage: `url(${event.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -103,7 +103,7 @@ export default async function OrganiserManageEventPage({
 
         {/* Pending notice */}
         {!event.is_approved && (
-          <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-200 rounded-2xl mb-6">
+          <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-200 rounded-xl mb-6">
             <Clock className="w-5 h-5 text-orange-500 flex-shrink-0" />
             <div>
               <div className="text-sm font-bold text-orange-700">Awaiting Paddymeet review</div>
@@ -120,7 +120,7 @@ export default async function OrganiserManageEventPage({
             { label: 'Attended', value: attended, icon: Users, color: 'orange' },
             { label: 'Ticket types', value: event.ticket_types?.length || 0, icon: Edit, color: 'purple' },
           ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-white border border-gray-100 rounded-2xl p-4 md:p-5">
+            <div key={label} className="bg-white border border-gray-100 rounded-xl p-4 md:p-5">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${
                 color === 'blue' ? 'bg-blue-50' :
                 color === 'green' ? 'bg-green-50' :
@@ -144,7 +144,7 @@ export default async function OrganiserManageEventPage({
           <div className="lg:col-span-2 space-y-5">
 
             {/* Event info */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <div className="bg-white rounded-xl border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-extrabold text-gray-900">Event Details</h2>
               </div>
@@ -171,7 +171,7 @@ export default async function OrganiserManageEventPage({
 
             {/* Ticket types */}
             {event.ticket_types && event.ticket_types.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+              <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <h2 className="text-sm font-extrabold text-gray-900 mb-4">Ticket Types</h2>
                 <div className="space-y-3">
                   {event.ticket_types.map((t: { id: string, name: string, price: number, quantity: number, quantity_sold: number, description: string }) => (
@@ -194,7 +194,7 @@ export default async function OrganiserManageEventPage({
             )}
 
             {/* Recent attendees */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <div className="bg-white rounded-xl border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <div>
                   <h2 className="text-sm font-extrabold text-gray-900">Recent Attendees</h2>
@@ -255,7 +255,7 @@ export default async function OrganiserManageEventPage({
 
             {/* Description */}
             {event.description && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <div className="bg-white rounded-xl border border-gray-100 p-5">
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Description</h2>
                 <p className="text-xs text-gray-600 leading-relaxed">{event.description}</p>
               </div>
@@ -263,7 +263,7 @@ export default async function OrganiserManageEventPage({
 
             {/* Cancellation policy */}
             {event.cancellation_policy && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <div className="bg-white rounded-xl border border-gray-100 p-5">
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Cancellation Policy</h2>
                 <p className="text-xs text-gray-600 leading-relaxed">{event.cancellation_policy}</p>
               </div>
@@ -271,7 +271,7 @@ export default async function OrganiserManageEventPage({
 
             {/* House rules */}
             {event.house_rules && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <div className="bg-white rounded-xl border border-gray-100 p-5">
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">House Rules</h2>
                 <p className="text-xs text-gray-600 leading-relaxed">{event.house_rules}</p>
               </div>
@@ -279,7 +279,7 @@ export default async function OrganiserManageEventPage({
 
             {/* Links */}
             {(event.website || event.social_link) && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <div className="bg-white rounded-xl border border-gray-100 p-5">
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Links</h2>
                 <div className="space-y-2">
                   {event.website && (
@@ -293,7 +293,7 @@ export default async function OrganiserManageEventPage({
             )}
 
             {/* Gate scanner passkey */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="bg-white rounded-xl border border-gray-100 p-5">
               <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Gate Scanner Passkey</h2>
               {event.scanner_passkey ? (
                 <>
@@ -306,7 +306,7 @@ export default async function OrganiserManageEventPage({
             </div>
 
             {/* Quick links */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="bg-white rounded-xl border border-gray-100 p-5">
               <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Quick Links</h2>
               <div className="space-y-2">
                 {[

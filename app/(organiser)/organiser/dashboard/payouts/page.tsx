@@ -64,7 +64,7 @@ export default async function OrganiserPayoutsPage() {
 
         {/* Bank details warning */}
         {!hasBankDetails && (
-          <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-200 rounded-2xl mb-6">
+          <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-200 rounded-xl mb-6">
             <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="text-sm font-bold text-orange-700 mb-1">Add your bank details to receive payouts</div>
@@ -84,7 +84,7 @@ export default async function OrganiserPayoutsPage() {
             { label: 'Total paid out', value: `₦${(totalPaid / 1000).toFixed(1)}k`, icon: CheckCircle, color: 'blue', desc: 'All time payouts' },
             { label: 'Net revenue', value: `₦${(netRevenue / 1000).toFixed(1)}k`, icon: ArrowUpRight, color: 'purple', desc: 'After all fees' },
           ].map(({ label, value, icon: Icon, color, desc }) => (
-            <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5">
+            <div key={label} className="bg-white border border-gray-100 rounded-xl p-5">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${
                 color === 'blue' ? 'bg-blue-50' :
                 color === 'green' ? 'bg-green-50' : 'bg-purple-50'
@@ -105,7 +105,7 @@ export default async function OrganiserPayoutsPage() {
 
           {/* Payout history */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100">
                 <h2 className="text-sm font-extrabold text-gray-900">Payout History</h2>
               </div>
@@ -160,7 +160,7 @@ export default async function OrganiserPayoutsPage() {
           <div className="space-y-5">
 
             {/* Bank details */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="bg-white rounded-xl border border-gray-100 p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Building2 className="w-4 h-4 text-blue-500" />
                 <h2 className="text-sm font-extrabold text-gray-900">Bank Details</h2>
@@ -200,7 +200,7 @@ export default async function OrganiserPayoutsPage() {
             </div>
 
             {/* Payout schedule */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="bg-white rounded-xl border border-gray-100 p-5">
               <h2 className="text-sm font-extrabold text-gray-900 mb-4">Payout Schedule</h2>
               <div className="space-y-3 text-xs text-gray-600 leading-relaxed">
                 <div className="flex items-start gap-2">

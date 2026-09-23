@@ -150,7 +150,7 @@ export default function QRScanner({ events }: Props) {
     <div className="space-y-5">
       {/* Event selector */}
       {events.length > 1 && (
-        <div className="bg-white border border-gray-100 rounded-2xl p-5">
+        <div className="bg-white border border-gray-100 rounded-xl p-5">
           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Scanning for event</label>
           <select
             value={selectedEventId}
@@ -168,13 +168,13 @@ export default function QRScanner({ events }: Props) {
       )}
 
       {events.length === 0 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 text-sm text-orange-700">
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 text-sm text-orange-700">
           You have no live events. Approve and publish an event first before scanning tickets.
         </div>
       )}
 
       {/* Scanner */}
-      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
         {/* Camera view */}
         {scanning && (
           <div className="relative aspect-video bg-black">
@@ -182,7 +182,7 @@ export default function QRScanner({ events }: Props) {
             <canvas ref={canvasRef} className="hidden" />
             {/* Scan frame overlay */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-56 h-56 border-2 border-white rounded-2xl opacity-70" />
+              <div className="w-56 h-56 border-2 border-white rounded-xl opacity-70" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56">
                 <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-orange-400 rounded-tl-xl" />
                 <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-orange-400 rounded-tr-xl" />
@@ -205,7 +205,7 @@ export default function QRScanner({ events }: Props) {
         <div className="p-5">
           {/* Scan result */}
           {result && (
-            <div className={`border-2 rounded-2xl p-5 mb-5 ${resultConfig[result.status].bg}`}>
+            <div className={`border-2 rounded-xl p-5 mb-5 ${resultConfig[result.status].bg}`}>
               <div className="flex items-center gap-3 mb-3">
                 <div className={`w-10 h-10 rounded-xl ${resultConfig[result.status].iconBg} flex items-center justify-center flex-shrink-0`}>
                   {(() => {
@@ -323,7 +323,7 @@ export default function QRScanner({ events }: Props) {
       </div>
 
       {/* Instructions */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-5">
+      <div className="bg-white border border-gray-100 rounded-xl p-5">
         <h3 className="text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-3">How it works</h3>
         <div className="space-y-2 text-xs text-gray-500">
           <div className="flex items-start gap-2">

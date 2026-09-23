@@ -81,7 +81,7 @@ export default async function OrganiserEventsPage({
             { label: 'Total events', value: totalCount ?? 0, color: 'blue', filter: 'all' },
           ].map(({ label, value, color, filter: f }) => (
             <Link key={label} href={`/organiser/dashboard/events?filter=${f}`}
-              className={`bg-white border-2 rounded-2xl p-4 md:p-5 transition-all hover:shadow-sm ${
+              className={`bg-white border-2 rounded-xl p-4 md:p-5 transition-all hover:shadow-sm ${
                 filter === f
                   ? color === 'green' ? 'border-green-300' :
                     color === 'orange' ? 'border-orange-300' : 'border-blue-300'
@@ -121,7 +121,7 @@ export default async function OrganiserEventsPage({
               const status = getStatus(event)
               const StatusIcon = status.icon
               return (
-                <div key={event.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all">
+                <div key={event.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all">
                   <div className="flex items-start gap-3 md:gap-5 p-4 md:p-5">
 
                     {/* Thumbnail */}
@@ -193,8 +193,8 @@ export default async function OrganiserEventsPage({
             })}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center">
-            <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
+          <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
+            <div className="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
               <Calendar className="w-6 h-6 text-gray-300" />
             </div>
             <h3 className="text-base font-bold text-gray-700 mb-2">

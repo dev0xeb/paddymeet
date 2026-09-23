@@ -110,7 +110,7 @@ export default async function ReferralsPage() {
         </div>
 
         {/* Referral Code Hero Card */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-slate-900/10 mb-8 border border-slate-700">
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl__TMP__ p-6 sm:p-8 text-white shadow-xl shadow-slate-900/10 mb-8 border border-slate-700">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             
             <div>
@@ -126,7 +126,7 @@ export default async function ReferralsPage() {
             </div>
 
             <div className="flex flex-col items-stretch sm:items-end gap-3 flex-shrink-0">
-              <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10">
+              <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/10">
                 <div className="text-[10px] text-slate-300 uppercase font-semibold">Your Referral Code</div>
                 <div className="text-lg font-mono font-extrabold text-orange-400 tracking-wider">
                   {referralCode}
@@ -144,7 +144,7 @@ export default async function ReferralsPage() {
         {/* Live Metrics Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
           
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Friends</span>
               <Users className="w-4 h-4 text-orange-500" />
@@ -153,7 +153,7 @@ export default async function ReferralsPage() {
             <div className="text-[11px] text-slate-500 mt-1">Verified registrations</div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Reward Points</span>
               <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -162,7 +162,7 @@ export default async function ReferralsPage() {
             <div className="text-[11px] text-emerald-600 font-medium mt-1">+10 pts per signup</div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] col-span-2 sm:col-span-1">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] col-span-2 sm:col-span-1">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ticket Discount</span>
               <Award className="w-4 h-4 text-purple-500" />
@@ -174,7 +174,7 @@ export default async function ReferralsPage() {
         </div>
 
         {/* Live Tracked Referrals Ledger */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 mb-8">
+        <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-base font-extrabold text-slate-900">Tracked Referrals Ledger</h3>
@@ -218,7 +218,7 @@ export default async function ReferralsPage() {
             </div>
           ) : (
             <div className="text-center py-10">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
                 <Users className="w-6 h-6" />
               </div>
               <h4 className="text-sm font-bold text-slate-800 mb-1">No Friends Referred Yet</h4>
@@ -230,25 +230,25 @@ export default async function ReferralsPage() {
         </div>
 
         {/* Reward Tiers Roadmap */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8">
+        <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8">
           <h3 className="text-base font-extrabold text-slate-900 mb-1">Squad Reward Tiers</h3>
           <p className="text-xs text-slate-500 mb-6">Unlock higher milestone perks as your party circle grows</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             
-            <div className="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50">
+            <div className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50">
               <div className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">Tier 1: Starter</div>
               <div className="text-sm font-extrabold text-slate-900 mb-1">1–4 Friends</div>
               <p className="text-xs text-slate-500">10 points per signup + 10% discount on standard passes.</p>
             </div>
 
-            <div className="p-4 rounded-2xl border border-orange-200 bg-orange-50/30">
+            <div className="p-4 rounded-xl border border-orange-200 bg-orange-50/30">
               <div className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">Tier 2: Party Host</div>
               <div className="text-sm font-extrabold text-slate-900 mb-1">5–9 Friends</div>
               <p className="text-xs text-slate-500">20% discount on all passes + Free welcome drink voucher.</p>
             </div>
 
-            <div className="p-4 rounded-2xl border border-purple-200 bg-purple-50/30">
+            <div className="p-4 rounded-xl border border-purple-200 bg-purple-50/30">
               <div className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">Tier 3: Nightlife Legend</div>
               <div className="text-sm font-extrabold text-slate-900 mb-1">10+ Friends</div>
               <p className="text-xs text-slate-500">Free VIP Table pass + Priority fast-track gate entry.</p>

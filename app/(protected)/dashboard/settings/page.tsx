@@ -272,7 +272,7 @@ export default function UserSettingsPage() {
 
         {/* Global Error Banner */}
         {error && (
-          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-rose-500 flex-shrink-0" />
             <span>{error}</span>
           </div>
@@ -280,14 +280,14 @@ export default function UserSettingsPage() {
 
         {/* Global Success Notification */}
         {saved && (
-          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-semibold text-emerald-700 flex items-center gap-2">
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-700 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
             <span>Profile and settings updated successfully!</span>
           </div>
         )}
 
         {/* Settings Navigation Tabs */}
-        <div className="flex p-1 bg-slate-200/70 rounded-2xl mb-8 gap-1 border border-slate-200">
+        <div className="flex p-1 bg-slate-200/70 rounded-xl mb-8 gap-1 border border-slate-200">
           {[
             { id: 'profile', label: 'Personal Profile', icon: User },
             { id: 'avatar', label: 'Avatar & Theme', icon: Sparkles },
@@ -311,13 +311,13 @@ export default function UserSettingsPage() {
 
         {/* TAB 1: PROFILE TAB */}
         {activeTab === 'profile' && (
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
             
             {/* Header / Avatar Live Badge */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-gradient-to-r from-slate-50 to-orange-50/30 rounded-2xl border border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-gradient-to-r from-slate-50 to-orange-50/30 rounded-xl border border-slate-100">
               <div className="flex items-center gap-4">
                 <div
-                  className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${
+                  className={`w-16 h-16 rounded-xl bg-gradient-to-br ${
                     selectedAvatar || 'from-orange-500 to-amber-600'
                   } flex items-center justify-center text-white text-2xl font-extrabold shadow-md flex-shrink-0`}
                 >
@@ -465,7 +465,7 @@ export default function UserSettingsPage() {
 
         {/* TAB 2: AVATAR & THEME TAB */}
         {activeTab === 'avatar' && (
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
             <div>
               <h2 className="text-base font-bold text-slate-900 mb-1">Select Avatar Theme</h2>
               <p className="text-xs text-slate-500">
@@ -474,9 +474,9 @@ export default function UserSettingsPage() {
             </div>
 
             {/* Current Active Avatar Preview */}
-            <div className="flex items-center gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+            <div className="flex items-center gap-4 p-5 bg-slate-50 rounded-xl border border-slate-100">
               <div
-                className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${
+                className={`w-20 h-20 rounded-xl bg-gradient-to-br ${
                   selectedAvatar || 'from-orange-500 to-amber-600'
                 } flex items-center justify-center text-white text-3xl font-extrabold shadow-lg shadow-slate-900/10 flex-shrink-0`}
               >
@@ -497,7 +497,7 @@ export default function UserSettingsPage() {
                   key={avatar.id}
                   type="button"
                   onClick={() => setSelectedAvatar(avatar.bg)}
-                  className={`group relative flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${
+                  className={`group relative flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
                     selectedAvatar === avatar.bg
                       ? 'border-orange-500 bg-orange-50/30 ring-2 ring-orange-500/20'
                       : 'border-slate-200/80 hover:border-slate-300 bg-white'
@@ -521,7 +521,7 @@ export default function UserSettingsPage() {
             </div>
 
             {/* Photo Upload Info Banner */}
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-3">
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-3">
               <div className="w-8 h-8 rounded-xl bg-slate-200/80 flex items-center justify-center text-slate-600 flex-shrink-0 mt-0.5">
                 <Camera className="w-4 h-4" />
               </div>
@@ -549,7 +549,7 @@ export default function UserSettingsPage() {
 
         {/* TAB 3: INTERESTS & VIBES TAB */}
         {activeTab === 'interests' && (
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
             <div>
               <h2 className="text-base font-bold text-slate-900 mb-1">Your Event Vibes & Interests</h2>
               <p className="text-xs text-slate-500">
@@ -706,7 +706,7 @@ function SecurityTab({
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
+    <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
       <div>
         <h2 className="text-base font-bold text-slate-900 mb-1">Update Security & Password</h2>
         <p className="text-xs text-slate-500">

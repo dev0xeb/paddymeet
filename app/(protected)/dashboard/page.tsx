@@ -127,7 +127,7 @@ export default async function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
 
         {/* Hero Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden border border-slate-700/50">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-xl__TMP__ p-6 sm:p-8 shadow-xl relative overflow-hidden border border-slate-700/50">
           <div className="absolute -right-16 -bottom-16 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute left-1/3 -top-12 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
           
@@ -170,7 +170,7 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           
           {/* Active Passes */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Passes</span>
               <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
@@ -190,7 +190,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Trust Score */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Trust Score</span>
               <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
@@ -207,7 +207,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Events Attended */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Events Attended</span>
               <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
@@ -225,7 +225,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Squads & Groups */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Squads & Tables</span>
               <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
@@ -249,7 +249,7 @@ export default async function DashboardPage() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* 1. MY ACTIVE PASSES (Personal purchased tickets filter) */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] overflow-hidden">
               <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
@@ -330,7 +330,7 @@ export default async function DashboardPage() {
                   </div>
                 ) : (
                   <div className="text-center py-10 px-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
-                    <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-3 text-orange-600">
+                    <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-3 text-orange-600">
                       <Ticket className="w-5 h-5" />
                     </div>
                     <h3 className="text-sm font-bold text-slate-900 mb-1">No Active Passes</h3>
@@ -349,7 +349,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* 2. UPCOMING EVENTS (Platform-Wide Live Events Discovery Feed) */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] overflow-hidden">
               <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
@@ -385,10 +385,10 @@ export default async function DashboardPage() {
                       return (
                         <div
                           key={evt.id}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-orange-300 hover:shadow-md transition-all bg-slate-50/50 group"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-xl border border-slate-200/80 hover:border-orange-300 hover:shadow-md transition-all bg-slate-50/50 group"
                         >
                           <div className="flex items-start gap-4 min-w-0">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-center flex-shrink-0 shadow-md border border-slate-700 relative overflow-hidden">
+                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-center flex-shrink-0 shadow-md border border-slate-700 relative overflow-hidden">
                               <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">
                                 {evt.event_date ? new Date(evt.event_date).toLocaleDateString('en-GB', { month: 'short' }) : 'TBD'}
                               </span>
@@ -453,7 +453,7 @@ export default async function DashboardPage() {
                   </div>
                 ) : (
                   <div className="text-center py-12 px-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
-                    <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-3 text-orange-600">
+                    <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-3 text-orange-600">
                       <Calendar className="w-5 h-5" />
                     </div>
                     <h3 className="text-sm font-bold text-slate-900 mb-1">No Upcoming Events Yet</h3>
@@ -472,7 +472,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* 3. My Squads & Group Split Tables */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] overflow-hidden">
               <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
@@ -533,7 +533,7 @@ export default async function DashboardPage() {
                   </div>
                 ) : (
                   <div className="text-center py-10 px-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
-                    <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center mx-auto mb-3 text-purple-600">
+                    <div className="w-12 h-12 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center mx-auto mb-3 text-purple-600">
                       <Users className="w-5 h-5" />
                     </div>
                     <h3 className="text-sm font-bold text-slate-900 mb-1">No Active Squads Yet</h3>
@@ -557,9 +557,9 @@ export default async function DashboardPage() {
           <div className="space-y-6">
 
             {/* Profile & Trust Tier Progress Card */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6">
+            <div className="bg-white rounded-xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6">
               <div className="flex items-center gap-3.5 mb-5">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 text-white font-extrabold text-lg flex items-center justify-center shadow-md shadow-orange-500/20">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white font-extrabold text-lg flex items-center justify-center shadow-md shadow-orange-500/20">
                   {profile.username?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -611,7 +611,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* Wallet & Rewards Hub */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6">
+            <div className="bg-white rounded-xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-slate-500" /> Wallet & Perks
@@ -655,7 +655,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* Referral & Invite Card */}
-            <div className="bg-gradient-to-br from-orange-600 to-amber-600 text-white rounded-2xl p-6 shadow-lg shadow-orange-600/20">
+            <div className="bg-gradient-to-br from-orange-600 to-amber-600 text-white rounded-xl p-6 shadow-lg shadow-orange-600/20">
               <div className="flex items-center gap-2 mb-2">
                 <Gift className="w-5 h-5 text-orange-200" />
                 <h3 className="text-sm font-bold text-white">Invite Squad & Earn Perks</h3>
@@ -678,7 +678,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* VIP Concierge Support */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 flex items-center justify-between gap-3 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+            <div className="bg-white rounded-xl border border-slate-200/80 p-5 flex items-center justify-between gap-3 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 flex-shrink-0">
                   <Headphones className="w-5 h-5" />

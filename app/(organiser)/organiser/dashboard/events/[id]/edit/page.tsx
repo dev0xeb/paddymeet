@@ -127,7 +127,7 @@ export default function EditEventPage() {
         </div>
 
         {/* Warning banner */}
-        <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-200 rounded-2xl mb-6">
+        <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-200 rounded-xl mb-6">
           <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
           <div>
             <div className="text-sm font-bold text-orange-700 mb-0.5">Re-review required</div>
@@ -138,18 +138,18 @@ export default function EditEventPage() {
         </div>
 
         {!loaded ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
             <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
           </div>
         ) : !event ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
             <p className="text-sm text-gray-400">Event not found</p>
           </div>
         ) : (
           <div className="space-y-5">
 
             {/* Basic info */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+            <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
               <h2 className="text-sm font-extrabold text-gray-900">Basic Information</h2>
 
               <div>
@@ -202,7 +202,7 @@ export default function EditEventPage() {
             </div>
 
             {/* Date & venue */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+            <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
               <h2 className="text-sm font-extrabold text-gray-900">Date & Venue</h2>
 
               <div className="grid grid-cols-2 gap-4">
@@ -259,7 +259,7 @@ export default function EditEventPage() {
             </div>
 
             {/* Additional info */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+            <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
               <h2 className="text-sm font-extrabold text-gray-900">Additional Information</h2>
 
               <div>

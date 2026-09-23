@@ -98,7 +98,7 @@ export default async function OrganiserRevenuePage({
             { label: 'Commission', value: `₦${(paddymeetCommission / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'purple', desc: `${(commissionRate * 100).toFixed(0)}% Paddymeet fee` },
             { label: 'Net revenue', value: `₦${(netRevenue / 1000).toFixed(1)}k`, icon: DollarSign, color: 'blue', desc: 'Your actual earnings' },
           ].map(({ label, value, icon: Icon, color, desc }) => (
-            <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5">
+            <div key={label} className="bg-white border border-gray-100 rounded-xl p-5">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${
                 color === 'blue' ? 'bg-blue-50' :
                 color === 'green' ? 'bg-green-50' :
@@ -120,7 +120,7 @@ export default async function OrganiserRevenuePage({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
 
           {/* Revenue by event */}
-          <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-5 md:p-6">
+          <div className="lg:col-span-2 bg-white border border-gray-100 rounded-xl p-5 md:p-6">
             <h2 className="text-sm font-extrabold text-gray-900 mb-4">Revenue by Event</h2>
             {revenueByEvent.length > 0 ? (
               <div className="space-y-3">
@@ -161,7 +161,7 @@ export default async function OrganiserRevenuePage({
           </div>
 
           {/* Monthly breakdown */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-6">
+          <div className="bg-white border border-gray-100 rounded-xl p-6">
             <h2 className="text-sm font-extrabold text-gray-900 mb-4">Monthly Breakdown</h2>
             {months.length > 0 ? (
               <div className="space-y-3">
@@ -209,7 +209,7 @@ export default async function OrganiserRevenuePage({
         </div>
 
         {/* Transaction history */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 className="text-sm font-extrabold text-gray-900">Transaction History</h2>
             <span className="text-xs text-gray-400">{count} total</span>

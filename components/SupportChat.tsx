@@ -346,12 +346,12 @@ export default function SupportChat({ accountType = 'explorer' }: { accountType?
             onClick={() => setOpen(false)}
           />
 
-          <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-lg h-[85vh] sm:h-[640px] flex flex-col overflow-hidden border border-slate-200/80 animate-in slide-in-from-bottom-5 duration-200">
+          <div className="relative bg-white rounded-t-2xl sm:rounded-xl__TMP__ shadow-2xl w-full sm:max-w-lg h-[85vh] sm:h-[640px] flex flex-col overflow-hidden border border-slate-200/80 animate-in slide-in-from-bottom-5 duration-200">
             
             {/* Header */}
             <div className="px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-between border-b border-slate-700">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -430,7 +430,7 @@ export default function SupportChat({ accountType = 'explorer' }: { accountType?
               
               {/* VIEW 1: TOPIC DETAILS VIEW */}
               {selectedTopic ? (
-                <div className="space-y-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm animate-in fade-in duration-150">
+                <div className="space-y-4 bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm animate-in fade-in duration-150">
                   <button
                     onClick={() => setSelectedTopic(null)}
                     className="inline-flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-700 mb-1"
@@ -486,7 +486,7 @@ export default function SupportChat({ accountType = 'explorer' }: { accountType?
               ) : showTicketForm ? (
                 
                 /* VIEW 2: HUMAN ESCALATION / SUPPORT TICKET FORM */
-                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4 animate-in fade-in duration-150">
+                <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm space-y-4 animate-in fade-in duration-150">
                   <button
                     onClick={() => setShowTicketForm(false)}
                     className="inline-flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-700"
@@ -504,7 +504,7 @@ export default function SupportChat({ accountType = 'explorer' }: { accountType?
                   </div>
 
                   {ticketSubmitted ? (
-                    <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-3">
+                    <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-3">
                       <div className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
                         <CheckCircle className="w-6 h-6" />
                       </div>
@@ -593,7 +593,7 @@ export default function SupportChat({ accountType = 'explorer' }: { accountType?
                       <button
                         key={topic.id}
                         onClick={() => setSelectedTopic(topic)}
-                        className="w-full text-left p-4 rounded-2xl border border-slate-200/80 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-sm transition-all flex items-center justify-between gap-3 group"
+                        className="w-full text-left p-4 rounded-xl border border-slate-200/80 bg-white hover:border-orange-300 hover:bg-orange-50/20 shadow-sm transition-all flex items-center justify-between gap-3 group"
                       >
                         <div className="min-w-0 flex-1">
                           <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-orange-600 transition-colors leading-snug">
@@ -607,7 +607,7 @@ export default function SupportChat({ accountType = 'explorer' }: { accountType?
                       </button>
                     ))
                   ) : (
-                    <div className="bg-white rounded-2xl p-8 text-center border border-slate-200/80 space-y-3">
+                    <div className="bg-white rounded-xl p-8 text-center border border-slate-200/80 space-y-3">
                       <HelpCircle className="w-8 h-8 text-slate-300 mx-auto" />
                       <div className="text-xs font-bold text-slate-800">No matching topic found</div>
                       <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
@@ -624,7 +624,7 @@ export default function SupportChat({ accountType = 'explorer' }: { accountType?
 
                   {/* Bottom Escalation Card */}
                   <div className="pt-2">
-                    <div className="p-4 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/80 flex items-center justify-between gap-3">
+                    <div className="p-4 rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/80 flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-xs font-bold text-slate-900">Need Immediate Gate Help?</div>
                         <p className="text-[11px] text-slate-600 mt-0.5">

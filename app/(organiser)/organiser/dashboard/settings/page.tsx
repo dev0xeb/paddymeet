@@ -241,13 +241,13 @@ export default function OrganiserSettingsPage() {
         </div>
 
         {!loaded ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
             <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
           </div>
         ) : (
           <>
             {saved && (
-              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-2xl mb-5">
+              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl mb-5">
                 <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
                 <span className="text-sm font-semibold text-green-700">Changes saved successfully</span>
               </div>
@@ -255,7 +255,7 @@ export default function OrganiserSettingsPage() {
             {error && <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 mb-5">{error}</div>}
 
             {activeTab === 'profile' && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+              <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Organisation Name</label>
@@ -299,7 +299,7 @@ export default function OrganiserSettingsPage() {
             )}
 
             {activeTab === 'bank' && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+              <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
                 <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-600 leading-relaxed">
                   Enter your account number and select your bank — your account name will be verified automatically via Paystack.
                 </div>
@@ -360,7 +360,7 @@ export default function OrganiserSettingsPage() {
             )}
 
             {activeTab === 'security' && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+              <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
                 <div>
                   <h2 className="text-sm font-extrabold text-gray-900 mb-1">Change Password</h2>
                   <p className="text-xs text-gray-500 mb-5">Password must be at least 8 characters long.</p>
