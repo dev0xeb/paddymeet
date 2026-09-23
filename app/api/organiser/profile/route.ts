@@ -26,7 +26,7 @@ export async function PUT(request: NextRequest) {
 
   const allowedFields = [
     'org_name', 'contact_name', 'phone', 'description', 'website', 'social_link',
-    'bank_code', 'bank_name', 'bank_account_number', 'bank_account_name',
+    'bank_code', 'bank_name', 'account_number', 'account_name',
   ]
 
   const updates: Record<string, string> = {}
@@ -39,7 +39,10 @@ export async function PUT(request: NextRequest) {
     .update(updates)
     .eq('id', user.id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  if (error) {
+    console.error('Organiser profile update failed:', error.message)
+    return NextResponse.json({ error: 'Could not save your changes. Please try again.' }, { status: 400 })
+  }
 
   return NextResponse.json({ success: true })
 }

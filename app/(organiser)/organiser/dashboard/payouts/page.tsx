@@ -48,7 +48,7 @@ export default async function OrganiserPayoutsPage() {
   const totalPaid = payouts?.filter(p => p.status === 'paid').reduce((sum, p) => sum + (p.amount || 0), 0) || 0
   const pendingPayout = netRevenue - totalPaid
 
-  const hasBankDetails = organiser.bank_name && organiser.bank_account_number && organiser.bank_account_name
+  const hasBankDetails = organiser.bank_name && organiser.account_number && organiser.account_name
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -174,12 +174,12 @@ export default async function OrganiserPayoutsPage() {
                   </div>
                   <div>
                     <div className="text-xs text-gray-400 mb-0.5">Account name</div>
-                    <div className="text-sm font-bold text-gray-900">{organiser.bank_account_name}</div>
+                    <div className="text-sm font-bold text-gray-900">{organiser.account_name}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-400 mb-0.5">Account number</div>
                     <div className="text-sm font-mono font-bold text-gray-900">
-                      {'•'.repeat(Math.max(0, organiser.bank_account_number.length - 4)) + organiser.bank_account_number.slice(-4)}
+                      {'•'.repeat(Math.max(0, organiser.account_number.length - 4)) + organiser.account_number.slice(-4)}
                     </div>
                   </div>
                   <Link href="/organiser/dashboard/settings"

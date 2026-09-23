@@ -32,7 +32,7 @@ export default async function AdminPayoutsPage() {
   ] = await Promise.all([
     adminClient
       .from('orders')
-      .select('*, events(title, organiser_id, organisers(org_name, bank_name, bank_account_number, bank_account_name, is_verified))')
+      .select('*, events(title, organiser_id, organisers(org_name, bank_name, account_number, account_name, is_verified))')
       .eq('payment_status', 'completed')
       .order('created_at', { ascending: false }),
     adminClient
@@ -77,8 +77,8 @@ export default async function AdminPayoutsPage() {
         gross: 0,
         orders: 0,
         bank_name: organiser.bank_name || '—',
-        account_number: organiser.bank_account_number || '—',
-        account_name: organiser.bank_account_name || '—',
+        account_number: organiser.account_number || '—',
+        account_name: organiser.account_name || '—',
         is_verified: organiser.is_verified ?? false,
         organiser_id: id,
       }

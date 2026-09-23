@@ -16,8 +16,8 @@ interface OrganiserProfile {
   social_link: string
   bank_code: string
   bank_name: string
-  bank_account_number: string
-  bank_account_name: string
+  account_number: string
+  account_name: string
 }
 
 interface Bank {
@@ -74,8 +74,8 @@ export default function OrganiserSettingsPage() {
     Promise.all([getProfile(), getBanks()]).then(([profileData, banksData]) => {
       if (profileData) {
         setProfile(profileData)
-        if (profileData.bank_account_number) setAccountNumber(profileData.bank_account_number)
-        if (profileData.bank_account_name) setVerifiedName(profileData.bank_account_name)
+        if (profileData.account_number) setAccountNumber(profileData.account_number)
+        if (profileData.account_name) setVerifiedName(profileData.account_name)
         if (profileData.bank_code) setSelectedBankCode(profileData.bank_code)
       }
       setBanks(banksData)
@@ -139,7 +139,7 @@ export default function OrganiserSettingsPage() {
         body: JSON.stringify(profile),
       })
       const data = await res.json()
-      if (data.error) setError(data.error)
+      if (data.error) setError('Could not save your profile. Please try again or contact support.')
       else { setSaved(true); setTimeout(() => setSaved(false), 3000) }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -162,12 +162,12 @@ export default function OrganiserSettingsPage() {
         body: JSON.stringify({
           bank_code: selectedBankCode,
           bank_name: selectedBank?.name || '',
-          bank_account_number: accountNumber,
-          bank_account_name: verifiedName,
+          account_number: accountNumber,
+          account_name: verifiedName,
         }),
       })
       const data = await res.json()
-      if (data.error) setError(data.error)
+      if (data.error) setError('Could not save your bank details. Please try again or contact support.')
       else { setSaved(true); setTimeout(() => setSaved(false), 3000) }
     } catch {
       setError('Something went wrong. Please try again.')

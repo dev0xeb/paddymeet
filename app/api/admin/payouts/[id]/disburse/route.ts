@@ -26,7 +26,7 @@ export async function POST(
     // 1. Fetch payout record with organiser bank details
     const { data: payout, error: payoutError } = await adminClient
       .from('payouts')
-      .select('*, organisers(id, org_name, email, bank_code, bank_account_number, bank_account_name, bank_recipient_code)')
+      .select('*, organisers(id, org_name, email, bank_code, account_number, account_name, bank_recipient_code)')
       .eq('id', id)
       .single()
 
@@ -50,7 +50,7 @@ export async function POST(
     }
 
     const org = Array.isArray(payout.organisers) ? payout.organisers[0] : payout.organisers
-    if (!org?.bank_account_number || !org?.bank_code) {
+    if (!org?.account_number || !org?.bank_code) {
       return NextResponse.json(
         { error: 'Organiser has not configured valid bank account details.' },
         { status: 400 }
@@ -93,8 +93,8 @@ export async function POST(
         },
         body: JSON.stringify({
           type: 'nuban',
-          name: org.bank_account_name || org.org_name,
-          account_number: org.bank_account_number,
+          name: org.account_name || org.org_name,
+          account_number: org.account_number,
           bank_code: org.bank_code,
           currency: 'NGN',
         }),
@@ -174,7 +174,7 @@ export async function POST(
       await adminClient.from('notifications').insert({
         user_id: payout.organiser_id,
         title: 'Payout Disbursed 💰',
-        message: `Your event payout of ₦${Number(payout.amount).toLocaleString()} has been sent to your bank account (${org.bank_account_number}). Ref: ${transferCode}`,
+        message: `Your event payout of ₦${Number(payout.amount).toLocaleString()} has been sent to your bank account (${org.account_number}). Ref: ${transferCode}`,
         type: 'payout',
         is_read: false,
       })
