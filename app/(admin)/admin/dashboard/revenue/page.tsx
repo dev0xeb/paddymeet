@@ -19,10 +19,10 @@ export default async function AdminRevenuePage() {
     { data: settings },
   ] = await Promise.all([
     adminClient.from('orders').select('total_paid, service_fee, amount, created_at, event_id, payment_status').eq('payment_status', 'completed'),
-    adminClient.from('platform_settings').select('platform_fee_percent').eq('id', 1).single(),
+    adminClient.from('platform_settings').select('commission_rate').eq('id', 1).single(),
   ])
 
-  const commissionRate = (settings?.platform_fee_percent ?? 5.0) / 100
+  const commissionRate = (settings?.commission_rate ?? 5.0) / 100
 
   const totalGross = orders?.reduce((sum, o) => sum + (o.total_paid || 0), 0) || 0
   const totalServiceFees = orders?.reduce((sum, o) => sum + (o.service_fee || 0), 0) || 0

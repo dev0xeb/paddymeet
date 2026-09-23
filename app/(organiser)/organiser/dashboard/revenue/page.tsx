@@ -18,11 +18,11 @@ export default async function OrganiserRevenuePage({
 
   const [{ data: organiser }, { data: settings }] = await Promise.all([
     supabase.from('organisers').select('id, org_name').eq('id', user.id).single(),
-    supabase.from('platform_settings').select('platform_fee_percent').eq('id', 1).single(),
+    supabase.from('platform_settings').select('commission_rate').eq('id', 1).single(),
   ])
   if (!organiser) redirect('/login')
 
-  const commissionRate = (Number(settings?.platform_fee_percent) || 5.0) / 100
+  const commissionRate = (Number(settings?.commission_rate) || 5.0) / 100
 
   const params = await searchParams
   const page = parseInt(params.page || '1')
@@ -95,7 +95,7 @@ export default async function OrganiserRevenuePage({
           {[
             { label: 'Gross revenue', value: `₦${(grossRevenue / 1000).toFixed(1)}k`, icon: DollarSign, color: 'green', desc: 'Total ticket sales' },
             { label: 'Service fees', value: `₦${(totalFees / 1000).toFixed(1)}k`, icon: Ticket, color: 'orange', desc: 'Paystack charges' },
-            { label: 'Commission', value: `₦${(paddymeetCommission / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'purple', desc: '10% Paddymeet fee' },
+            { label: 'Commission', value: `₦${(paddymeetCommission / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'purple', desc: `${(commissionRate * 100).toFixed(0)}% Paddymeet fee` },
             { label: 'Net revenue', value: `₦${(netRevenue / 1000).toFixed(1)}k`, icon: DollarSign, color: 'blue', desc: 'Your actual earnings' },
           ].map(({ label, value, icon: Icon, color, desc }) => (
             <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5">
@@ -195,7 +195,7 @@ export default async function OrganiserRevenuePage({
                 {[
                   { label: 'Gross revenue', value: `₦${(grossRevenue / 1000).toFixed(1)}k`, color: 'text-gray-900' },
                   { label: 'Service fees', value: `-₦${(totalFees / 1000).toFixed(1)}k`, color: 'text-red-500' },
-                  { label: 'Paddymeet (10%)', value: `-₦${(paddymeetCommission / 1000).toFixed(1)}k`, color: 'text-red-500' },
+                  { label: `Paddymeet (${(commissionRate * 100).toFixed(0)}%)`, value: `-₦${(paddymeetCommission / 1000).toFixed(1)}k`, color: 'text-red-500' },
                   { label: 'Net earnings', value: `₦${(netRevenue / 1000).toFixed(1)}k`, color: 'text-green-600 font-extrabold' },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="flex items-center justify-between text-xs">

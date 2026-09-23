@@ -39,14 +39,14 @@ export default async function AdminReportsPage() {
     adminClient.from('organisers').select('id, org_name, is_verified, created_at'),
     adminClient.from('events').select('id, title, city, event_date, is_approved, is_live, created_at, organisers(org_name)'),
     adminClient.from('tickets').select('id, status, purchased_at, event_id'),
-    adminClient.from('platform_settings').select('platform_fee_percent').eq('id', 1).single(),
+    adminClient.from('platform_settings').select('commission_rate').eq('id', 1).single(),
   ])
 
   const completedOrders = orders?.filter(o => o.payment_status === 'completed') || []
   const totalGross = completedOrders.reduce((sum, o) => sum + (o.total_paid || 0), 0)
   const totalFees = completedOrders.reduce((sum, o) => sum + (o.service_fee || 0), 0)
   const totalTicketSubtotal = completedOrders.reduce((sum, o) => sum + (o.amount || 0), 0)
-  const feePercent = settings?.platform_fee_percent ?? 5.0
+  const feePercent = settings?.commission_rate ?? 5.0
   const platformCommission = totalTicketSubtotal * (feePercent / 100)
   const organiserPayouts = totalTicketSubtotal - platformCommission
   const platformNetEarnings = totalFees + platformCommission

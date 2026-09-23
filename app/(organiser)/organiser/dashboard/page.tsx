@@ -18,12 +18,12 @@ export default async function OrganiserDashboardPage() {
   const [{ data: organiser }, { data: events }, { data: settings }] = await Promise.all([
     supabase.from('organisers').select('*').eq('id', user.id).single(),
     supabase.from('events').select('*, ticket_types(*)').eq('organiser_id', user.id).order('created_at', { ascending: false }),
-    supabase.from('platform_settings').select('platform_fee_percent').eq('id', 1).single(),
+    supabase.from('platform_settings').select('commission_rate').eq('id', 1).single(),
   ])
 
   if (!organiser) redirect('/login')
 
-  const platformFeePercent = Number(settings?.platform_fee_percent) || 5.0
+  const platformFeePercent = Number(settings?.commission_rate) || 5.0
   const netPayoutPercent = Math.max(0, 100 - platformFeePercent)
 
   const eventIds = events?.map(e => e.id) || []

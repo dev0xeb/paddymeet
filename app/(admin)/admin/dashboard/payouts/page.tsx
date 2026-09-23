@@ -42,12 +42,12 @@ export default async function AdminPayoutsPage() {
       .limit(50),
     adminClient
       .from('platform_settings')
-      .select('platform_fee_percent')
+      .select('commission_rate')
       .eq('id', 1)
       .single(),
   ])
 
-  const commissionRate = (settings?.platform_fee_percent ?? 5.0) / 100
+  const commissionRate = (settings?.commission_rate ?? 5.0) / 100
   const organiserCutRatio = 1 - commissionRate // e.g. 0.95 (95%)
 
   // Calculate pending payouts per organiser
