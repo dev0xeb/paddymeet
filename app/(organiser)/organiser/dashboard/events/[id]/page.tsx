@@ -72,7 +72,10 @@ export default async function OrganiserManageEventPage({
       <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
 
         {/* Event hero */}
-        <div className={`h-40 rounded-2xl bg-gradient-to-br ${gradient} relative mb-6 overflow-hidden`}>
+        <div
+          className={`h-40 rounded-2xl relative mb-6 overflow-hidden ${event.cover_image_url ? '' : `bg-gradient-to-br ${gradient}`}`}
+          style={event.cover_image_url ? { backgroundImage: `url(${event.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+        >
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute top-3 left-3 flex items-center gap-2">
             <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
