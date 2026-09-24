@@ -349,10 +349,13 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
                   placeholder="Re-enter your password"
                   value={formData.confirmPassword}
                   onChange={e => update('confirmPassword', e.target.value)}
-                  className={inputClass + (formData.confirmPassword && !passwordsMatch ? ' border-red-300 focus:border-red-400' : '')}
+                  className={inputClass + (formData.confirmPassword ? (passwordsMatch ? ' border-green-300 focus:border-green-400' : ' border-red-300 focus:border-red-400') : '')}
                 />
-                {formData.confirmPassword && !passwordsMatch && (
-                  <p className="text-xs text-red-500 font-medium mt-1.5">Passwords do not match</p>
+                {formData.confirmPassword && (
+                  <p className={`flex items-center gap-1.5 text-xs font-medium mt-1.5 ${passwordsMatch ? 'text-green-500' : 'text-red-500'}`}>
+                    {passwordsMatch ? <Check className="w-3 h-3 flex-shrink-0" /> : <X className="w-3 h-3 flex-shrink-0" />}
+                    {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
+                  </p>
                 )}
               </div>
 
@@ -662,10 +665,13 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
                   placeholder="Re-enter your password"
                   value={formData.confirmPassword}
                   onChange={e => update('confirmPassword', e.target.value)}
-                  className={inputClass + (formData.confirmPassword && !passwordsMatch ? ' border-red-300 focus:border-red-400' : '')}
+                  className={inputClass + (formData.confirmPassword ? (passwordsMatch ? ' border-green-300 focus:border-green-400' : ' border-red-300 focus:border-red-400') : '')}
                 />
-                {formData.confirmPassword && !passwordsMatch && (
-                  <p className="text-xs text-red-500 font-medium mt-1.5">Passwords do not match</p>
+                {formData.confirmPassword && (
+                  <p className={`flex items-center gap-1.5 text-xs font-medium mt-1.5 ${passwordsMatch ? 'text-green-500' : 'text-red-500'}`}>
+                    {passwordsMatch ? <Check className="w-3 h-3 flex-shrink-0" /> : <X className="w-3 h-3 flex-shrink-0" />}
+                    {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
+                  </p>
                 )}
               </div>
 

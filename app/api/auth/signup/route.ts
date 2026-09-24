@@ -91,6 +91,12 @@ export async function POST(request: NextRequest) {
 
       if (profileError) {
         console.error('Profile creation error:', profileError)
+        // Undo the auth user we just created — otherwise this email is
+        // permanently stuck: Supabase Auth already has it registered, but
+        // with no profile row there's no way to log in, and every future
+        // signup attempt fails with a confusing "already exists" error
+        // even though the signup never actually succeeded.
+        await adminClient.auth.admin.deleteUser(authData.user.id)
         return NextResponse.json({ error: profileError.message }, { status: 400 })
       }
 
@@ -179,6 +185,10 @@ export async function POST(request: NextRequest) {
 
       if (orgError) {
         console.error('Organiser insertion error:', orgError)
+        // Same rollback as the explorer path — without this, a failed
+        // organiser-row insert leaves the email permanently stuck in
+        // Supabase Auth with no organiser record and no way to retry.
+        await adminClient.auth.admin.deleteUser(authData.user.id)
         return NextResponse.json({ error: orgError.message }, { status: 400 })
       }
 
