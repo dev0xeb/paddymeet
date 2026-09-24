@@ -103,7 +103,9 @@ export default function SubmitEventPage() {
   // Validation
   const step1Valid = !!(eventData.title && eventData.event_type && eventData.vibe && eventData.description)
   const step2Valid = !!(eventData.event_date && eventData.start_time && eventData.venue_name && eventData.city && eventData.state)
-  const step3Valid = eventData.is_free || ticketTypes.every(t => t.name && t.price > 0 && t.quantity > 0)
+  const step3Valid = eventData.is_free || ticketTypes.every(t =>
+    t.name && t.price > 0 && t.quantity > 0 && (!t.is_group_ticket || t.group_size >= 2)
+  )
 
   const nextStep = (current: Step, valid: boolean) => {
     if (!valid) { setError('Please fill in all required fields before continuing.'); return }
@@ -438,7 +440,18 @@ export default function SubmitEventPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className={labelClass}>Group size</label>
-                          <input type="number" placeholder="e.g. 5" min="2" max="20" value={ticket.group_size || ''} onChange={e => updateTicket(i, 'group_size', parseInt(e.target.value) || 2)} className={inputClass} />
+                          <input
+                            type="number"
+                            placeholder="e.g. 5"
+                            min="2"
+                            max="20"
+                            value={ticket.group_size || ''}
+                            onChange={e => updateTicket(i, 'group_size', parseInt(e.target.value) || 0)}
+                            className={inputClass + (ticket.group_size > 0 && ticket.group_size < 2 ? ' border-red-300 focus:border-red-400' : '')}
+                          />
+                          {ticket.group_size > 0 && ticket.group_size < 2 && (
+                            <p className="text-xs text-red-500 font-medium mt-1.5">Group size must be at least 2</p>
+                          )}
                         </div>
                         <div>
                           <label className={labelClass}>Group sales close</label>

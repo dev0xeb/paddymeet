@@ -26,8 +26,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required event fields' }, { status: 400 })
   }
 
-  if (eventData.end_time && eventData.end_time <= eventData.start_time) {
-    return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 })
+  // Nightlife events routinely run past midnight (e.g. 9pm to 6am the next
+  // day) — there's no separate end_date field, so an end_time earlier than
+  // start_time is understood to roll into the day after event_date, not an
+  // error. Only reject a genuine zero-duration event (identical times).
+  if (eventData.end_time && eventData.end_time === eventData.start_time) {
+    return NextResponse.json({ error: 'End time must be different from start time' }, { status: 400 })
   }
 
   if (eventData.capacity !== undefined && eventData.capacity !== null && (typeof eventData.capacity !== 'number' || eventData.capacity < 0)) {
