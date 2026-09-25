@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, Plus, Clock, ArrowRight } from 'lucide-react'
+import { Users, Plus, Clock, ArrowRight, MessageCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import GroupSharePaymentModal from './GroupSharePaymentModal'
+import { useGroupChat } from '@/context/GroupChatContext'
 
 interface TicketType {
   id: string
@@ -21,6 +22,7 @@ interface GroupRow {
   max_members: number
   status: string
   paidCount: number
+  isPaidMember: boolean
 }
 
 interface Props {
@@ -41,23 +43,33 @@ export default function TicketGroupBrowser({ eventId, eventTitle, ticketType, us
 
   const [paymentModal, setPaymentModal] = useState<{ groupId: string, groupName: string, amount: number, needsPayment: boolean, remainingSpots: number } | null>(null)
 
+  const { openGroup } = useGroupChat()
+
   const fetchGroups = async () => {
     const supabase = createClient()
     const { data } = await supabase
       .from('groups')
-      .select('id, name, max_members, status, group_members(payment_status)')
+      .select('id, name, max_members, status, group_members(user_id, payment_status)')
       .eq('ticket_type_id', ticketType.id)
       .eq('status', 'recruiting')
       .order('created_at', { ascending: false })
 
     if (data) {
-      const rows: GroupRow[] = data.map((g) => ({
-        id: g.id,
-        name: g.name,
-        max_members: g.max_members,
-        status: g.status,
-        paidCount: (g.group_members as { payment_status: string }[] || []).filter(m => m.payment_status === 'paid').length,
-      }))
+      const rows: GroupRow[] = data.map((g) => {
+        const members = (g.group_members as { user_id: string, payment_status: string }[] || [])
+        return {
+          id: g.id,
+          name: g.name,
+          max_members: g.max_members,
+          status: g.status,
+          paidCount: members.filter(m => m.payment_status === 'paid').length,
+          // A separate chat room exists per group — only someone who has
+          // actually joined and paid their share (a 'paid' group_members
+          // row) gets into it, matching the same rule the API already
+          // enforces server-side in canAccessGroup().
+          isPaidMember: members.some(m => m.user_id === userId && m.payment_status === 'paid'),
+        }
+      })
       setGroups(rows)
     }
     setLoading(false)
@@ -157,13 +169,22 @@ export default function TicketGroupBrowser({ eventId, eventTitle, ticketType, us
                 <div className="text-xs font-bold text-gray-900 truncate">{group.name}</div>
                 <div className="text-xs text-gray-500">{group.paidCount}/{group.max_members} joined</div>
               </div>
-              <button
-                onClick={() => handleJoin(group)}
-                disabled={deadlinePassed || soldOut || group.paidCount >= group.max_members}
-                className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-40 flex-shrink-0"
-              >
-                Join
-              </button>
+              {group.isPaidMember ? (
+                <button
+                  onClick={() => openGroup({ id: group.id, name: group.name, event_title: eventTitle })}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-orange-200 text-orange-600 text-xs font-bold rounded-xl hover:bg-orange-50 transition-colors flex-shrink-0"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" /> Open Chat
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleJoin(group)}
+                  disabled={deadlinePassed || soldOut || group.paidCount >= group.max_members}
+                  className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-40 flex-shrink-0"
+                >
+                  Join
+                </button>
+              )}
             </div>
           )) : (
             <div className="text-center py-4">
@@ -216,9 +237,12 @@ export default function TicketGroupBrowser({ eventId, eventTitle, ticketType, us
           userEmail={userEmail}
           onClose={() => setPaymentModal(null)}
           onComplete={() => {
+            // Open this group's own chat room the moment payment is
+            // confirmed — a full page reload would just discard it, since
+            // the chat widget only lives in client-side React state.
+            openGroup({ id: paymentModal.groupId, name: paymentModal.groupName, event_title: eventTitle })
             setPaymentModal(null)
             fetchGroups()
-            window.location.reload()
           }}
         />
       )}

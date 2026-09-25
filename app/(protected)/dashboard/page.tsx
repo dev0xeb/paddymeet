@@ -31,6 +31,7 @@ export default async function DashboardPage() {
   if (!user) redirect('/login')
 
   // 1. Fetch user profile, tickets, groups, promos, and all upcoming live events in parallel
+  const today = new Date().toISOString().split('T')[0]
   const [
     { data: profile },
     { data: tickets },
@@ -46,7 +47,7 @@ export default async function DashboardPage() {
     supabase.from('group_members').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
     supabase.from('promo_codes').select('*').eq('is_active', true).limit(3),
     supabase.from('users').select('id', { count: 'exact', head: true }).eq('referred_by', user.id),
-    supabase.from('events').select('*, ticket_types(name, price, quantity, quantity_sold), organisers(org_name, is_verified)').eq('is_approved', true).eq('is_live', true).order('event_date', { ascending: true })
+    supabase.from('events').select('*, ticket_types(name, price, quantity, quantity_sold), organisers(org_name, is_verified)').eq('is_approved', true).eq('is_live', true).gte('event_date', today).order('event_date', { ascending: true })
   ])
 
   if (!profile) redirect('/login')

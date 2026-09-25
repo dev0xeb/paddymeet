@@ -21,11 +21,16 @@ export default async function EventsPage({
     .eq('id', user.id)
     .single() : { data: null }
 
+  // Once an event's date has passed it has nothing left to sell and
+  // shouldn't keep showing here — same fix as the landing page and
+  // dashboard's upcoming-events lists.
+  const today = new Date().toISOString().split('T')[0]
   let query = supabase
     .from('events')
     .select('*, ticket_types(*), organisers(org_name)')
     .eq('is_approved', true)
     .eq('is_live', true)
+    .gte('event_date', today)
     .order('event_date', { ascending: true })
 
   if (params.city) query = query.ilike('city', `%${params.city}%`)
