@@ -10,6 +10,7 @@ interface Props {
   amountPerMember: number
   needsPayment: boolean
   remainingSpots: number
+  userId: string
   userEmail: string
   onClose: () => void
   onComplete: (groupCompleted: boolean) => void
@@ -26,7 +27,7 @@ interface AttendeeInput { name: string, email: string, phone: string }
 type Step = 'spots' | 'details' | 'processing' | 'done'
 
 export default function GroupSharePaymentModal({
-  groupId, groupName, eventTitle, amountPerMember, needsPayment, remainingSpots, userEmail, onClose, onComplete,
+  groupId, groupName, eventTitle, amountPerMember, needsPayment, remainingSpots, userId, userEmail, onClose, onComplete,
 }: Props) {
   const [step, setStep] = useState<Step>('spots')
   const [spotCount, setSpotCount] = useState(1)
@@ -140,6 +141,13 @@ export default function GroupSharePaymentModal({
         group_id: groupId,
         spots: spotCount,
         attendees: buildAttendeesPayload(),
+        // Required so the Paystack webhook — the fallback path that finishes
+        // this payment if the buyer's browser drops the connection right
+        // after paying — can actually attribute the group_members row to
+        // the right person. Without this it silently can't, which left
+        // paid-but-interrupted group purchases permanently stuck with no
+        // ticket ever issued.
+        user_id: userId,
       },
       callback: (response: { reference: string }) => {
         setStep('processing')

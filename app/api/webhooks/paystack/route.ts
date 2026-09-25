@@ -471,6 +471,16 @@ async function handleGroupPayment(
     ? metadata.attendees
     : Array.from({ length: spotCount }, () => ({ name: '', email: data.customer?.email || '', phone: '' }))
 
+  if (!userId) {
+    // Should be unreachable now that GroupSharePaymentModal always sends
+    // user_id in the Paystack metadata — logged loudly rather than
+    // silently inserting an unattributed group_members row (which is what
+    // happened before that fix existed, and is exactly why this fallback
+    // path could never actually rescue an interrupted group payment).
+    console.error(`Group payment webhook missing metadata.user_id for group ${groupId}, reference ${reference} — cannot attribute this payment to a member.`)
+    return
+  }
+
   // Check if member rows already exist for this reference
   const { data: existingMembers } = await adminClient
     .from('group_members')
@@ -480,7 +490,7 @@ async function handleGroupPayment(
   if (!existingMembers || existingMembers.length === 0) {
     const memberRows = attendeeList.map((a) => ({
       group_id: groupId,
-      user_id: userId || null,
+      user_id: userId,
       role: group.creator_id === userId ? 'admin' : 'member',
       payment_status: 'paid',
       amount_paid: amountPerSpot,
@@ -491,11 +501,20 @@ async function handleGroupPayment(
       attendee_phone: a.phone || null,
     }))
 
-    await adminClient.from('group_members').insert(memberRows)
+    const { error: memberInsertError } = await adminClient.from('group_members').insert(memberRows)
+    if (memberInsertError) {
+      // A unique-constraint hit here means the buyer's own browser request
+      // to /api/groups/[id]/pay-share/verify already won this exact insert
+      // — not a real failure, just this webhook losing the race. Anything
+      // else is a genuine problem worth knowing about. Either way, keep
+      // going: the capacity check below re-reads real state from the DB
+      // rather than assuming this insert succeeded.
+      console.error(`Group payment webhook: group_members insert failed for group ${groupId}, reference ${reference}:`, memberInsertError.message)
+    }
 
     // Record order
-    await adminClient.from('orders').insert({
-      user_id: userId || null,
+    const { error: orderInsertError } = await adminClient.from('orders').insert({
+      user_id: userId,
       event_id: group.event_id,
       group_id: groupId,
       amount: amountPaid,
@@ -507,6 +526,9 @@ async function handleGroupPayment(
       buyer_name: attendeeList[0]?.name || null,
       buyer_phone: attendeeList[0]?.phone || null,
     })
+    if (orderInsertError) {
+      console.error(`Group payment webhook: order insert failed for group ${groupId}, reference ${reference}:`, orderInsertError.message)
+    }
   }
 
   // Check if group is full
@@ -517,6 +539,25 @@ async function handleGroupPayment(
     .eq('payment_status', 'paid')
 
   if ((currentPaid ?? 0) >= group.max_members) {
+    // Guarded update — only the request that actually flips the group from
+    // 'recruiting' to 'completed' issues tickets. Same guard
+    // pay-share/verify already uses; this route never had it, meaning two
+    // near-simultaneous webhook deliveries (Paystack does retry) or a
+    // webhook racing the buyer's own client-side request could both reach
+    // here and both create a full set of duplicate tickets.
+    const { data: completionRows } = await adminClient
+      .from('groups')
+      .update({ status: 'completed' })
+      .eq('id', groupId)
+      .eq('status', 'recruiting')
+      .select('id')
+
+    if (!completionRows || completionRows.length === 0) {
+      // Another request already completed this group and is issuing
+      // tickets — nothing left to do here.
+      return
+    }
+
     const { data: allPaidMembers } = await adminClient
       .from('group_members')
       .select('*')
@@ -539,8 +580,10 @@ async function handleGroupPayment(
       }))
 
     if (ticketsToCreate.length > 0) {
-      const { data: createdTickets } = await adminClient.from('tickets').insert(ticketsToCreate).select()
-      await adminClient.from('groups').update({ status: 'completed' }).eq('id', groupId)
+      const { data: createdTickets, error: ticketInsertError } = await adminClient.from('tickets').insert(ticketsToCreate).select()
+      if (ticketInsertError) {
+        console.error(`Group payment webhook: ticket creation failed for group ${groupId}:`, ticketInsertError.message)
+      }
 
       if (ticketType?.id) {
         await adminClient.rpc('increment_tickets_sold', {

@@ -234,6 +234,7 @@ export default function TicketGroupBrowser({ eventId, eventTitle, ticketType, us
           amountPerMember={paymentModal.amount}
           needsPayment={paymentModal.needsPayment}
           remainingSpots={paymentModal.remainingSpots}
+          userId={userId}
           userEmail={userEmail}
           onClose={() => setPaymentModal(null)}
           onComplete={() => {

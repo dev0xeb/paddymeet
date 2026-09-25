@@ -61,7 +61,9 @@ export async function POST(
     }
   }
 
-  // Idempotency check: if webhook already fulfilled this group share payment
+  // Idempotency check: if the webhook already fulfilled this group share
+  // payment (it can win the race against this very request — that's the
+  // point of having it), don't insert a duplicate row or re-issue tickets.
   if (reference !== 'FREE') {
     const { data: existingMembers } = await supabase
       .from('group_members')
@@ -69,10 +71,28 @@ export async function POST(
       .eq('payment_reference', reference)
 
     if (existingMembers && existingMembers.length > 0) {
+      // Re-read the group's status fresh rather than trusting the copy
+      // fetched at the top of this request — the webhook may have just
+      // completed it moments ago.
+      const { data: freshGroup } = await supabase
+        .from('groups')
+        .select('status')
+        .eq('id', groupId)
+        .maybeSingle()
+
+      const issuedTicketIds = existingMembers.map((m) => m.ticket_id).filter(Boolean) as string[]
+      const { data: issuedTickets } = issuedTicketIds.length > 0
+        ? await supabase.from('tickets').select('id, ticket_code').in('id', issuedTicketIds)
+        : { data: [] as { id: string, ticket_code: string }[] }
+      const ticketCodeById = new Map((issuedTickets || []).map((t) => [t.id, t.ticket_code]))
+
       return NextResponse.json({
         success: true,
-        group_completed: group.status === 'completed',
+        group_completed: freshGroup?.status === 'completed',
         members_paid: existingMembers.length,
+        tickets: existingMembers
+          .filter((m) => m.ticket_id)
+          .map((m) => ({ ticket_code: ticketCodeById.get(m.ticket_id!) || null, attendee_name: m.attendee_name })),
       })
     }
   }
