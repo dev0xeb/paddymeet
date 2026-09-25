@@ -14,7 +14,8 @@ import {
   ShieldCheck,
   CheckCircle2,
   Receipt,
-  Loader2
+  Loader2,
+  Users
 } from 'lucide-react'
 import UserAvatarMenu from '@/components/UserAvatarMenu'
 import TicketQRModal from '@/components/TicketQRModal'
@@ -277,6 +278,12 @@ export default async function TicketsPage() {
                               {ticketType.name} Tier
                             </span>
                           )}
+                          <span className={`flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold ${
+                            ticketType?.is_group_ticket ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            <Users className="w-2.5 h-2.5" />
+                            {ticketType?.is_group_ticket ? `Group (${ticketType.group_size})` : 'Individual'}
+                          </span>
                           {event?.event_type && (
                             <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 uppercase">
                               {event.event_type}

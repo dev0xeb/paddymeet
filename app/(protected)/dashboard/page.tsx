@@ -303,6 +303,12 @@ export default async function DashboardPage() {
                                     {ticketType.name}
                                   </span>
                                 )}
+                                <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                  ticketType?.is_group_ticket ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'
+                                }`}>
+                                  <Users className="w-2.5 h-2.5" />
+                                  {ticketType?.is_group_ticket ? `Group (${ticketType.group_size})` : 'Individual'}
+                                </span>
                               </div>
                               <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
                                 <span className="flex items-center gap-1">
