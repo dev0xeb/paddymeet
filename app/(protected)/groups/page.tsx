@@ -163,7 +163,7 @@ export default async function MyGroupsPage() {
               return (
                 <div
                   key={membership.id}
-                  className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-purple-200 transition-all p-6"
+                  className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-purple-200 transition-all p-6"
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     
@@ -239,7 +239,7 @@ export default async function MyGroupsPage() {
             })}
           </div>
         ) : (
-          <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 p-12 text-center mb-10 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center mb-10 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]">
             <div className="w-16 h-16 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center mx-auto mb-4 text-purple-600">
               <Users className="w-8 h-8" />
             </div>

@@ -346,7 +346,7 @@ export default function SupportChat({ accountType = 'explorer' }: { accountType?
             onClick={() => setOpen(false)}
           />
 
-          <div className="relative bg-white rounded-t-2xl sm:rounded-xl__TMP__ shadow-2xl w-full sm:max-w-lg h-[85vh] sm:h-[640px] flex flex-col overflow-hidden border border-slate-200/80 animate-in slide-in-from-bottom-5 duration-200">
+          <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-[85vh] sm:h-[640px] flex flex-col overflow-hidden border border-slate-200/80 animate-in slide-in-from-bottom-5 duration-200">
             
             {/* Header */}
             <div className="px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-between border-b border-slate-700">

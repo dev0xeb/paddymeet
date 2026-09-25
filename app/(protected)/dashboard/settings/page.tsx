@@ -311,7 +311,7 @@ export default function UserSettingsPage() {
 
         {/* TAB 1: PROFILE TAB */}
         {activeTab === 'profile' && (
-          <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
             
             {/* Header / Avatar Live Badge */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-gradient-to-r from-slate-50 to-orange-50/30 rounded-xl border border-slate-100">
@@ -465,7 +465,7 @@ export default function UserSettingsPage() {
 
         {/* TAB 2: AVATAR & THEME TAB */}
         {activeTab === 'avatar' && (
-          <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
             <div>
               <h2 className="text-base font-bold text-slate-900 mb-1">Select Avatar Theme</h2>
               <p className="text-xs text-slate-500">
@@ -549,7 +549,7 @@ export default function UserSettingsPage() {
 
         {/* TAB 3: INTERESTS & VIBES TAB */}
         {activeTab === 'interests' && (
-          <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
             <div>
               <h2 className="text-base font-bold text-slate-900 mb-1">Your Event Vibes & Interests</h2>
               <p className="text-xs text-slate-500">
@@ -706,7 +706,7 @@ function SecurityTab({
   }
 
   return (
-    <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
+    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6">
       <div>
         <h2 className="text-base font-bold text-slate-900 mb-1">Update Security & Password</h2>
         <p className="text-xs text-slate-500">

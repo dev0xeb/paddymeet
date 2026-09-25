@@ -110,7 +110,7 @@ export default async function ReferralsPage() {
         </div>
 
         {/* Referral Code Hero Card */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl__TMP__ p-6 sm:p-8 text-white shadow-xl shadow-slate-900/10 mb-8 border border-slate-700">
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl shadow-slate-900/10 mb-8 border border-slate-700">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             
             <div>
@@ -174,7 +174,7 @@ export default async function ReferralsPage() {
         </div>
 
         {/* Live Tracked Referrals Ledger */}
-        <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 mb-8">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-base font-extrabold text-slate-900">Tracked Referrals Ledger</h3>
@@ -230,7 +230,7 @@ export default async function ReferralsPage() {
         </div>
 
         {/* Reward Tiers Roadmap */}
-        <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8">
           <h3 className="text-base font-extrabold text-slate-900 mb-1">Squad Reward Tiers</h3>
           <p className="text-xs text-slate-500 mb-6">Unlock higher milestone perks as your party circle grows</p>
 

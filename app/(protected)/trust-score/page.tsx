@@ -115,7 +115,7 @@ export default async function TrustScorePage() {
         </div>
 
         {/* Hero Score Meter */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl__TMP__ p-6 sm:p-8 text-white shadow-xl shadow-slate-900/10 mb-8 border border-slate-700">
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl shadow-slate-900/10 mb-8 border border-slate-700">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             
             <div className="space-y-2">
@@ -157,7 +157,7 @@ export default async function TrustScorePage() {
         </div>
 
         {/* Score Composition Breakdown */}
-        <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 mb-8 space-y-6">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8 mb-8 space-y-6">
           <div>
             <h3 className="text-base font-extrabold text-slate-900 mb-1">Score Composition Breakdown</h3>
             <p className="text-xs text-slate-500">How your {trustScore} points are calculated in real time</p>
@@ -221,7 +221,7 @@ export default async function TrustScorePage() {
         </div>
 
         {/* Tier Roadmap & Privilege Unlocks */}
-        <div className="bg-white rounded-xl__TMP__ border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] p-6 sm:p-8">
           <h3 className="text-base font-extrabold text-slate-900 mb-1">Tier Roadmap & Perks</h3>
           <p className="text-xs text-slate-500 mb-6">Unlock exclusive platform privileges as your score increases</p>
 
