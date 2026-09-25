@@ -221,6 +221,7 @@ export async function POST(request: NextRequest) {
         user_id: user_id || null,
         ticket_code: generateTicketCode('PM'),
         status: 'active',
+        payment_reference: reference,
         attendee_name: attendee?.name || buyer_name || null,
         attendee_email: attendee?.email || data.customer?.email || null,
         attendee_phone: attendee?.phone || buyer_phone || null,
@@ -575,6 +576,11 @@ async function handleGroupPayment(
         user_id: m.user_id,
         ticket_code: generateTicketCode('PM-GRP'),
         status: 'active',
+        // Each member's own share payment, not the reference of whichever
+        // payment happened to complete the group — a group's members each
+        // paid separately, so their ticket needs to trace back to their
+        // own transaction, not someone else's.
+        payment_reference: m.payment_reference,
         attendee_name: m.attendee_name,
         attendee_phone: m.attendee_phone,
       }))

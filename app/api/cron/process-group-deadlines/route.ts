@@ -234,6 +234,7 @@ async function processTicketTypeGroups(
       user_id: m.user_id,
       ticket_code: generateTicketCode('PM-GRP'),
       status: 'active',
+      payment_reference: m.payment_reference,
       attendee_name: m.attendee_name || null,
       attendee_phone: m.attendee_phone || null,
     }))

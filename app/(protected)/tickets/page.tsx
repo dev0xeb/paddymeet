@@ -12,7 +12,9 @@ import {
   ArrowLeft,
   Search,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Receipt,
+  Loader2
 } from 'lucide-react'
 import UserAvatarMenu from '@/components/UserAvatarMenu'
 import TicketQRModal from '@/components/TicketQRModal'
@@ -38,6 +40,48 @@ export default async function TicketsPage() {
 
   const activeTickets = tickets?.filter(t => t.status === 'active') || []
   const pastTickets = tickets?.filter(t => t.status !== 'active') || []
+
+  // Transaction history: confirmed (orders, each matched to the ticket(s)
+  // it produced via payment_reference) plus anything still pending — a
+  // solo checkout that hasn't been confirmed yet, or a group share you've
+  // paid for where the group hasn't filled (or, if something ever breaks
+  // again the way the group-ticket bug did, one that's stuck) — so a
+  // payment never just vanishes with nothing to show for it.
+  const { data: orders } = await supabase
+    .from('orders')
+    .select('*, events(title)')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(30)
+
+  const orderRefs = (orders || []).map(o => o.payment_reference).filter(Boolean)
+  const { data: orderTickets } = orderRefs.length > 0
+    ? await supabase.from('tickets').select('ticket_code, payment_reference').in('payment_reference', orderRefs)
+    : { data: [] as { ticket_code: string, payment_reference: string }[] }
+
+  const ticketCodesByRef = new Map<string, string[]>()
+  for (const t of orderTickets || []) {
+    if (!t.payment_reference) continue
+    const list = ticketCodesByRef.get(t.payment_reference) || []
+    list.push(t.ticket_code)
+    ticketCodesByRef.set(t.payment_reference, list)
+  }
+
+  const { data: pendingReservations } = await supabase
+    .from('ticket_reservations')
+    .select('*, events(title), ticket_types(name, price)')
+    .eq('user_id', user.id)
+    .eq('status', 'pending')
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false })
+
+  const { data: pendingGroupShares } = await supabase
+    .from('group_members')
+    .select('*, groups(name, max_members, events(title))')
+    .eq('user_id', user.id)
+    .eq('payment_status', 'paid')
+    .is('ticket_id', null)
+    .order('paid_at', { ascending: false })
 
   return (
     <div className="min-h-screen bg-slate-50/70 antialiased text-slate-900">
@@ -95,6 +139,101 @@ export default async function TicketsPage() {
             <Search className="w-4 h-4" /> Book More Tickets
           </Link>
         </div>
+
+        {/* Transaction History */}
+        {((pendingReservations && pendingReservations.length > 0) ||
+          (pendingGroupShares && pendingGroupShares.length > 0) ||
+          (orders && orders.length > 0)) && (
+          <div className="mb-10">
+            <div className="flex items-center gap-2 mb-4">
+              <Receipt className="w-4 h-4 text-slate-400" />
+              <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Transaction History</h2>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] divide-y divide-slate-100 overflow-hidden">
+
+              {pendingGroupShares?.map((share) => {
+                const group = Array.isArray(share.groups) ? share.groups[0] : share.groups
+                const event = group ? (Array.isArray(group.events) ? group.events[0] : group.events) : null
+                return (
+                  <div key={share.id} className="flex items-center gap-3.5 p-4">
+                    <div className="w-9 h-9 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0">
+                      <Loader2 className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-slate-900 truncate">{event?.title || 'Group Ticket'}</div>
+                      <div className="text-xs text-slate-500">
+                        ₦{Number(share.amount_paid || 0).toLocaleString()} paid · {group?.name || 'Group'} — waiting for the group to fill
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full flex-shrink-0">
+                      Pending
+                    </span>
+                  </div>
+                )
+              })}
+
+              {pendingReservations?.map((res) => {
+                const event = Array.isArray(res.events) ? res.events[0] : res.events
+                const ticketType = Array.isArray(res.ticket_types) ? res.ticket_types[0] : res.ticket_types
+                return (
+                  <div key={res.id} className="flex items-center gap-3.5 p-4">
+                    <div className="w-9 h-9 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0">
+                      <Loader2 className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-slate-900 truncate">{event?.title || 'Event'}</div>
+                      <div className="text-xs text-slate-500">
+                        {ticketType?.name || 'Ticket'} · {res.quantity}x · awaiting payment confirmation
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full flex-shrink-0">
+                      Pending
+                    </span>
+                  </div>
+                )
+              })}
+
+              {orders?.map((order) => {
+                const event = Array.isArray(order.events) ? order.events[0] : order.events
+                const ticketCodes = order.payment_reference ? ticketCodesByRef.get(order.payment_reference) || [] : []
+                return (
+                  <div key={order.id} className="p-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-bold text-slate-900 truncate">{event?.title || 'Event'}</div>
+                        <div className="text-xs text-slate-500">
+                          ₦{Number(order.total_paid || 0).toLocaleString()} · {order.created_at ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full flex-shrink-0">
+                        Confirmed
+                      </span>
+                    </div>
+                    {ticketCodes.length > 0 ? (
+                      <div className="mt-2.5 ml-12 space-y-1">
+                        {ticketCodes.map((code) => (
+                          <div key={code} className="flex items-center gap-1.5 text-xs text-slate-500">
+                            <Ticket className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                            Ticket issued — <span className="font-mono text-slate-700">{code}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-2.5 ml-12 text-xs text-slate-400">
+                        No ticket linked to this payment yet
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+            </div>
+          </div>
+        )}
 
         {/* Active Tickets List */}
         {activeTickets.length > 0 ? (

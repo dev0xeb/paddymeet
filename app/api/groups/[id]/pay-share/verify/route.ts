@@ -214,6 +214,10 @@ export async function POST(
       user_id: m.user_id,
       ticket_code: generateTicketCode('PM-GRP'),
       status: 'active',
+      // Each member's own share payment, not just this request's reference
+      // — every member paid separately, so their ticket needs to trace
+      // back to their own transaction.
+      payment_reference: m.payment_reference,
       attendee_name: m.attendee_name,
       attendee_phone: m.attendee_phone,
     }))

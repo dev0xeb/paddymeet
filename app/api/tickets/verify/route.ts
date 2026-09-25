@@ -247,6 +247,7 @@ export async function POST(request: NextRequest) {
       user_id,
       ticket_code: generateTicketCode('PM'),
       status: 'active',
+      payment_reference: reference,
       attendee_name: attendee?.name || buyer_name || null,
       attendee_email: attendee?.email || null,
       attendee_phone: attendee?.phone || buyer_phone || null,
