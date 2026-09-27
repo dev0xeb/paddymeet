@@ -383,7 +383,7 @@ export default function LandingClientPage({ user, accountType = null, displayNam
         <nav className="pm-nav max-w-[1180px] mx-auto flex items-center gap-8 px-3 py-2.5 sm:pl-5">
           <Brand />
 
-          <div className={`${open ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row gap-1 sm:gap-7 absolute sm:static top-[60px] left-3 right-3 sm:top-auto sm:left-auto sm:right-auto p-4 sm:p-0 pm-card sm:bg-transparent sm:border-0 mr-auto`}>
+          <div className={`${open ? 'flex pm-card' : 'hidden'} sm:flex flex-col sm:flex-row gap-1 sm:gap-7 absolute sm:static top-[60px] left-3 right-3 sm:top-auto sm:left-auto sm:right-auto p-4 sm:p-0 mr-auto`}>
             {navLinks.map(([href, label]) => (
               <Link key={href} href={href} className="text-[13px] text-[#b9a8a0] hover:text-[#f7efe4] transition-colors py-1.5 sm:py-0">
                 {label}

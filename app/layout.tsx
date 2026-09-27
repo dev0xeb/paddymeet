@@ -5,7 +5,6 @@ import "./landing.css";
 import { fraunces, dmSans } from "./fonts";
 import { GroupChatProvider } from "@/context/GroupChatContext";
 import GroupChatBar from "@/components/GroupChatBar";
-import NavigationProgress from "@/components/NavigationProgress";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -70,7 +69,6 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <GroupChatProvider>
-          <NavigationProgress />
           {children}
           <GroupChatBar />
         </GroupChatProvider>
