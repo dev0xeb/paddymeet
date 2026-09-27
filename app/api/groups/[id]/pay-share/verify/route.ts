@@ -227,12 +227,11 @@ export async function POST(
       .insert(ticketsToCreate)
       .select()
 
-    if (ticketType?.id) {
-      await supabase.rpc('increment_tickets_sold', {
-        ticket_type_id: ticketType.id,
-        amount: ticketsToCreate.length,
-      })
-    }
+    // No ticket_types.quantity_sold increment here — this table's single
+    // unit of capacity was already claimed when the group was first
+    // created (see create-ticket-group), regardless of its group_size.
+    // Incrementing again here by member count double-counted every
+    // completed group against the organiser's stated capacity.
 
     // Link tickets back to their member rows and send emails. Paired by
     // array index (ticketsToCreate was built by mapping allPaidMembers 1:1

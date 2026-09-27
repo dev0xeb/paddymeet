@@ -591,12 +591,11 @@ async function handleGroupPayment(
         console.error(`Group payment webhook: ticket creation failed for group ${groupId}:`, ticketInsertError.message)
       }
 
-      if (ticketType?.id) {
-        await adminClient.rpc('increment_tickets_sold', {
-          ticket_type_id: ticketType.id,
-          amount: ticketsToCreate.length,
-        })
-      }
+      // No ticket_types.quantity_sold increment here — this table's single
+      // unit of capacity was already claimed when the group was first
+      // created (see create-ticket-group), regardless of its group_size.
+      // Incrementing again here by member count double-counted every
+      // completed group against the organiser's stated capacity.
 
       if (createdTickets) {
         for (let i = 0; i < createdTickets.length; i++) {

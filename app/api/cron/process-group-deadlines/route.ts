@@ -293,14 +293,27 @@ async function processTicketTypeGroups(
     }
   }
 
-  // Handle leftover members — notify them to switch to a single ticket and release their slot
-  for (const member of leftoverMembers) {
-    // Release the reserved slot
+  // Every merged-away or failed group above gave back the one table-unit of
+  // capacity it reserved at creation — recompute quantity_sold once from the
+  // real, current count of still-active (recruiting/completed) groups for
+  // this ticket type, rather than decrementing per leftover member (which
+  // both double-released multi-member failed groups and drifted from a
+  // stale in-memory quantity_sold read at the top of this function).
+  if (mergedGroups.length > 0 || leftoverMembers.length > 0) {
+    const { count: activeTables } = await adminClient
+      .from('groups')
+      .select('*', { count: 'exact', head: true })
+      .eq('ticket_type_id', ticketTypeId)
+      .in('status', ['recruiting', 'completed'])
+
     await adminClient
       .from('ticket_types')
-      .update({ quantity_sold: Math.max(0, (ticketType.quantity_sold as number) - 1) })
+      .update({ quantity_sold: activeTables ?? 0 })
       .eq('id', ticketTypeId)
+  }
 
+  // Handle leftover members — notify them to switch to a single ticket
+  for (const member of leftoverMembers) {
     // Notify the user
     await adminClient.from('notifications').insert({
       user_id: member.user_id,

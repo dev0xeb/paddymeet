@@ -48,6 +48,9 @@ export default async function AdminEventDetailPage({
     : { label: 'Pending Review', class: 'bg-orange-50 text-orange-500 border-orange-200' }
 
   const needsDecision = !event.is_approved && !event.is_rejected
+  const isSoldOut = badge.label === 'Live'
+    && event.ticket_types && event.ticket_types.length > 0
+    && event.ticket_types.every((t: { quantity: number, quantity_sold: number }) => (t.quantity_sold || 0) >= t.quantity)
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
@@ -65,6 +68,9 @@ export default async function AdminEventDetailPage({
             <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${badge.class}`}>
               {badge.label}
             </span>
+            {isSoldOut && (
+              <span className="px-2.5 py-1 bg-gray-900 text-white rounded-full text-xs font-bold">Sold Out</span>
+            )}
             {event.is_free && (
               <span className="px-2.5 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-bold">Free</span>
             )}
@@ -166,11 +172,18 @@ export default async function AdminEventDetailPage({
               <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <h2 className="text-sm font-extrabold text-gray-900 mb-4">Ticket Types</h2>
                 <div className="space-y-3">
-                  {event.ticket_types.map((t: { id: string, name: string, price: number, quantity: number, quantity_sold: number, description: string, is_group_ticket: boolean, group_size: number }) => (
+                  {event.ticket_types.map((t: { id: string, name: string, price: number, quantity: number, quantity_sold: number, description: string, is_group_ticket: boolean, group_size: number }) => {
+                    const ticketSoldOut = (t.quantity_sold || 0) >= t.quantity
+                    return (
                     <div key={t.id} className="p-3 bg-gray-50 rounded-xl">
                       <div className="flex items-center gap-4">
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-bold text-gray-900">{t.name}</div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div className="text-sm font-bold text-gray-900">{t.name}</div>
+                            {ticketSoldOut && (
+                              <span className="px-1.5 py-0.5 bg-gray-900 text-white text-[10px] font-bold rounded-full">Sold Out</span>
+                            )}
+                          </div>
                           {t.description && <div className="text-xs text-gray-500 mt-0.5">{t.description}</div>}
                         </div>
                         <div className="text-sm font-bold text-gray-900 flex-shrink-0">{t.price > 0 ? `₦${t.price.toLocaleString()}` : 'Free'}</div>
@@ -184,7 +197,8 @@ export default async function AdminEventDetailPage({
                         </div>
                       )}
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}

@@ -142,6 +142,9 @@ export default async function AdminEventsPage({
           <div className="space-y-4">
             {events.map((event, index) => {
               const badge = getStatusBadge(event)
+              const eventTicketTypes = (event.ticket_types || []) as { quantity: number, quantity_sold: number }[]
+              const isSoldOut = badge.label === 'Live' && eventTicketTypes.length > 0
+                && eventTicketTypes.every(t => (t.quantity_sold || 0) >= t.quantity)
               return (
                 <div key={event.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all">
                   <div className="flex items-start gap-5 p-5">
@@ -166,6 +169,9 @@ export default async function AdminEventsPage({
                             <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${badge.class}`}>
                               {badge.label}
                             </span>
+                            {isSoldOut && (
+                              <span className="px-2 py-0.5 bg-gray-900 text-white text-xs font-bold rounded-full">Sold Out</span>
+                            )}
                             {event.is_free && (
                               <span className="px-2 py-0.5 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full">Free</span>
                             )}

@@ -42,6 +42,7 @@ interface Props {
 
 export default function BuyTicketButton({ event, ticketType, user, label, fullWidth, autoOpen, onClose }: Props) {
   const [open, setOpen] = useState(autoOpen || false)
+  const soldOut = (ticketType.quantity_sold || 0) >= ticketType.quantity
 
   const handleClose = () => {
     setOpen(false)
@@ -51,12 +52,21 @@ export default function BuyTicketButton({ event, ticketType, user, label, fullWi
   return (
     <>
       {!autoOpen && (
-        <button
-          onClick={() => setOpen(true)}
-          className={`${fullWidth ? 'w-full py-3.5 rounded-xl' : 'px-5 py-2 rounded-full'} bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors flex items-center justify-center`}
-        >
-          {label || (event.is_free ? 'Get Free Ticket' : 'Buy Ticket')}
-        </button>
+        soldOut ? (
+          <button
+            disabled
+            className={`${fullWidth ? 'w-full py-3.5 rounded-xl' : 'px-5 py-2 rounded-full'} bg-gray-100 text-gray-400 text-sm font-bold cursor-not-allowed flex items-center justify-center`}
+          >
+            Sold Out
+          </button>
+        ) : (
+          <button
+            onClick={() => setOpen(true)}
+            className={`${fullWidth ? 'w-full py-3.5 rounded-xl' : 'px-5 py-2 rounded-full'} bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors flex items-center justify-center`}
+          >
+            {label || (event.is_free ? 'Get Free Ticket' : 'Buy Ticket')}
+          </button>
+        )
       )}
 
       {open && (

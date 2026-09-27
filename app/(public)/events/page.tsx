@@ -112,9 +112,13 @@ export default async function EventsPage({
         {/* Events grid */}
         {events && events.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {events.map((event, index) => (
+            {events.map((event, index) => {
+              const ticketTypesForEvent = (event.ticket_types || []) as { quantity: number, quantity_sold: number }[]
+              const allSoldOut = ticketTypesForEvent.length > 0
+                && ticketTypesForEvent.every(t => (t.quantity_sold || 0) >= t.quantity)
+              return (
               <Link key={event.id} href={`/events/${event.id}`}
-                className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-50 transition-all duration-300">
+                className={`group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-50 transition-all duration-300 ${allSoldOut ? 'opacity-70' : ''}`}>
                 <div className={`h-44 relative ${event.cover_image_url ? '' : `bg-gradient-to-br ${gradients[index % gradients.length]}`}`}
   style={event.cover_image_url ? { backgroundImage: `url(${event.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -122,7 +126,9 @@ export default async function EventsPage({
                     <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-gray-700">
                       {event.vibe || 'Social'}
                     </span>
-                    {event.is_free ? (
+                    {allSoldOut ? (
+                      <span className="px-2.5 py-1 bg-gray-900/80 backdrop-blur-sm rounded-full text-xs font-bold text-white">Sold Out</span>
+                    ) : event.is_free ? (
                       <span className="px-2.5 py-1 bg-green-500 rounded-full text-xs font-bold text-white">Free</span>
                     ) : (
                       <span className="flex items-center gap-1 px-2.5 py-1 bg-orange-500 rounded-full text-xs font-bold text-white">
@@ -164,7 +170,11 @@ export default async function EventsPage({
                       </div>
                       <span className="text-xs text-gray-500 font-medium">Going</span>
                     </div>
-                    {event.is_free ? (
+                    {allSoldOut ? (
+                      <span className="px-4 py-2 bg-gray-100 text-gray-500 border border-gray-200 text-xs font-bold rounded-full">
+                        Sold Out
+                      </span>
+                    ) : event.is_free ? (
                       <span className="px-4 py-2 bg-green-50 text-green-600 border border-green-200 text-xs font-bold rounded-full">
                         Free
                       </span>
@@ -176,7 +186,8 @@ export default async function EventsPage({
                   </div>
                 </div>
               </Link>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <div className="text-center py-20">

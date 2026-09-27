@@ -126,6 +126,9 @@ export default async function OrganiserEventsPage({
             {events.map((event, index) => {
               const status = getStatus(event)
               const StatusIcon = status.icon
+              const eventTicketTypes = (event.ticket_types || []) as { quantity: number, quantity_sold: number }[]
+              const isSoldOut = status.label === 'Live' && eventTicketTypes.length > 0
+                && eventTicketTypes.every(t => (t.quantity_sold || 0) >= t.quantity)
               return (
                 <div key={event.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition-all">
                   <div className="flex items-start gap-3 md:gap-5 p-4 md:p-5">
@@ -156,6 +159,11 @@ export default async function OrganiserEventsPage({
                                 {status.label}
                               </span>
                             </span>
+                            {isSoldOut && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-bold border flex-shrink-0 bg-gray-900 text-white border-gray-900">
+                                Sold Out
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-blue-500 font-semibold">{event.event_type}{event.vibe ? ` · ${event.vibe}` : ''}</div>
                         </div>

@@ -34,18 +34,40 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Group ticket sales have closed for this ticket type' }, { status: 400 })
   }
 
-  if ((ticketType.quantity_sold || 0) >= ticketType.quantity) {
-    return NextResponse.json({ error: 'This group ticket is sold out' }, { status: 400 })
+  // Atomic, self-healing capacity check — one unit of quantity == one
+  // table, regardless of group_size. Derives the real reserved-table count
+  // from the groups table itself (recruiting/completed) rather than
+  // trusting the cached quantity_sold column, and confirms the guarded
+  // update actually matched a row before proceeding: the previous version
+  // here checked only for a Postgres error, but a lost compare-and-swap
+  // race (someone else reserved the last table first) updates zero rows
+  // without raising one, so it silently let the request through anyway and
+  // created more tables than the organiser's stated capacity allowed.
+  let reserved = false
+  for (let attempt = 0; attempt < 3 && !reserved; attempt++) {
+    const { count: activeTables } = await supabase
+      .from('groups')
+      .select('*', { count: 'exact', head: true })
+      .eq('ticket_type_id', ticket_type_id)
+      .in('status', ['recruiting', 'completed'])
+
+    const currentSold = activeTables || 0
+
+    if (currentSold + 1 > ticketType.quantity) {
+      return NextResponse.json({ error: 'This group ticket is sold out' }, { status: 400 })
+    }
+
+    const { data: reserveRows } = await supabase
+      .from('ticket_types')
+      .update({ quantity_sold: currentSold + 1 })
+      .eq('id', ticket_type_id)
+      .eq('quantity_sold', currentSold)
+      .select('id')
+
+    reserved = !!reserveRows && reserveRows.length > 0
   }
 
-  // Reserve one group slot at the ticket-type level (the "table" itself)
-  const { error: reserveError } = await supabase
-    .from('ticket_types')
-    .update({ quantity_sold: (ticketType.quantity_sold || 0) + 1 })
-    .eq('id', ticket_type_id)
-    .eq('quantity_sold', ticketType.quantity_sold || 0)
-
-  if (reserveError) {
+  if (!reserved) {
     return NextResponse.json({ error: 'Could not reserve a slot. Please try again.' }, { status: 400 })
   }
 

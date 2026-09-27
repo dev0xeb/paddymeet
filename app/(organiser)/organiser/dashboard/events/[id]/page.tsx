@@ -73,6 +73,10 @@ export default async function OrganiserManageEventPage({
     ? { label: 'Live', class: 'bg-green-50 text-green-600 border-green-200' }
     : { label: 'Approved', class: 'bg-gray-50 text-gray-500 border-gray-200' }
 
+  const isSoldOut = badge.label === 'Live'
+    && event.ticket_types && event.ticket_types.length > 0
+    && event.ticket_types.every((t: { quantity: number, quantity_sold: number }) => (t.quantity_sold || 0) >= t.quantity)
+
   return (
     <div className="min-h-screen bg-gray-50">
 
@@ -91,6 +95,9 @@ export default async function OrganiserManageEventPage({
             <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${badge.class}`}>
               {badge.label}
             </span>
+            {isSoldOut && (
+              <span className="px-2.5 py-1 bg-gray-900 text-white rounded-full text-xs font-bold">Sold Out</span>
+            )}
             {event.is_free && (
               <span className="px-2.5 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-bold">Free</span>
             )}
@@ -178,10 +185,17 @@ export default async function OrganiserManageEventPage({
               <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <h2 className="text-sm font-extrabold text-gray-900 mb-4">Ticket Types</h2>
                 <div className="space-y-3">
-                  {event.ticket_types.map((t: { id: string, name: string, price: number, quantity: number, quantity_sold: number, description: string }) => (
+                  {event.ticket_types.map((t: { id: string, name: string, price: number, quantity: number, quantity_sold: number, description: string }) => {
+                    const ticketSoldOut = (t.quantity_sold || 0) >= t.quantity
+                    return (
                     <div key={t.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold text-gray-900">{t.name}</div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="text-sm font-bold text-gray-900">{t.name}</div>
+                          {ticketSoldOut && (
+                            <span className="px-1.5 py-0.5 bg-gray-900 text-white text-[10px] font-bold rounded-full">Sold Out</span>
+                          )}
+                        </div>
                         {t.description && <div className="text-xs text-gray-500 mt-0.5">{t.description}</div>}
                       </div>
                       <div className="text-sm font-bold text-gray-900 flex-shrink-0">₦{t.price.toLocaleString()}</div>
@@ -192,7 +206,8 @@ export default async function OrganiserManageEventPage({
                         <div className="h-full bg-blue-500 rounded-full" style={{ width: `${t.quantity > 0 ? Math.min(100, ((t.quantity_sold || 0) / t.quantity) * 100) : 0}%` }} />
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}

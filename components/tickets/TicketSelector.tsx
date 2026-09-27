@@ -41,6 +41,7 @@ interface Props {
 export default function TicketSelector({ event, ticketTypes, user, label, fullWidth }: Props) {
   const [showSelector, setShowSelector] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null)
+  const allSoldOut = ticketTypes.every(t => t.quantity - (t.quantity_sold || 0) <= 0)
 
   // If only one ticket type open purchase directly
   if (ticketTypes.length === 1) {
@@ -52,6 +53,17 @@ export default function TicketSelector({ event, ticketTypes, user, label, fullWi
         label={label}
         fullWidth={fullWidth}
       />
+    )
+  }
+
+  if (allSoldOut) {
+    return (
+      <button
+        disabled
+        className={`${fullWidth ? 'w-full py-3.5 rounded-xl' : 'px-5 py-2 rounded-full'} bg-gray-100 text-gray-400 text-sm font-bold cursor-not-allowed flex items-center justify-center`}
+      >
+        Sold Out
+      </button>
     )
   }
 
