@@ -215,7 +215,7 @@ export default async function OrganiserRevenuePage({
             <span className="text-xs text-gray-400">{count} total</span>
           </div>
 
-          <div className="hidden md:grid grid-cols-4 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
+          <div className="hidden lg:grid grid-cols-4 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
             {['Event', 'Date', 'Gross', 'Net'].map(h => (
               <div key={h} className="text-xs font-bold text-gray-400 uppercase tracking-wider">{h}</div>
             ))}
@@ -229,7 +229,7 @@ export default async function OrganiserRevenuePage({
                   : (order.events as { title: string } | null)?.title
                 const net = (order.total_paid || 0) - (order.service_fee || 0) - (order.total_paid || 0) * commissionRate
                 return (
-                  <div key={order.id} className="flex flex-col sm:grid sm:grid-cols-4 gap-2 sm:gap-4 px-4 py-4 hover:bg-gray-50 transition-colors">
+                  <div key={order.id} className="flex flex-col lg:grid lg:grid-cols-4 gap-2 lg:gap-4 px-4 py-4 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                         {evTitle?.charAt(0) || 'E'}

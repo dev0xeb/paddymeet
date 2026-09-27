@@ -30,13 +30,21 @@ export default async function AdminEventsPage({
   const params = await searchParams
   const status = params.status || 'pending'
 
+  // An event's is_live flag never flips automatically once its date passes
+  // — nothing in this app updates it — so "Live" on its own conflates
+  // genuinely upcoming events with ones that already happened and just
+  // haven't been taken down. Ended is its own filter, and Live now
+  // excludes anything whose date has already passed.
+  const today = new Date().toISOString().split('T')[0]
+
   let query = adminClient
     .from('events')
     .select('*, organisers(id, org_name, contact_name, email, is_verified), ticket_types(*)')
     .order('created_at', { ascending: false })
 
   if (status === 'pending') query = query.eq('is_approved', false).eq('is_rejected', false)
-  if (status === 'live') query = query.eq('is_approved', true).eq('is_live', true)
+  if (status === 'live') query = query.eq('is_approved', true).eq('is_live', true).gte('event_date', today)
+  if (status === 'ended') query = query.eq('is_approved', true).lt('event_date', today)
   if (status === 'rejected') query = query.eq('is_rejected', true)
   // 'all' — no filter
 
@@ -44,12 +52,14 @@ export default async function AdminEventsPage({
     { data: events },
     { count: pendingCount },
     { count: liveCount },
+    { count: endedCount },
     { count: rejectedCount },
     { count: totalCount },
   ] = await Promise.all([
     query.limit(50),
     adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_approved', false).eq('is_rejected', false),
-    adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_approved', true).eq('is_live', true),
+    adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_approved', true).eq('is_live', true).gte('event_date', today),
+    adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_approved', true).lt('event_date', today),
     adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_rejected', true),
     adminClient.from('events').select('*', { count: 'exact', head: true }),
   ])
@@ -62,8 +72,9 @@ export default async function AdminEventsPage({
     'from-blue-900 via-indigo-900 to-purple-900',
   ]
 
-  const getStatusBadge = (event: { is_approved: boolean, is_live: boolean, is_rejected: boolean }) => {
+  const getStatusBadge = (event: { is_approved: boolean, is_live: boolean, is_rejected: boolean, event_date: string | null }) => {
     if (event.is_rejected) return { label: 'Rejected', class: 'bg-red-50 text-red-500 border-red-200' }
+    if (event.is_approved && event.event_date && event.event_date < today) return { label: 'Ended', class: 'bg-gray-100 text-gray-500 border-gray-200' }
     if (event.is_approved && event.is_live) return { label: 'Live', class: 'bg-green-50 text-green-600 border-green-200' }
     if (event.is_approved && !event.is_live) return { label: 'Approved', class: 'bg-blue-50 text-blue-600 border-blue-200' }
     return { label: 'Pending', class: 'bg-orange-50 text-orange-500 border-orange-200' }
@@ -97,10 +108,11 @@ export default async function AdminEventsPage({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           {[
             { label: 'Pending review', value: pendingCount ?? 0, color: 'orange', status: 'pending' },
             { label: 'Live events', value: liveCount ?? 0, color: 'green', status: 'live' },
+            { label: 'Ended', value: endedCount ?? 0, color: 'gray', status: 'ended' },
             { label: 'Rejected', value: rejectedCount ?? 0, color: 'red', status: 'rejected' },
             { label: 'Total events', value: totalCount ?? 0, color: 'blue', status: 'all' },
           ].map(({ label, value, color, status: s }) => (
@@ -109,6 +121,7 @@ export default async function AdminEventsPage({
                 status === s
                   ? color === 'orange' ? 'border-orange-300' :
                     color === 'green' ? 'border-green-300' :
+                    color === 'gray' ? 'border-gray-300' :
                     color === 'red' ? 'border-red-300' : 'border-blue-300'
                   : 'border-gray-100'
               }`}>
@@ -124,6 +137,7 @@ export default async function AdminEventsPage({
           {[
             { label: 'Pending', value: 'pending', count: pendingCount ?? 0 },
             { label: 'Live', value: 'live', count: liveCount ?? 0 },
+            { label: 'Ended', value: 'ended', count: endedCount ?? 0 },
             { label: 'Rejected', value: 'rejected', count: rejectedCount ?? 0 },
             { label: 'All Events', value: 'all', count: totalCount ?? 0 },
           ].map(({ label, value, count }) => (
@@ -272,10 +286,12 @@ export default async function AdminEventsPage({
             <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
             <h3 className="text-base font-bold text-gray-700 mb-1">
               {status === 'pending' ? 'No events pending review' :
-               status === 'rejected' ? 'No rejected events' : 'No events found'}
+               status === 'rejected' ? 'No rejected events' :
+               status === 'ended' ? 'No ended events yet' : 'No events found'}
             </h3>
             <p className="text-sm text-gray-400">
-              {status === 'pending' ? 'All submitted events have been reviewed.' : 'Events will appear here once organisers start submitting.'}
+              {status === 'pending' ? 'All submitted events have been reviewed.' :
+               status === 'ended' ? 'Events move here once their date has passed.' : 'Events will appear here once organisers start submitting.'}
             </p>
           </div>
         )}

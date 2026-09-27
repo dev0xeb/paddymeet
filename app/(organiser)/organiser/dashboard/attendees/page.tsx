@@ -145,7 +145,7 @@ export default async function OrganiserAttendeesPage({
 
         {/* Attendees table */}
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <div className="hidden md:grid grid-cols-6 gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100">
+          <div className="hidden lg:grid grid-cols-6 gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100">
             {['Attendee', 'Event', 'Ticket', 'Date', 'Location', 'Status'].map(h => (
               <div key={h} className="text-xs font-bold text-gray-400 uppercase tracking-wider">{h}</div>
             ))}
@@ -158,7 +158,7 @@ export default async function OrganiserAttendeesPage({
                 const tt = getField(ticket.ticket_types)
                 const ev = getField(ticket.events)
                 return (
-                  <div key={ticket.id} className="flex flex-col sm:grid sm:grid-cols-6 gap-2 sm:gap-3 px-4 py-4 hover:bg-gray-50 transition-colors">
+                  <div key={ticket.id} className="flex flex-col lg:grid lg:grid-cols-6 gap-2 lg:gap-3 px-4 py-4 hover:bg-gray-50 transition-colors">
 
                     {/* Attendee */}
                     <div className="flex items-center gap-2 min-w-0">

@@ -122,7 +122,7 @@ export default async function AdminUsersPage({
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
 
           {/* Table header */}
-          <div className="hidden sm:grid grid-cols-6 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
+          <div className="hidden lg:grid grid-cols-6 gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
             {['User', 'Location', 'Trust Score', 'Tier', 'Joined', 'Actions'].map(h => (
               <div key={h} className="text-xs font-bold text-gray-400 uppercase tracking-wider">{h}</div>
             ))}
@@ -144,7 +144,7 @@ export default async function AdminUsersPage({
                 created_at: string
                 events_attended: number
               }) => (
-                <div key={u.id} className="flex flex-col sm:grid sm:grid-cols-6 gap-3 sm:gap-4 px-5 py-4 hover:bg-gray-50 transition-colors sm:items-center">
+                <div key={u.id} className="flex flex-col lg:grid lg:grid-cols-6 gap-3 lg:gap-4 px-5 py-4 hover:bg-gray-50 transition-colors lg:items-center">
 
                   {/* User */}
                   <div className="flex items-center gap-3 min-w-0">
