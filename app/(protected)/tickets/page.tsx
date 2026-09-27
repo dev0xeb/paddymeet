@@ -255,39 +255,66 @@ export default async function TicketsPage({
             <div className="space-y-2.5">
               {pagedHistoryTickets.map((ticket) => {
                 const ticketType = ticket.ticket_types
+                const wasScanned = ticket.attended === true || ticket.status === 'used'
+
+                // Status reflects what actually happened at the gate, not
+                // just the ticket's internal status field — a ticket for a
+                // past event that was never scanned is a genuine "missed"
+                // outcome, distinct from one that was actually checked in.
+                const attendanceStatus = ticket.status === 'cancelled'
+                  ? { label: 'Cancelled', className: 'bg-red-50 text-red-600' }
+                  : ticket.status === 'refunded'
+                  ? { label: 'Refunded', className: 'bg-red-50 text-red-600' }
+                  : wasScanned
+                  ? { label: 'Attended', className: 'bg-emerald-50 text-emerald-700' }
+                  : { label: 'Not Scanned', className: 'bg-slate-100 text-slate-500' }
+
                 return (
                   <div
                     key={ticket.id}
-                    className="bg-white rounded-xl border border-slate-200/70 p-4 flex items-center justify-between gap-4 opacity-75 hover:opacity-100 transition-opacity"
+                    className="bg-white rounded-xl border border-slate-200/70 p-4 opacity-75 hover:opacity-100 transition-opacity"
                   >
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm flex-shrink-0">
-                        {ticket.events?.title?.charAt(0) || 'E'}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="text-sm font-bold text-slate-900 truncate">
-                            {ticket.events?.title}
-                          </h4>
-                          <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                            ticketType?.is_group_ticket ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'
-                          }`}>
-                            <Users className="w-2.5 h-2.5" />
-                            {ticketType?.is_group_ticket ? `Group (${ticketType.group_size})` : 'Individual'}
-                          </span>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                          {ticket.events?.title?.charAt(0) || 'E'}
                         </div>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {ticket.events?.event_date
-                            ? new Date(ticket.events.event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                            : 'Past Event'}{' '}
-                          • {ticketType?.name || 'Standard'}
-                        </p>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="text-sm font-bold text-slate-900 truncate">
+                              {ticket.events?.title}
+                            </h4>
+                            <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                              ticketType?.is_group_ticket ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              <Users className="w-2.5 h-2.5" />
+                              {ticketType?.is_group_ticket ? `Group (${ticketType.group_size})` : 'Individual'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {ticket.events?.event_date
+                              ? new Date(ticket.events.event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                              : 'Past Event'}{' '}
+                            • {ticketType?.name || 'Standard'}
+                            {ticket.events?.venue_name && <> • {ticket.events.venue_name}</>}
+                          </p>
+                        </div>
                       </div>
+
+                      <span className={`flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-full flex-shrink-0 ${attendanceStatus.className}`}>
+                        {wasScanned && <CheckCircle2 className="w-3 h-3" />}
+                        {attendanceStatus.label}
+                      </span>
                     </div>
 
-                    <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full flex-shrink-0 capitalize">
-                      {ticket.status === 'used' ? 'Attended' : ticket.status === 'active' ? 'Ended' : ticket.status}
-                    </span>
+                    <div className="flex items-center gap-3 flex-wrap mt-2.5 pt-2.5 border-t border-slate-50 text-[11px] text-slate-400">
+                      <span className="font-mono">{ticket.ticket_code}</span>
+                      {wasScanned && ticket.attendance_marked_at && (
+                        <span>
+                          Checked in {new Date(ticket.attendance_marked_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )
               })}
