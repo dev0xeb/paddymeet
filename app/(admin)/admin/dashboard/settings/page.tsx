@@ -1,12 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import {
-  ArrowLeft, Plus, Trash2, Shield, Clock, Check, X, Eye, EyeOff,
-  UserPlus, Sparkles, AlertCircle, Loader2, RefreshCw, Users, Lock, ChevronRight
+  Plus, Trash2, Shield, Clock, Check, X, Eye, EyeOff,
+  UserPlus, Sparkles, AlertCircle, Loader2, Users, Lock
 } from 'lucide-react'
-import Logo from '@/components/Logo'
 
 interface AdminMember {
   id: string
@@ -168,28 +166,9 @@ export default function AdminSettingsPage() {
   const inputClass = "w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-orange-500 transition-all shadow-xs"
 
   return (
-    <div className="min-h-screen bg-slate-50 antialiased">
-      {/* Top Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 bg-slate-900 border-b border-slate-800">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/admin/dashboard"
-            className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Dashboard
-          </Link>
-          <div className="hidden sm:block h-5 w-px bg-slate-700" />
-          <span className="hidden sm:inline-flex text-xs font-semibold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
-            Team & Staff Access
-          </span>
-        </div>
-        <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          <Logo theme="white" className="h-6 w-auto" />
-        </Link>
-      </nav>
+    <>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
 
-      <div className="pt-16 max-w-7xl mx-auto px-4 md:px-6 py-8">
-        
         {/* Header & Add Button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -545,6 +524,6 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
-    </div>
+    </>
   )
 }

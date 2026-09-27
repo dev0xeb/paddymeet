@@ -8,7 +8,6 @@ import {
   Globe, Share2, Eye, KeyRound
 } from 'lucide-react'
 import AdminApproveEventButton from '@/components/AdminApproveEventButton'
-import Logo from '@/components/Logo'
 
 export default async function AdminEventDetailPage({
   params,
@@ -51,25 +50,10 @@ export default async function AdminEventDetailPage({
   const needsDecision = !event.is_approved && !event.is_rejected
 
   return (
-    <div className="min-h-screen bg-gray-50">
-
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 bg-gray-900 border-b border-gray-800">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/dashboard/events" className="flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Events
-          </Link>
-          <div className="hidden sm:block h-5 w-px bg-gray-700" />
-          <span className="hidden sm:inline-flex text-xs font-bold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
-            Event Moderation
-          </span>
-        </div>
-        <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          <Logo theme="white" className="h-6 w-auto" />
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <Link href="/admin/dashboard/events" className="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors mb-4">
+          <ArrowLeft className="w-3.5 h-3.5" /> Events
         </Link>
-      </nav>
-
-      <div className="pt-16 max-w-5xl mx-auto px-4 sm:px-6 py-8">
 
         {/* Hero */}
         <div
@@ -307,7 +291,6 @@ export default async function AdminEventDetailPage({
 
           </div>
         </div>
-      </div>
     </div>
   )
 }

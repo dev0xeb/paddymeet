@@ -1,10 +1,8 @@
 import { createClient } from '@/lib/supabase-server'
 import { createAdminClient } from '@/lib/supabase-admin'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import ScannerReportGenerator from '@/components/admin/ScannerReportGenerator'
-import Logo from '@/components/Logo'
 
 export default async function AdminScannerPage() {
   const supabase = await createClient()
@@ -36,19 +34,7 @@ export default async function AdminScannerPage() {
     .eq('is_rejected', false)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 bg-gray-900 border-b border-gray-800">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/dashboard" className="flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Dashboard
-          </Link>
-          <div className="hidden sm:block h-5 w-px bg-gray-700" />
-          <span className="hidden sm:inline-flex text-xs font-bold text-pink-400 bg-pink-500/10 px-3 py-1 rounded-full border border-pink-500/20">AI Scanner</span>
-        </div>
-        <Link href="/" className="text-lg font-bold text-white tracking-tight"><Logo theme="white" className="h-6 w-auto" /></Link>
-      </nav>
-
-      <div className="pt-16 max-w-4xl mx-auto px-4 md:px-6 py-8">
+    <div className="max-w-4xl mx-auto px-4 md:px-6 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1 flex items-center gap-2">
             <Search className="w-6 h-6 text-pink-500" /> Event Scanner
@@ -70,7 +56,6 @@ export default async function AdminScannerPage() {
 
         <ScannerReportGenerator events={upcomingEvents ?? []} />
 
-      </div>
     </div>
   )
 }

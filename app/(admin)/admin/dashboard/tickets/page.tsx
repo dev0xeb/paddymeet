@@ -3,11 +3,10 @@ import { createAdminClient } from '@/lib/supabase-admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
-  ArrowLeft, Ticket, CheckCircle, XCircle, Clock, Filter,
-  Search, CheckCheck, Calendar, User, Phone, Mail
+  Ticket, CheckCircle, XCircle, Filter,
+  Search, CheckCheck
 } from 'lucide-react'
 import AdminTicketActions from '@/components/AdminTicketActions'
-import Logo from '@/components/Logo'
 
 export default async function AdminTicketsPage({
   searchParams,
@@ -73,28 +72,8 @@ export default async function AdminTicketsPage({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 antialiased">
-      {/* Top Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 bg-slate-900 border-b border-slate-800">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/admin/dashboard"
-            className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Dashboard
-          </Link>
-          <div className="hidden sm:block h-5 w-px bg-slate-700" />
-          <span className="hidden sm:inline-flex text-xs font-semibold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
-            Tickets Management
-          </span>
-        </div>
-        <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          <Logo theme="white" className="h-6 w-auto" />
-        </Link>
-      </nav>
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
 
-      <div className="pt-16 max-w-7xl mx-auto px-4 md:px-6 py-8">
-        
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
@@ -305,7 +284,6 @@ export default async function AdminTicketsPage({
           </div>
         )}
 
-      </div>
     </div>
   )
 }

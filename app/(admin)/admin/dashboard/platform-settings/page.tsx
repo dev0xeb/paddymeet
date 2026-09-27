@@ -1,13 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import {
-  ArrowLeft, Save, Check, Shield, DollarSign, Star, Gift,
-  AlertTriangle, Loader2, Sparkles, Sliders, RefreshCw, X
+  Save, Check, Shield, DollarSign, Star, Gift,
+  AlertTriangle, Loader2, Sliders, X
 } from 'lucide-react'
 import ProcessGroupDeadlinesButton from '@/components/admin/ProcessGroupDeadlinesButton'
-import Logo from '@/components/Logo'
 
 interface PlatformSettings {
   commission_rate: number
@@ -104,28 +102,21 @@ export default function AdminPlatformSettingsPage() {
   const labelClass = "block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5"
 
   return (
-    <div className="min-h-screen bg-slate-50 antialiased">
-      {/* Top Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 bg-slate-900 border-b border-slate-800">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/admin/dashboard"
-            className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Dashboard
-          </Link>
-          <div className="hidden sm:block h-5 w-px bg-slate-700" />
-          <span className="hidden sm:inline-flex text-xs font-semibold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-            System Control Room
-          </span>
-        </div>
+    <>
+      <div className="max-w-4xl mx-auto px-4 md:px-6 py-8">
 
-        <div className="flex items-center gap-3">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">Global Platform Settings</h1>
+            <p className="text-xs text-slate-500">Configure financial take rates, community trust score gates, and system operations.</p>
+          </div>
+
           <button
             type="button"
             onClick={handleSave}
             disabled={saving || loading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl transition-all shadow-sm disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl transition-all shadow-sm disabled:opacity-50 flex-shrink-0"
           >
             {saving ? (
               <>
@@ -144,19 +135,6 @@ export default function AdminPlatformSettingsPage() {
               </>
             )}
           </button>
-
-          <Link href="/" className="text-lg font-bold text-white tracking-tight pl-2">
-            <Logo theme="white" className="h-6 w-auto" />
-          </Link>
-        </div>
-      </nav>
-
-      <div className="pt-16 max-w-4xl mx-auto px-4 md:px-6 py-8">
-        
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">Global Platform Settings</h1>
-          <p className="text-xs text-slate-500">Configure financial take rates, community trust score gates, and system operations.</p>
         </div>
 
         {error && (
@@ -421,6 +399,6 @@ export default function AdminPlatformSettingsPage() {
         </div>
       )}
 
-    </div>
+    </>
   )
 }

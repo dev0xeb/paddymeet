@@ -1,13 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import {
-  ArrowLeft, Plus, Trash2, Copy, Check, Tag, Percent,
-  Calendar, CheckCircle2, Clock, X, Loader2, Sparkles,
-  AlertCircle, Search, Play, Pause, DollarSign, Users
+  Plus, Trash2, Copy, Check, Tag, Percent,
+  CheckCircle2, X, Loader2, Sparkles,
+  AlertCircle, Search, Play, Pause, Users
 } from 'lucide-react'
-import Logo from '@/components/Logo'
 
 interface PromoCode {
   id: string
@@ -155,28 +153,9 @@ export default function AdminPromoCodesPage() {
   const inputClass = "w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-orange-500 transition-all"
 
   return (
-    <div className="min-h-screen bg-slate-50 antialiased">
-      {/* Top Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 bg-slate-900 border-b border-slate-800">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/admin/dashboard"
-            className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Dashboard
-          </Link>
-          <div className="hidden sm:block h-5 w-px bg-slate-700" />
-          <span className="hidden sm:inline-flex text-xs font-semibold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
-            Promotions & Discounts
-          </span>
-        </div>
-        <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          <Logo theme="white" className="h-6 w-auto" />
-        </Link>
-      </nav>
+    <>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
 
-      <div className="pt-16 max-w-7xl mx-auto px-4 md:px-6 py-8">
-        
         {/* Header & Create Action */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -370,6 +349,7 @@ export default function AdminPromoCodesPage() {
       </div>
 
       {/* Modal: Create Promo Code */}
+
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in text-left">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 relative">
@@ -519,6 +499,6 @@ export default function AdminPromoCodesPage() {
         </div>
       )}
 
-    </div>
+    </>
   )
 }

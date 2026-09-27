@@ -1,13 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
 import {
-  ArrowLeft, MessageSquare, Send, Clock, CheckCircle2,
-  User, Building2, Filter, Search, AlertCircle, Shield,
-  Phone, Mail, Check, Loader2, Sparkles, RefreshCw, Plus, X
+  MessageSquare, Send, Clock, CheckCircle2,
+  Search, Loader2, Sparkles, Plus, X
 } from 'lucide-react'
-import Logo from '@/components/Logo'
 
 interface SupportUser {
   id: string
@@ -215,22 +212,16 @@ export default function AdminSupportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 antialiased flex flex-col">
-      {/* Top Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 bg-slate-900 border-b border-slate-800">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/admin/dashboard"
-            className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Dashboard
-          </Link>
-          <div className="hidden sm:block h-5 w-px bg-slate-700" />
-          <span className="hidden sm:inline-flex text-xs font-semibold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
-            Support Desk & Help Centre
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
+    <>
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 md:p-6">
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">Support Desk</h1>
+            <p className="text-xs text-slate-500">Manage attendee and host support tickets, respond to inquiries.</p>
+          </div>
           <button
             type="button"
             onClick={() => setNewTicketModal(true)}
@@ -238,15 +229,8 @@ export default function AdminSupportPage() {
           >
             <Plus className="w-4 h-4" /> New Ticket
           </button>
-          <Link href="/" className="text-lg font-bold text-white tracking-tight pl-2">
-            <Logo theme="white" className="h-6 w-auto" />
-          </Link>
         </div>
-      </nav>
 
-      {/* Main Container */}
-      <div className="pt-16 flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 md:p-6">
-        
         {/* Support Workspace Split Pane */}
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[calc(100vh-120px)]">
           
@@ -618,6 +602,6 @@ export default function AdminSupportPage() {
         </div>
       )}
 
-    </div>
+    </>
   )
 }
