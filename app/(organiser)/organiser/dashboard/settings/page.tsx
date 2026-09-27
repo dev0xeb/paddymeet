@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import OrganiserNav from '@/components/OrganiserNav'
 import { ArrowLeft, Save, User, CreditCard, Building2, Check, Eye, EyeOff, Loader2, CheckCircle, AlertCircle, ChevronDown } from 'lucide-react'
@@ -47,6 +48,7 @@ async function getBanks(): Promise<Bank[]> {
 }
 
 export default function OrganiserSettingsPage() {
+  const router = useRouter()
   const [profile, setProfile] = useState<OrganiserProfile | null>(null)
   const [banks, setBanks] = useState<Bank[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -167,12 +169,19 @@ export default function OrganiserSettingsPage() {
         }),
       })
       const data = await res.json()
-      if (data.error) setError('Could not save your bank details. Please try again or contact support.')
-      else { setSaved(true); setTimeout(() => setSaved(false), 3000) }
+      if (data.error) {
+        setError('Could not save your bank details. Please try again or contact support.')
+        setSaving(false)
+      } else {
+        // Land back on Payouts so the organiser immediately sees the bank
+        // details they just added, instead of staying on the form with no
+        // confirmation of where it went.
+        router.push('/organiser/dashboard/payouts')
+      }
     } catch {
       setError('Something went wrong. Please try again.')
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   const handleChangePassword = async () => {
