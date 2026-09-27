@@ -19,11 +19,19 @@ export default async function HomePage() {
   // nav state on the homepage routes an organiser to their own dashboard
   // instead of the explorer one.
   let accountType: 'explorer' | 'organiser' | null = null
+  let displayName: string | null = null
   if (user) {
     accountType = (user.user_metadata?.account_type as 'explorer' | 'organiser' | undefined) || null
     if (!accountType) {
       const { data: org } = await supabase.from('organisers').select('id').eq('id', user.id).maybeSingle()
       accountType = org ? 'organiser' : 'explorer'
+    }
+
+    if (accountType === 'organiser') {
+      const { data: org } = await supabase.from('organisers').select('org_name').eq('id', user.id).maybeSingle()
+      displayName = org?.org_name || user.email || null
+    } else {
+      displayName = profile?.username || user.email || null
     }
   }
 
@@ -46,6 +54,7 @@ export default async function HomePage() {
         user={user}
         profile={profile}
         accountType={accountType}
+        displayName={displayName}
         liveEvents={eventsRaw || []}
       />
       <SupportChat accountType="explorer" />

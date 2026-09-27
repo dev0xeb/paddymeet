@@ -32,6 +32,7 @@ interface Props {
   user: { id: string; email?: string } | null
   profile: { username?: string; tier?: string; trust_score?: number } | null
   accountType?: 'explorer' | 'organiser' | null
+  displayName?: string | null
   liveEvents?: LiveEvent[]
 }
 
@@ -295,7 +296,7 @@ function SplitShareVisual() {
   )
 }
 
-export default function LandingClientPage({ user, profile, accountType = null, liveEvents = [] }: Props) {
+export default function LandingClientPage({ user, accountType = null, displayName = null, liveEvents = [] }: Props) {
   const [open, setOpen] = useState(false)
   const [vibe, setVibe] = useState('All energy')
   const [city, setCity] = useState('Lagos')
@@ -409,7 +410,7 @@ export default function LandingClientPage({ user, profile, accountType = null, l
 
           <div className="hidden sm:flex items-center gap-4 ml-auto">
             {user ? (
-              <NavProfileMenu username={profile?.username || user.email || 'Account'} accountType={accountType} />
+              <NavProfileMenu username={displayName || user.email || 'Account'} accountType={accountType} />
             ) : (
               <>
                 <Link href="/login" className="text-[13px] text-[#b9a8a0] hover:text-[#f7efe4] transition-colors">Log in</Link>
