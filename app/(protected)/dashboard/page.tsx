@@ -623,8 +623,8 @@ export default async function DashboardPage() {
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-slate-500" /> Wallet & Perks
                 </h3>
-                <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  Active
+                <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                  Coming Soon
                 </span>
               </div>
 

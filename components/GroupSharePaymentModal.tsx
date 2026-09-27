@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X, Check, ArrowRight, Users, Plus, Minus, Ticket } from 'lucide-react'
+import { X, Check, ArrowRight, Users, Plus, Minus, Ticket, AlertTriangle } from 'lucide-react'
 
 interface Props {
   groupId: string
@@ -266,6 +266,15 @@ export default function GroupSharePaymentModal({
               )}
 
               {error && <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 mb-4">{error}</div>}
+
+              {totalAmount > 0 && (
+                <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl mb-4">
+                  <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    Pay the exact amount shown — <span className="font-bold">₦{totalAmount.toLocaleString()}</span>. If a different amount is paid, your ticket will not be issued.
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <button onClick={() => setStep('spots')} className="flex-1 py-3.5 border-2 border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:border-gray-300 transition-colors">
