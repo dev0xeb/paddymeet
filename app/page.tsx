@@ -14,6 +14,19 @@ export default async function HomePage() {
         .single()
     : { data: null }
 
+  // Same account-type resolution the login page uses: metadata first, then
+  // fall back to checking the organisers table — needed so the logged-in
+  // nav state on the homepage routes an organiser to their own dashboard
+  // instead of the explorer one.
+  let accountType: 'explorer' | 'organiser' | null = null
+  if (user) {
+    accountType = (user.user_metadata?.account_type as 'explorer' | 'organiser' | undefined) || null
+    if (!accountType) {
+      const { data: org } = await supabase.from('organisers').select('id').eq('id', user.id).maybeSingle()
+      accountType = org ? 'organiser' : 'explorer'
+    }
+  }
+
   // Fetch real upcoming events in PaddyMeet — once an event's date has
   // passed it has nothing left to sell and shouldn't keep showing here.
   const today = new Date().toISOString().split('T')[0]
@@ -32,6 +45,7 @@ export default async function HomePage() {
       <LandingClientPage
         user={user}
         profile={profile}
+        accountType={accountType}
         liveEvents={eventsRaw || []}
       />
       <SupportChat accountType="explorer" />

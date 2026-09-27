@@ -1,15 +1,17 @@
 'use client'
 
-import { useMemo, useState, useRef, type ReactNode } from 'react'
+import { useMemo, useState, useRef, useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
   ArrowRight, Calendar, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight,
   ClipboardList, Compass, Crown, CreditCard, EyeOff, Flame, Handshake, KeyRound, Lock,
-  MapPin, Megaphone, Menu, MessageCircle, Moon, QrCode, Search, Send, ShieldCheck,
+  LayoutDashboard, LogOut, MapPin, Megaphone, Menu, MessageCircle, Moon, QrCode, Search, Send, ShieldCheck,
   Sparkles, Star, Ticket, TrendingUp, UserCheck, Users, X, type LucideIcon,
 } from 'lucide-react'
 import Logo from '@/components/Logo'
+import { createClient } from '@/lib/supabase'
 
 export interface LiveEvent {
   id: string
@@ -29,6 +31,7 @@ export interface LiveEvent {
 interface Props {
   user: { id: string; email?: string } | null
   profile: { username?: string; tier?: string; trust_score?: number } | null
+  accountType?: 'explorer' | 'organiser' | null
   liveEvents?: LiveEvent[]
 }
 
@@ -61,6 +64,81 @@ function Brand({ compact = false }: { compact?: boolean }) {
     <Link href="/" aria-label="PaddyMeet home">
       <Logo theme="white" className={compact ? 'h-6 w-auto' : 'h-7 w-auto'} />
     </Link>
+  )
+}
+
+/** Logged-in nav state — replaces "Log in / Get Started" once a session exists. */
+function NavProfileMenu({
+  username,
+  accountType,
+}: {
+  username: string
+  accountType: 'explorer' | 'organiser' | null
+}) {
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+  const dashboardHref = accountType === 'organiser' ? '/organiser/dashboard' : '/dashboard'
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleLogout = async () => {
+    setOpen(false)
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = '/'
+  }
+
+  const initial = username?.replace('@', '').charAt(0).toUpperCase() || 'U'
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 transition-colors"
+      >
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#ff5b1e] to-[#f2a93b] flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
+          {initial}
+        </div>
+        <span className="text-[13px] font-medium text-[#f7efe4] max-w-[110px] truncate hidden sm:block">
+          {username}
+        </span>
+        <ChevronDown className={`w-3.5 h-3.5 text-[#b9a8a0] transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-52 pm-card overflow-hidden z-[100] py-1">
+          <button
+            onClick={() => { setOpen(false); router.push(dashboardHref) }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#e6d9d1] hover:bg-white/5 hover:text-[#f7efe4] transition-colors text-left"
+          >
+            <LayoutDashboard className="w-4 h-4 flex-shrink-0" /> Dashboard
+          </button>
+          {accountType !== 'organiser' && (
+            <button
+              onClick={() => { setOpen(false); router.push('/tickets') }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#e6d9d1] hover:bg-white/5 hover:text-[#f7efe4] transition-colors text-left"
+            >
+              <Ticket className="w-4 h-4 flex-shrink-0" /> My Tickets
+            </button>
+          )}
+          <div className="border-t border-[var(--pm-border)] mt-1 pt-1">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#ff8a52] hover:bg-white/5 transition-colors text-left"
+            >
+              <LogOut className="w-4 h-4 flex-shrink-0" /> Log Out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -217,7 +295,7 @@ function SplitShareVisual() {
   )
 }
 
-export default function LandingClientPage({ liveEvents = [] }: Props) {
+export default function LandingClientPage({ user, profile, accountType = null, liveEvents = [] }: Props) {
   const [open, setOpen] = useState(false)
   const [vibe, setVibe] = useState('All energy')
   const [city, setCity] = useState('Lagos')
@@ -311,18 +389,35 @@ export default function LandingClientPage({ liveEvents = [] }: Props) {
               </Link>
             ))}
             <div className="flex sm:hidden flex-col gap-2 mt-2 pt-3 border-t border-[var(--pm-border)]">
-              <Link href="/login" className="text-[13px] text-[#b9a8a0] hover:text-[#f7efe4] transition-colors py-1">Log in</Link>
-              <Link href="/signup" className="pm-btn pm-btn--primary text-[12.5px] px-5 py-2.5 self-start">
-                Get Started <ArrowRight size={14} />
-              </Link>
+              {user ? (
+                <>
+                  <Link href={accountType === 'organiser' ? '/organiser/dashboard' : '/dashboard'} className="text-[13px] text-[#b9a8a0] hover:text-[#f7efe4] transition-colors py-1">Dashboard</Link>
+                  {accountType !== 'organiser' && (
+                    <Link href="/tickets" className="text-[13px] text-[#b9a8a0] hover:text-[#f7efe4] transition-colors py-1">My Tickets</Link>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="text-[13px] text-[#b9a8a0] hover:text-[#f7efe4] transition-colors py-1">Log in</Link>
+                  <Link href="/signup" className="pm-btn pm-btn--primary text-[12.5px] px-5 py-2.5 self-start">
+                    Get Started <ArrowRight size={14} />
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
           <div className="hidden sm:flex items-center gap-4 ml-auto">
-            <Link href="/login" className="text-[13px] text-[#b9a8a0] hover:text-[#f7efe4] transition-colors">Log in</Link>
-            <Link href="/signup" className="pm-btn pm-btn--primary text-[12.5px] px-5 py-2.5">
-              Get Started <ArrowRight size={14} />
-            </Link>
+            {user ? (
+              <NavProfileMenu username={profile?.username || user.email || 'Account'} accountType={accountType} />
+            ) : (
+              <>
+                <Link href="/login" className="text-[13px] text-[#b9a8a0] hover:text-[#f7efe4] transition-colors">Log in</Link>
+                <Link href="/signup" className="pm-btn pm-btn--primary text-[12.5px] px-5 py-2.5">
+                  Get Started <ArrowRight size={14} />
+                </Link>
+              </>
+            )}
           </div>
 
           <button className="sm:hidden ml-auto text-[#f7efe4]" onClick={() => setOpen(!open)} aria-label="Toggle menu">
