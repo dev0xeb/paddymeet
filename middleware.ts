@@ -76,13 +76,27 @@ export async function middleware(request: NextRequest) {
     // makes a real network round-trip to revalidate the session (that's
     // what makes it safe to trust in SSR, unlike getSession()), so this
     // needs real headroom for normal latency, not just protection against
-    // a truly hung request. This was previously 2 seconds, which any
-    // ordinary cold start or network blip could exceed — losing the race
-    // meant a logged-in user got treated as logged out and bounced to
-    // /login on literally any page reload, every time it happened.
+    // a truly hung request.
+    const TIMED_OUT = Symbol('timed_out')
     const userPromise = supabase.auth.getUser()
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000))
-    const result: any = await Promise.race([userPromise, timeoutPromise])
+    const timeoutPromise = new Promise<typeof TIMED_OUT>((resolve) => setTimeout(() => resolve(TIMED_OUT), 8000))
+    const result = await Promise.race([userPromise, timeoutPromise])
+
+    // A real session cookie is already confirmed present at this point
+    // (hasAuthCookie above). If the verification call itself is just slow
+    // — a cold start, a network blip, momentary Supabase Auth latency — that
+    // is not the same thing as Supabase actually saying "no user", and
+    // must not be treated as one. Doing so was exactly what made a
+    // logged-in user get bounced to /login on an ordinary reload: the
+    // 8-second budget helps, but any environment can still occasionally
+    // exceed it, and every one of those moments was silently logging
+    // people out of a session that was actually still valid. Only redirect
+    // once Supabase has definitively resolved and confirmed there's no
+    // user — on timeout, let the request through and leave auth enforcement
+    // to the page itself.
+    if (result === TIMED_OUT) {
+      return supabaseResponse
+    }
 
     const user = result?.data?.user
 
@@ -100,17 +114,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
   } catch {
-    // On auth error, redirect safely
-    if (isProtectedAdminRoute) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/admin-login'
-      return NextResponse.redirect(url)
-    }
-    if (isProtectedUserRoute) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
-    }
+    // The verification call itself errored (not a definitive "no user"
+    // response) — same reasoning as the timeout case above: a confirmed
+    // session cookie already exists, so don't treat a transient error as a
+    // logout. Let the request through.
+    return supabaseResponse
   }
 
   return supabaseResponse
