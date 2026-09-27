@@ -462,9 +462,14 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
                   </div>
                   <div className="text-right">
                     <div className="text-base font-extrabold text-gray-900">
-                      {event.is_free ? 'Free' : `₦${ticketType.price.toLocaleString()}`}
+                      {event.is_free
+                        ? 'Free'
+                        : `₦${(ticketType.is_group_ticket ? ticketType.price : ticketType.price * quantity).toLocaleString()}`}
                     </div>
                     {ticketType.is_group_ticket && <div className="text-xs text-gray-400">for {ticketType.group_size} people</div>}
+                    {!ticketType.is_group_ticket && quantity > 1 && (
+                      <div className="text-xs text-gray-400">₦{ticketType.price.toLocaleString()} × {quantity}</div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -63,6 +63,16 @@ export default async function OrganiserManageEventPage({
   ]
   const gradient = gradients[id.charCodeAt(0) % gradients.length]
 
+  const today = new Date().toISOString().split('T')[0]
+  const isEnded = !!event.event_date && event.event_date < today
+  const badge = !event.is_approved
+    ? { label: 'Pending Review', class: 'bg-orange-50 text-orange-500 border-orange-200' }
+    : isEnded
+    ? { label: 'Ended', class: 'bg-gray-50 text-gray-500 border-gray-200' }
+    : event.is_live
+    ? { label: 'Live', class: 'bg-green-50 text-green-600 border-green-200' }
+    : { label: 'Approved', class: 'bg-gray-50 text-gray-500 border-gray-200' }
+
   return (
     <div className="min-h-screen bg-gray-50">
 
@@ -78,14 +88,8 @@ export default async function OrganiserManageEventPage({
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute top-3 left-3 flex items-center gap-2">
-            <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
-              event.is_approved && event.is_live
-                ? 'bg-green-50 text-green-600 border-green-200'
-                : !event.is_approved
-                ? 'bg-orange-50 text-orange-500 border-orange-200'
-                : 'bg-gray-50 text-gray-500 border-gray-200'
-            }`}>
-              {event.is_approved && event.is_live ? 'Live' : !event.is_approved ? 'Pending Review' : 'Approved'}
+            <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${badge.class}`}>
+              {badge.label}
             </span>
             {event.is_free && (
               <span className="px-2.5 py-1 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs font-bold">Free</span>

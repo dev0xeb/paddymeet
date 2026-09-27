@@ -19,11 +19,13 @@ export default async function OrganiserEventsPage({
 
   const params = await searchParams
   const filter = params.filter || 'all'
+  const today = new Date().toISOString().split('T')[0]
 
-  const [{ data: organiser }, { count: liveCount }, { count: pendingCount }, { count: totalCount }] = await Promise.all([
+  const [{ data: organiser }, { count: liveCount }, { count: pendingCount }, { count: endedCount }, { count: totalCount }] = await Promise.all([
     supabase.from('organisers').select('id, org_name, is_verified').eq('id', user.id).single(),
-    supabase.from('events').select('*', { count: 'exact', head: true }).eq('organiser_id', user.id).eq('is_approved', true).eq('is_live', true),
+    supabase.from('events').select('*', { count: 'exact', head: true }).eq('organiser_id', user.id).eq('is_approved', true).eq('is_live', true).gte('event_date', today),
     supabase.from('events').select('*', { count: 'exact', head: true }).eq('organiser_id', user.id).eq('is_approved', false),
+    supabase.from('events').select('*', { count: 'exact', head: true }).eq('organiser_id', user.id).eq('is_approved', true).lt('event_date', today),
     supabase.from('events').select('*', { count: 'exact', head: true }).eq('organiser_id', user.id),
   ])
 
@@ -35,14 +37,15 @@ export default async function OrganiserEventsPage({
     .eq('organiser_id', user.id)
     .order('created_at', { ascending: false })
 
-  if (filter === 'live') query = query.eq('is_approved', true).eq('is_live', true)
+  if (filter === 'live') query = query.eq('is_approved', true).eq('is_live', true).gte('event_date', today)
   if (filter === 'pending') query = query.eq('is_approved', false)
-  if (filter === 'ended') query = query.eq('is_live', false).eq('is_approved', true)
+  if (filter === 'ended') query = query.eq('is_approved', true).lt('event_date', today)
 
   const { data: events } = await query
 
-  const getStatus = (event: { is_approved: boolean, is_live: boolean }) => {
+  const getStatus = (event: { is_approved: boolean, is_live: boolean, event_date: string | null }) => {
     if (!event.is_approved) return { label: 'Pending', color: 'bg-orange-50 text-orange-500 border-orange-200', icon: Clock }
+    if (event.event_date && event.event_date < today) return { label: 'Ended', color: 'bg-gray-50 text-gray-500 border-gray-200', icon: XCircle }
     if (event.is_live) return { label: 'Live', color: 'bg-green-50 text-green-600 border-green-200', icon: CheckCircle }
     return { label: 'Ended', color: 'bg-gray-50 text-gray-500 border-gray-200', icon: XCircle }
   }
@@ -74,17 +77,19 @@ export default async function OrganiserEventsPage({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-6">
           {[
             { label: 'Live events', value: liveCount ?? 0, color: 'green', filter: 'live' },
             { label: 'Pending review', value: pendingCount ?? 0, color: 'orange', filter: 'pending' },
+            { label: 'Ended', value: endedCount ?? 0, color: 'gray', filter: 'ended' },
             { label: 'Total events', value: totalCount ?? 0, color: 'blue', filter: 'all' },
           ].map(({ label, value, color, filter: f }) => (
             <Link key={label} href={`/organiser/dashboard/events?filter=${f}`}
               className={`bg-white border-2 rounded-xl p-4 md:p-5 transition-all hover:shadow-sm ${
                 filter === f
                   ? color === 'green' ? 'border-green-300' :
-                    color === 'orange' ? 'border-orange-300' : 'border-blue-300'
+                    color === 'orange' ? 'border-orange-300' :
+                    color === 'gray' ? 'border-gray-300' : 'border-blue-300'
                   : 'border-gray-100'
               }`}>
               <div className="text-xl md:text-2xl font-extrabold text-gray-900 mb-0.5">{value}</div>
@@ -99,6 +104,7 @@ export default async function OrganiserEventsPage({
             { label: 'All', value: 'all', count: totalCount ?? 0 },
             { label: 'Live', value: 'live', count: liveCount ?? 0 },
             { label: 'Pending', value: 'pending', count: pendingCount ?? 0 },
+            { label: 'Ended', value: 'ended', count: endedCount ?? 0 },
           ].map(({ label, value, count }) => (
             <Link key={value} href={`/organiser/dashboard/events?filter=${value}`}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all flex-shrink-0 ${
@@ -199,7 +205,8 @@ export default async function OrganiserEventsPage({
             </div>
             <h3 className="text-base font-bold text-gray-700 mb-2">
               {filter === 'pending' ? 'No events pending review' :
-               filter === 'live' ? 'No live events yet' : 'No events submitted yet'}
+               filter === 'live' ? 'No live events yet' :
+               filter === 'ended' ? 'No ended events yet' : 'No events submitted yet'}
             </h3>
             <p className="text-sm text-gray-400 mb-5">
               {filter === 'all' ? 'Submit your first event to get started' : 'Try a different filter'}
