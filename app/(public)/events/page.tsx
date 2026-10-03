@@ -231,7 +231,7 @@ export default async function EventsPage({
               <Link key={l} href="/signup" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">{l}</Link>
             ))}
           </div>
-          <div className="text-xs text-gray-400">© 2025 Paddymeet</div>
+          <div className="text-xs text-gray-400">© {new Date().getFullYear()} Paddymeet</div>
         </div>
       </footer>
 
