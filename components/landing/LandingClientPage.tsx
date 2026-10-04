@@ -309,24 +309,14 @@ export default function LandingClientPage({ user, accountType = null, displayNam
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const heroPhotoY = useTransform(scrollYProgress, [0, 1], ['0%', '14%'])
 
-  const fallbackEvents: LiveEvent[] = [
-    { id: 'e1', title: 'Soft Launch Sundays', event_type: 'Rooftop', city: 'Lagos', event_date: '2026-08-29', venue_name: 'The Observatory · VI', vibe: 'Rooftop', ticket_types: [{ price: 18500 }] },
-    { id: 'e2', title: 'Midnight Odyssey', event_type: 'Rave', city: 'Abuja', event_date: '2026-09-04', venue_name: 'The Bunker · Wuse II', vibe: 'Rave & electronic', ticket_types: [{ price: 22000 }] },
-    { id: 'e3', title: 'Sundown Social Club', event_type: 'Beach day', city: 'Lagos', event_date: '2026-09-06', venue_name: 'Landmark Beach · Oniru', vibe: 'Beach day', ticket_types: [{ price: 12000 }] },
-    { id: 'e4', title: 'Afrobeats & Suya Nights', event_type: 'Afrobeats', city: 'Lagos', event_date: '2026-09-12', venue_name: 'Terra Kulture · VI', vibe: 'Afrobeats', ticket_types: [{ price: 15000 }] },
-    { id: 'e5', title: 'Capital Sunset Sessions', event_type: 'Rooftop', city: 'Abuja', event_date: '2026-09-19', venue_name: 'Sky Lounge · Maitama', vibe: 'Rooftop', ticket_types: [{ price: 20000 }] },
-  ]
+  const displayList = liveEvents ?? []
 
-  const displayList = liveEvents && liveEvents.length > 0 ? liveEvents : fallbackEvents
-
-  const filteredEvents = vibe === 'All energy'
+  const finalEventList = vibe === 'All energy'
     ? displayList
     : displayList.filter((e) =>
         e.vibe?.toLowerCase().includes(vibe.toLowerCase().slice(0, 4)) ||
         e.event_type?.toLowerCase().includes(vibe.toLowerCase().slice(0, 4))
       )
-
-  const finalEventList = filteredEvents.length > 0 ? filteredEvents : displayList
 
   const scrollCarousel = (direction: 'left' | 'right') => {
     carouselRef.current?.scrollBy({ left: direction === 'left' ? -340 : 340, behavior: 'smooth' })
@@ -555,6 +545,10 @@ export default function LandingClientPage({ user, accountType = null, displayNam
               </button>
             ))}
           </Reveal>
+
+          {finalEventList.length === 0 && (
+            <p className="text-sm text-[#8c7c76] py-10">No upcoming events right now. Check back soon.</p>
+          )}
 
           <div className="relative">
             <div ref={carouselRef} className="flex gap-5 overflow-x-auto pb-4 -mx-1 px-1" style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
