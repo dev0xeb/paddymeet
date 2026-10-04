@@ -44,7 +44,7 @@ export default async function OrganiserDashboardPage() {
   const netEstimatedPayout = Math.max(0, totalRevenue - feeAmount)
   const totalTickets = orders?.length || 0
   const recentOrders = orders?.slice(0, 5) || []
-  const liveEvents = events?.filter(e => e.is_live && e.is_approved).length || 0
+  const liveEvents = events?.filter(e => e.is_live && e.is_approved && !(e.event_date && e.event_date < new Date().toISOString().split('T')[0])).length || 0
   const pendingEvents = events?.filter(e => !e.is_approved && !e.is_rejected).length || 0
 
   const statusConfig: Record<string, { label: string, color: string, icon: React.ElementType }> = {
@@ -55,9 +55,13 @@ export default async function OrganiserDashboardPage() {
     ended: { label: 'Ended', color: 'text-slate-600 bg-slate-100 border-slate-200/80', icon: CheckCircle2 },
   }
 
-  const getEventStatus = (event: { is_approved: boolean, is_live: boolean, is_rejected: boolean }) => {
+  const today = new Date().toISOString().split('T')[0]
+  const isPast = (event: { event_date: string | null }) => !!event.event_date && event.event_date < today
+
+  const getEventStatus = (event: { is_approved: boolean, is_live: boolean, is_rejected: boolean, event_date: string | null }) => {
     if (event.is_rejected) return 'rejected'
     if (!event.is_approved) return 'pending'
+    if (isPast(event)) return 'ended'
     if (event.is_live) return 'live'
     return 'ended'
   }
