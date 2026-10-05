@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { sendTicketEmail } from '@/lib/email'
 import { generateTicketCode } from '@/lib/ticketCode'
 import { computeOrderTotal } from '@/lib/pricing'
@@ -30,6 +31,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'You can only claim tickets for your own account' }, { status: 403 })
   }
 
+  // The buyer's session can't write ticket_types, tickets, or orders under RLS,
+  // and a silent zero-row update was misreported as a lost capacity race. Every
+  // data call below runs with the admin client; the session check above and the
+  // user_id/event validation below still gate what gets written.
+  const db = createAdminClient()
+
   // DEV-ONLY: NEXT_PUBLIC_SKIP_PAYSTACK=true lets the checkout modal skip the
   // real Paystack widget and call this route with a TEST-BYPASS- reference
   // instead. The flag is re-checked here independently of the client, so a
@@ -41,7 +48,7 @@ export async function POST(request: NextRequest) {
   let verifyData: { status: boolean; data: { status: string; amount: number } }
 
   if (skipPaystack) {
-    const { data: bypassTicketType } = await supabase
+    const { data: bypassTicketType } = await db
       .from('ticket_types')
       .select('price, is_group_ticket')
       .eq('id', ticket_type_id)
@@ -75,14 +82,14 @@ export async function POST(request: NextRequest) {
   const amountPaid = verifyData.data.amount / 100
 
   // Idempotency check: if webhook already fulfilled this payment, return the created tickets
-  const { data: existingOrder } = await supabase
+  const { data: existingOrder } = await db
     .from('orders')
     .select('id, payment_status')
     .eq('payment_reference', reference)
     .maybeSingle()
 
   if (existingOrder && existingOrder.payment_status === 'completed') {
-    const { data: existingTickets } = await supabase
+    const { data: existingTickets } = await db
       .from('tickets')
       .select('*')
       .eq('event_id', event_id)
@@ -100,7 +107,7 @@ export async function POST(request: NextRequest) {
   // Independently recompute what this order should cost — never trust the
   // amount the client asked Paystack to charge. All inputs here come from
   // the database, not the request body.
-  const { data: ticketType, error: ticketTypeError } = await supabase
+  const { data: ticketType, error: ticketTypeError } = await db
     .from('ticket_types')
     .select('price, is_group_ticket, quantity, quantity_sold')
     .eq('id', ticket_type_id)
@@ -116,7 +123,7 @@ export async function POST(request: NextRequest) {
   // point with a "res-soft-" reservation id that skipped the reserve step
   // entirely. Nothing previously stopped a real payment from completing
   // for an event admin moderation had never approved.
-  const { data: eventForVerify } = await supabase
+  const { data: eventForVerify } = await db
     .from('events')
     .select('is_approved, is_live')
     .eq('id', event_id)
@@ -126,7 +133,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'This event is not open for ticket sales yet.' }, { status: 400 })
   }
 
-  const { data: buyerProfile } = await supabase
+  const { data: buyerProfile } = await db
     .from('users')
     .select('referral_discount_percent, email')
     .eq('id', user_id)
@@ -135,7 +142,7 @@ export async function POST(request: NextRequest) {
 
   let validPromo: { code: string; discount_type: string; discount_value: number } | null = null
   if (promo_code) {
-    const { data: promo } = await supabase
+    const { data: promo } = await db
       .from('promo_codes')
       .select('code, discount_type, discount_value, max_uses, uses_count, is_active, expires_at')
       .eq('code', promo_code)
@@ -175,7 +182,7 @@ export async function POST(request: NextRequest) {
   let capacityError: { message: string } | null = null
   let claimedSold = ticketType.quantity_sold || 0
   for (let attempt = 0; attempt < 3 && !capacityRows?.length; attempt++) {
-    const { data: freshTicketType } = await supabase
+    const { data: freshTicketType } = await db
       .from('ticket_types')
       .select('quantity_sold, quantity')
       .eq('id', ticket_type_id)
@@ -187,7 +194,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not enough tickets remaining for this ticket type.' }, { status: 409 })
     }
 
-    const result = await supabase
+    const result = await db
       .from('ticket_types')
       .update({ quantity_sold: currentSold + quantity })
       .eq('id', ticket_type_id)
@@ -206,14 +213,14 @@ export async function POST(request: NextRequest) {
     // finished creating the tickets. Without this, a customer whose own
     // payment the webhook already fulfilled could see a scary "claimed by
     // someone else" error for a purchase that actually succeeded.
-    const { data: winningOrder } = await supabase
+    const { data: winningOrder } = await db
       .from('orders')
       .select('id, payment_status')
       .eq('payment_reference', reference)
       .maybeSingle()
 
     if (winningOrder && winningOrder.payment_status === 'completed') {
-      const { data: existingTickets } = await supabase
+      const { data: existingTickets } = await db
         .from('tickets')
         .select('*')
         .eq('event_id', event_id)
@@ -254,14 +261,14 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  const { data: createdTickets, error: ticketError } = await supabase
+  const { data: createdTickets, error: ticketError } = await db
     .from('tickets')
     .insert(tickets)
     .select()
 
   if (ticketError) {
     // Give back the capacity we just reserved — no tickets were actually created.
-    await supabase
+    await db
       .from('ticket_types')
       .update({ quantity_sold: claimedSold })
       .eq('id', ticket_type_id)
@@ -270,7 +277,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Only record the order as completed once tickets genuinely exist for it.
-  const { data: order, error: orderError } = await supabase
+  const { data: order, error: orderError } = await db
     .from('orders')
     .insert({
       user_id,
@@ -295,7 +302,7 @@ export async function POST(request: NextRequest) {
 
   // Reset referral discount after use
   if (referralDiscountPercent > 0) {
-    await supabase
+    await db
       .from('users')
       .update({ referral_discount_percent: 0 })
       .eq('id', user_id)
@@ -312,14 +319,14 @@ export async function POST(request: NextRequest) {
   if (validPromo) {
     let promoIncremented = false
     for (let attempt = 0; attempt < 3 && !promoIncremented; attempt++) {
-      const { data: promoRow } = await supabase
+      const { data: promoRow } = await db
         .from('promo_codes')
         .select('uses_count')
         .eq('code', validPromo.code)
         .single()
       if (!promoRow) break
       const currentUses = promoRow.uses_count || 0
-      const { data: updatedPromoRows } = await supabase
+      const { data: updatedPromoRows } = await db
         .from('promo_codes')
         .update({ uses_count: currentUses + 1 })
         .eq('code', validPromo.code)
@@ -334,14 +341,14 @@ export async function POST(request: NextRequest) {
 
   // Convert temporary reservation to completed status
   if (reservation_id && !reservation_id.startsWith('res-soft-')) {
-    await supabase
+    await db
       .from('ticket_reservations')
       .update({ status: 'converted' })
       .eq('id', reservation_id)
   }
 
   // Auto-add user to event groups
-  const { data: eventGroups } = await supabase
+  const { data: eventGroups } = await db
     .from('groups')
     .select('id, group_type')
     .eq('event_id', event_id)
@@ -349,14 +356,14 @@ export async function POST(request: NextRequest) {
 
   if (eventGroups && eventGroups.length > 0) {
     for (const group of eventGroups) {
-      const { data: existing } = await supabase
+      const { data: existing } = await db
         .from('group_members')
         .select('id')
         .eq('group_id', group.id)
         .eq('user_id', user_id)
         .limit(1)
       if ((existing?.length ?? 0) === 0) {
-        await supabase.from('group_members').insert({
+        await db.from('group_members').insert({
           group_id: group.id,
           user_id,
           role: 'member',
@@ -364,13 +371,13 @@ export async function POST(request: NextRequest) {
       }
     }
   } else {
-    const { data: event } = await supabase
+    const { data: event } = await db
       .from('events')
       .select('title')
       .eq('id', event_id)
       .single()
 
-    const { data: newGroup } = await supabase
+    const { data: newGroup } = await db
       .from('groups')
       .insert({
         event_id,
@@ -384,7 +391,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (newGroup) {
-      await supabase.from('group_members').insert({
+      await db.from('group_members').insert({
         group_id: newGroup.id,
         user_id,
         role: 'member',
@@ -393,7 +400,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Send ticket confirmation notification
-  await supabase
+  await db
     .from('notifications')
     .insert({
       user_id,
@@ -405,13 +412,13 @@ export async function POST(request: NextRequest) {
 
   // Send emails — group tickets by destination email
   if (createdTickets && createdTickets.length > 0) {
-    const { data: emailEvent } = await supabase
+    const { data: emailEvent } = await db
       .from('events')
       .select('title, event_date, start_time, venue_name')
       .eq('id', event_id)
       .single()
 
-    const { data: emailTicketType } = await supabase
+    const { data: emailTicketType } = await db
       .from('ticket_types')
       .select('name')
       .eq('id', ticket_type_id)
@@ -450,7 +457,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Referral discount trigger — check if this is the user's first ticket
-  await awardReferralDiscount(supabase, user_id)
+  await awardReferralDiscount(db, user_id)
 
   return NextResponse.json({
     success: true,
