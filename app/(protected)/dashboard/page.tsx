@@ -43,7 +43,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase.from('users').select('*, user_interests(*)').eq('id', user.id).single(),
     supabase.from('tickets').select('*, ticket_types(name, price, is_group_ticket, group_size), events(*)').eq('user_id', user.id).order('purchased_at', { ascending: false }),
-    supabase.from('group_members').select('*, groups(*, events(id, title, event_date, city, venue_name), ticket_types(name, price, is_group_ticket))').eq('user_id', user.id).limit(4),
+    supabase.from('group_members').select('*, groups(*, events(id, title, event_date, city, venue_name), ticket_types(name, price, is_group_ticket))').eq('user_id', user.id).limit(40),
     supabase.from('group_members').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
     supabase.from('promo_codes').select('*').eq('is_active', true).limit(3),
     supabase.from('users').select('id', { count: 'exact', head: true }).eq('referred_by', user.id),
@@ -87,7 +87,13 @@ export default async function DashboardPage() {
   const tier = profile.tier || 'Newbie'
   const progress = tierProgress[tier] || 25
   const currentTierTheme = tierColors[tier] || tierColors.Newbie
-  const groupsList = groupMembers || []
+  const groupsList = (groupMembers || [])
+    .filter((member) => {
+      const group = Array.isArray(member.groups) ? member.groups[0] : member.groups
+      const event = Array.isArray(group?.events) ? group?.events[0] : group?.events
+      return !event?.event_date || event.event_date >= today
+    })
+    .slice(0, 4)
   const activeGroupsCount = groupsCount ?? groupsList.length
   const liveEvents = upcomingLiveEvents || []
 
