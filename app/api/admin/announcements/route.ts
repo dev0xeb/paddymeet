@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { createAdminClient } from '@/lib/supabase-admin'
+import { sendAnnouncementEmails } from '@/lib/email'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET() {
@@ -64,60 +65,63 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Title and message are required' }, { status: 400 })
   }
 
-  // Get target user IDs
-  let userIds: string[] = []
+  // Get target recipients (id + email/name, so the same lookup can drive
+  // both the in-app notification and the email).
+  let recipients: { id: string, email: string | null, name: string | null }[] = []
 
   if (audience === 'all') {
     const { data: users } = await adminClient
       .from('users')
-      .select('id')
+      .select('id, email, username')
       .eq('is_suspended', false)
-    userIds = users?.map(u => u.id) || []
+    recipients = users?.map(u => ({ id: u.id, email: u.email, name: u.username })) || []
   } else if (audience === 'organisers') {
     const { data: orgs } = await adminClient
       .from('organisers')
-      .select('id')
-    userIds = orgs?.map(o => o.id) || []
+      .select('id, email, org_name')
+    recipients = orgs?.map(o => ({ id: o.id, email: o.email, name: o.org_name })) || []
   } else if (audience === 'verified_organisers') {
     const { data: orgs } = await adminClient
       .from('organisers')
-      .select('id')
+      .select('id, email, org_name')
       .eq('is_verified', true)
-    userIds = orgs?.map(o => o.id) || []
+    recipients = orgs?.map(o => ({ id: o.id, email: o.email, name: o.org_name })) || []
   } else if (audience === 'city' && city) {
     const { data: users } = await adminClient
       .from('users')
-      .select('id')
+      .select('id, email, username')
       .ilike('city', `%${city}%`)
       .eq('is_suspended', false)
-    userIds = users?.map(u => u.id) || []
+    recipients = users?.map(u => ({ id: u.id, email: u.email, name: u.username })) || []
   } else if (audience === 'individual' && user_email) {
     // Check users table first
     const { data: userRecord } = await adminClient
       .from('users')
-      .select('id')
+      .select('id, email, username')
       .eq('email', user_email)
       .single()
 
     if (userRecord) {
-      userIds = [userRecord.id]
+      recipients = [{ id: userRecord.id, email: userRecord.email, name: userRecord.username }]
     } else {
       // Check organisers table
       const { data: orgRecord } = await adminClient
         .from('organisers')
-        .select('id')
+        .select('id, email, org_name')
         .eq('email', user_email)
         .single()
 
       if (orgRecord) {
-        userIds = [orgRecord.id]
+        recipients = [{ id: orgRecord.id, email: orgRecord.email, name: orgRecord.org_name }]
       }
     }
   }
 
-  if (userIds.length === 0) {
+  if (recipients.length === 0) {
     return NextResponse.json({ error: 'No recipients found for the selected audience' }, { status: 400 })
   }
+
+  const userIds = recipients.map(r => r.id)
 
   // Create notifications in database
   if (channel === 'push' || channel === 'both') {
@@ -137,6 +141,18 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Send emails
+  let emailResult: { sent: number, failed: number } | null = null
+  if (channel === 'email' || channel === 'both') {
+    const emailRecipients = recipients
+      .filter((r): r is { id: string, email: string, name: string | null } => !!r.email)
+      .map(r => ({ to: r.email, recipientName: r.name || undefined }))
+
+    emailResult = emailRecipients.length > 0
+      ? await sendAnnouncementEmails(emailRecipients, title, message)
+      : { sent: 0, failed: 0 }
+  }
+
   // Save announcement record
   await adminClient
     .from('announcements')
@@ -153,5 +169,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     success: true,
     sent_to: userIds.length,
+    email_sent: emailResult?.sent ?? null,
+    email_failed: emailResult?.failed ?? null,
   })
 }

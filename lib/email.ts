@@ -5,6 +5,18 @@ const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key')
 
 const FROM_EMAIL = 'Paddymeet <tickets@paddymeet.com>'
 
+// Admin-authored announcement text lands directly in this HTML, so it needs
+// escaping — otherwise a title or message containing e.g. "<" breaks the
+// layout in some mail clients.
+function escapeHtml(input: string) {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 interface TicketInfo {
   ticketCode: string
   ticketTypeName: string
@@ -155,4 +167,67 @@ export async function sendCheckInEmail(data: CheckInEmailData) {
     console.error('Check-in email send error:', error)
     return { success: false, error }
   }
+}
+
+interface AnnouncementEmailRecipient {
+  to: string
+  recipientName?: string
+}
+
+// Sends one email per recipient via Resend's batch endpoint, 100 at a time
+// (Resend's per-call limit) — not a single email with everyone in `to`,
+// which would expose every recipient's address to every other recipient.
+export async function sendAnnouncementEmails(recipients: AnnouncementEmailRecipient[], title: string, message: string) {
+  const safeTitle = escapeHtml(title)
+  const safeMessage = escapeHtml(message).replace(/\n/g, '<br />')
+
+  const buildEmail = (r: AnnouncementEmailRecipient) => ({
+    from: FROM_EMAIL,
+    to: r.to,
+    subject: title,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; background: #f9fafb; padding: 32px 0;">
+        <div style="background: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid #f0f0f0;">
+
+          <div style="background: linear-gradient(135deg, #f97316, #ec4899); padding: 32px 24px; text-align: center;">
+            <img src="https://paddymeet.com/brand/paddymeet-logo-kit/paddymeet-logo-horizontal-white-medium.png" alt="PaddyMeet" height="28" style="height: 28px; width: auto;" />
+          </div>
+
+          <div style="padding: 32px 24px;">
+            <h1 style="font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 12px;">${safeTitle}</h1>
+            ${r.recipientName ? `<p style="font-size: 13px; color: #9ca3af; margin: 0 0 16px;">Hi ${escapeHtml(r.recipientName)},</p>` : ''}
+            <p style="font-size: 14px; color: #374151; line-height: 1.6; margin: 0 0 24px;">${safeMessage}</p>
+            <a href="https://paddymeet.com" style="display: block; text-align: center; background: #f97316; color: white; font-weight: 700; font-size: 14px; padding: 14px; border-radius: 12px; text-decoration: none;">
+              Open Paddymeet
+            </a>
+          </div>
+        </div>
+
+        <p style="text-align: center; font-size: 11px; color: #9ca3af; margin-top: 16px;">
+          Paddymeet Inc · 14 Bode Thomas Street, Surulere, Lagos
+        </p>
+      </div>
+    `,
+  })
+
+  let sent = 0
+  let failed = 0
+
+  for (let i = 0; i < recipients.length; i += 100) {
+    const batch = recipients.slice(i, i + 100).map(buildEmail)
+    try {
+      const result = await resend.batch.send(batch)
+      if (result.error) {
+        failed += batch.length
+        console.error('Announcement batch send error:', result.error)
+      } else {
+        sent += batch.length
+      }
+    } catch (error) {
+      failed += batch.length
+      console.error('Announcement batch send exception:', error)
+    }
+  }
+
+  return { sent, failed }
 }

@@ -36,6 +36,7 @@ export default function AdminAnnouncementsPage() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
   const [sentCount, setSentCount] = useState(0)
+  const [emailResult, setEmailResult] = useState<{ sent: number, failed: number } | null>(null)
 
   const [counts, setCounts] = useState({ users: 0, organisers: 0, verifiedOrganisers: 0 })
   const [recentList, setRecentList] = useState<RecentAnnouncement[]>([])
@@ -98,6 +99,11 @@ export default function AdminAnnouncementsPage() {
       } else {
         setSent(true)
         setSentCount(data.sent_to || 0)
+        setEmailResult(
+          data.email_sent !== null && data.email_sent !== undefined
+            ? { sent: data.email_sent, failed: data.email_failed || 0 }
+            : null
+        )
         setTitle('')
         setMessage('')
         setSelectedCity('')
@@ -134,7 +140,15 @@ export default function AdminAnnouncementsPage() {
                   <div>
                     <div className="text-xs font-bold text-emerald-800">Announcement broadcasted successfully!</div>
                     <div className="text-[11px] text-emerald-700 mt-0.5">
-                      Delivered to <strong>{sentCount}</strong> active recipient{sentCount === 1 ? '' : 's'}.
+                      Notified <strong>{sentCount}</strong> recipient{sentCount === 1 ? '' : 's'} in-app.
+                      {emailResult && (
+                        <>
+                          {' '}Email: <strong>{emailResult.sent}</strong> sent
+                          {emailResult.failed > 0 && (
+                            <span className="text-rose-700">, <strong>{emailResult.failed}</strong> failed</span>
+                          )}.
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
