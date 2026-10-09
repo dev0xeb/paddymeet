@@ -97,55 +97,95 @@ export async function POST(
     }
   }
 
-  // Re-check capacity right before committing
-  const { count: currentPaid } = await supabase
-    .from('group_members')
-    .select('*', { count: 'exact', head: true })
-    .eq('group_id', groupId)
-    .eq('payment_status', 'paid')
-
-  if ((currentPaid ?? 0) + spotCount > group.max_members) {
-    return NextResponse.json({ error: 'Not enough spots remaining in this group' }, { status: 400 })
-  }
-
   const amountPerSpot = amountPaid > 0 ? Math.round(amountPaid / spotCount) : 0
   const attendeeList: AttendeeInput[] = attendees && attendees.length === spotCount
     ? attendees
     : Array.from({ length: spotCount }, () => ({ name: '', email: '', phone: '' }))
+  const role = group.creator_id === user.id ? 'admin' : 'member'
 
-  // group_members is unique on (group_id, user_id, seat_number), not just
-  // (group_id, user_id) — a single payer can hold several spots, so each
-  // row for this purchase needs its own seat number, continuing on from
-  // any seats this user already holds in the group.
-  const { data: existingSeats } = await supabase
-    .from('group_members')
-    .select('seat_number')
-    .eq('group_id', groupId)
-    .eq('user_id', user.id)
-  const nextSeat = (existingSeats || []).reduce((max, s) => Math.max(max, s.seat_number || 1), 0) + 1
+  // Atomic path (migration 021): claim_group_seats locks the group's row
+  // and does the capacity check + the insert inside one transaction, so
+  // two people paying for the same last open seat at once can't both
+  // succeed — one's capacity check correctly sees the other's just-
+  // inserted rows. Falls back to the plain check-then-insert below if
+  // that migration hasn't been run yet (same behavior this route always
+  // had — a narrower race, not a regression).
+  const { data: claimResult, error: claimError } = await supabase.rpc('claim_group_seats', {
+    p_group_id: groupId,
+    p_user_id: user.id,
+    p_role: role,
+    p_payment_reference: reference,
+    p_amount_per_spot: amountPerSpot,
+    p_members: attendeeList.map(a => ({ name: a.name || null, email: a.email || null, phone: a.phone || null })),
+  })
+  const rpcMissing = !!claimError && /Could not find the function/i.test(claimError.message)
 
-  // Insert one paid group_members row per spot
-  const memberRows = attendeeList.map((a, i) => ({
-    group_id: groupId,
-    user_id: user.id,
-    seat_number: nextSeat + i,
-    role: group.creator_id === user.id ? 'admin' : 'member',
-    payment_status: 'paid',
-    amount_paid: amountPerSpot,
-    payment_reference: reference,
-    paid_at: new Date().toISOString(),
-    attendee_name: a.name || null,
-    attendee_email: a.email || null,
-    attendee_phone: a.phone || null,
-  }))
+  let insertedMembers: { id: string, attendee_name: string | null }[] | null = null
 
-  const { data: insertedMembers, error: insertError } = await supabase
-    .from('group_members')
-    .insert(memberRows)
-    .select()
+  if (claimError && !rpcMissing) {
+    return NextResponse.json({ error: claimError.message }, { status: 400 })
+  }
 
-  if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 400 })
+  if (!rpcMissing) {
+    const claim = Array.isArray(claimResult) ? claimResult[0] : claimResult
+    if (!claim?.claimed) {
+      return NextResponse.json({ error: 'Not enough spots remaining in this group' }, { status: 400 })
+    }
+    const { data: fetchedMembers, error: fetchError } = await supabase
+      .from('group_members')
+      .select('*')
+      .in('id', (claim.inserted_ids || []) as string[])
+    if (fetchError) {
+      return NextResponse.json({ error: fetchError.message }, { status: 400 })
+    }
+    insertedMembers = fetchedMembers
+  } else {
+    // Re-check capacity right before committing
+    const { count: currentPaid } = await supabase
+      .from('group_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('group_id', groupId)
+      .eq('payment_status', 'paid')
+
+    if ((currentPaid ?? 0) + spotCount > group.max_members) {
+      return NextResponse.json({ error: 'Not enough spots remaining in this group' }, { status: 400 })
+    }
+
+    // group_members is unique on (group_id, user_id, seat_number), not just
+    // (group_id, user_id) — a single payer can hold several spots, so each
+    // row for this purchase needs its own seat number, continuing on from
+    // any seats this user already holds in the group.
+    const { data: existingSeats } = await supabase
+      .from('group_members')
+      .select('seat_number')
+      .eq('group_id', groupId)
+      .eq('user_id', user.id)
+    const nextSeat = (existingSeats || []).reduce((max, s) => Math.max(max, s.seat_number || 1), 0) + 1
+
+    // Insert one paid group_members row per spot
+    const memberRows = attendeeList.map((a, i) => ({
+      group_id: groupId,
+      user_id: user.id,
+      seat_number: nextSeat + i,
+      role,
+      payment_status: 'paid',
+      amount_paid: amountPerSpot,
+      payment_reference: reference,
+      paid_at: new Date().toISOString(),
+      attendee_name: a.name || null,
+      attendee_email: a.email || null,
+      attendee_phone: a.phone || null,
+    }))
+
+    const { data: fallbackInserted, error: insertError } = await supabase
+      .from('group_members')
+      .insert(memberRows)
+      .select()
+
+    if (insertError) {
+      return NextResponse.json({ error: insertError.message }, { status: 400 })
+    }
+    insertedMembers = fallbackInserted
   }
 
   // Record the order for revenue tracking
@@ -174,7 +214,15 @@ export async function POST(
     .eq('id', user.id)
     .single()
 
-  const totalPaidNow = (currentPaid ?? 0) + spotCount
+  // Freshly counted rather than derived from a pre-insert read + spotCount —
+  // this request's own just-committed rows (and any concurrent one's) are
+  // both reflected here, so this can't under- or over-count.
+  const { count: paidCountNow } = await supabase
+    .from('group_members')
+    .select('*', { count: 'exact', head: true })
+    .eq('group_id', groupId)
+    .eq('payment_status', 'paid')
+  const totalPaidNow = paidCountNow ?? spotCount
   const groupCompleted = totalPaidNow >= group.max_members
 
   if (groupCompleted) {

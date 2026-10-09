@@ -489,28 +489,58 @@ async function handleGroupPayment(
     .eq('payment_reference', reference)
 
   if (!existingMembers || existingMembers.length === 0) {
-    const memberRows = attendeeList.map((a) => ({
-      group_id: groupId,
-      user_id: userId,
-      role: group.creator_id === userId ? 'admin' : 'member',
-      payment_status: 'paid',
-      amount_paid: amountPerSpot,
-      payment_reference: reference,
-      paid_at: new Date().toISOString(),
-      attendee_name: a.name || null,
-      attendee_email: a.email || data.customer?.email || null,
-      attendee_phone: a.phone || null,
-    }))
+    const role = group.creator_id === userId ? 'admin' : 'member'
 
-    const { error: memberInsertError } = await adminClient.from('group_members').insert(memberRows)
-    if (memberInsertError) {
-      // A unique-constraint hit here means the buyer's own browser request
-      // to /api/groups/[id]/pay-share/verify already won this exact insert
-      // — not a real failure, just this webhook losing the race. Anything
-      // else is a genuine problem worth knowing about. Either way, keep
-      // going: the capacity check below re-reads real state from the DB
-      // rather than assuming this insert succeeded.
-      console.error(`Group payment webhook: group_members insert failed for group ${groupId}, reference ${reference}:`, memberInsertError.message)
+    // Atomic path (migration 021): locks the group row and does the
+    // capacity check + insert in one transaction, so this webhook firing
+    // at the same moment as the buyer's own pay-share/verify request (or
+    // another member's webhook) can't push the group over its stated
+    // size. This path previously had NO capacity check at all — it
+    // inserted unconditionally and relied on the completion guard further
+    // down to catch problems after the fact. Falls back to that same
+    // unconditional insert if migration 021 hasn't been run yet (not a
+    // regression — identical to this route's behavior before this fix).
+    const { data: claimResult, error: claimError } = await adminClient.rpc('claim_group_seats', {
+      p_group_id: groupId,
+      p_user_id: userId,
+      p_role: role,
+      p_payment_reference: reference,
+      p_amount_per_spot: amountPerSpot,
+      p_members: attendeeList.map((a) => ({ name: a.name || null, email: a.email || data.customer?.email || null, phone: a.phone || null })),
+    })
+    const rpcMissing = !!claimError && /Could not find the function/i.test(claimError.message)
+
+    if (!rpcMissing) {
+      const claim = Array.isArray(claimResult) ? claimResult[0] : claimResult
+      if (claimError) {
+        console.error(`Group payment webhook: claim_group_seats failed for group ${groupId}, reference ${reference}:`, claimError.message)
+      } else if (!claim?.claimed) {
+        console.error(`Group payment webhook: group ${groupId} is full, reference ${reference} could not be seated — flagging for manual review.`)
+      }
+    } else {
+      const memberRows = attendeeList.map((a) => ({
+        group_id: groupId,
+        user_id: userId,
+        role,
+        payment_status: 'paid',
+        amount_paid: amountPerSpot,
+        payment_reference: reference,
+        paid_at: new Date().toISOString(),
+        attendee_name: a.name || null,
+        attendee_email: a.email || data.customer?.email || null,
+        attendee_phone: a.phone || null,
+      }))
+
+      const { error: memberInsertError } = await adminClient.from('group_members').insert(memberRows)
+      if (memberInsertError) {
+        // A unique-constraint hit here means the buyer's own browser request
+        // to /api/groups/[id]/pay-share/verify already won this exact insert
+        // — not a real failure, just this webhook losing the race. Anything
+        // else is a genuine problem worth knowing about. Either way, keep
+        // going: the capacity check below re-reads real state from the DB
+        // rather than assuming this insert succeeded.
+        console.error(`Group payment webhook: group_members insert failed for group ${groupId}, reference ${reference}:`, memberInsertError.message)
+      }
     }
 
     // Record order
