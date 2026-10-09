@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { ArrowLeft, Mail, MapPin, MessageCircle } from 'lucide-react'
+import { ArrowLeft, MapPin } from 'lucide-react'
 import type { Metadata } from 'next'
 import Logo from '@/components/Logo'
+import ContactSection from '@/components/contact/ContactSection'
 
 export const metadata: Metadata = {
   title: 'Contact Us',
@@ -29,49 +30,7 @@ export default function ContactPage() {
           <p className="text-gray-500 leading-relaxed">We would love to hear from you. Choose the right channel below.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14">
-          {[
-            {
-              icon: MessageCircle,
-              title: 'General Support',
-              desc: 'For account issues, ticket problems, or general questions about Paddymeet.',
-              action: 'Open Support Chat',
-              href: '/',
-              color: 'orange',
-            },
-            {
-              icon: Mail,
-              title: 'Business Enquiries',
-              desc: 'For partnerships, sponsorships, media enquiries, and organiser onboarding.',
-              action: 'hello@paddymeet.com',
-              href: 'mailto:hello@paddymeet.com',
-              color: 'blue',
-            },
-            {
-              icon: Mail,
-              title: 'Legal & Privacy',
-              desc: 'For data requests, legal matters, and privacy-related concerns.',
-              action: 'legal@paddymeet.com',
-              href: 'mailto:legal@paddymeet.com',
-              color: 'purple',
-            },
-          ].map(({ icon: Icon, title, desc, action, href, color }) => (
-            <div key={title} className="p-6 bg-white border border-gray-100 rounded-2xl hover:border-orange-200 hover:shadow-sm transition-all text-center">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
-                color === 'orange' ? 'bg-orange-50' :
-                color === 'blue' ? 'bg-blue-50' : 'bg-purple-50'
-              }`}>
-                <Icon className={`w-5 h-5 ${
-                  color === 'orange' ? 'text-orange-500' :
-                  color === 'blue' ? 'text-blue-500' : 'text-purple-500'
-                }`} />
-              </div>
-              <h3 className="text-base font-extrabold text-gray-900 mb-2">{title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed mb-4">{desc}</p>
-              <a href={href} className="text-sm font-bold text-orange-500 hover:underline">{action}</a>
-            </div>
-          ))}
-        </div>
+        <ContactSection />
 
         <div className="bg-gray-50 rounded-2xl p-8">
           <div className="flex items-start gap-4">

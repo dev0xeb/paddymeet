@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import {
   MessageCircle,
   X,
@@ -40,7 +40,7 @@ export interface FAQTopic {
   }
 }
 
-const FAQ_CATEGORIES = [
+export const FAQ_CATEGORIES = [
   { id: 'ticket-discovery', label: 'Discovery', icon: Compass, desc: 'Find & choose the right tickets' },
   { id: 'ticket-purchase', label: 'Buying & Split', icon: CreditCard, desc: 'Pricing, promos & squad tables' },
   { id: 'order-management', label: 'My Orders', icon: Ticket, desc: 'Pass status, transfers & refunds' },
@@ -48,7 +48,7 @@ const FAQ_CATEGORIES = [
   { id: 'user-preferences', label: 'Vibe & Profile', icon: Sliders, desc: 'Personalization & history' },
 ] as const
 
-const TOPICS_DATA: FAQTopic[] = [
+export const TOPICS_DATA: FAQTopic[] = [
   // 1. TICKET DISCOVERY
   {
     id: 'search_events',
@@ -258,8 +258,26 @@ const TOPICS_DATA: FAQTopic[] = [
   },
 ]
 
-export default function SupportChat({ accountType = 'explorer' }: { accountType?: 'explorer' | 'organiser' }) {
+export default function SupportChat({
+  accountType = 'explorer',
+  openSignal,
+}: {
+  accountType?: 'explorer' | 'organiser'
+  /** Bump this number (e.g. from a counter in the parent) to open the chat
+   * from outside, such as a "Chat with us" button elsewhere on the page.
+   * Ignored while 0/undefined so the chat doesn't open itself on mount. */
+  openSignal?: number
+}) {
   const [open, setOpen] = useState(false)
+
+  // Opens the chat when openSignal changes, without an effect — this is
+  // React's documented pattern for adjusting state during render in
+  // response to a changed prop, not the same as a setState-in-effect.
+  const [prevOpenSignal, setPrevOpenSignal] = useState(openSignal)
+  if (openSignal !== prevOpenSignal) {
+    setPrevOpenSignal(openSignal)
+    if (openSignal) setOpen(true)
+  }
   const [selectedCategory, setSelectedCategory] = useState<string>('ticket-discovery')
   const [selectedTopic, setSelectedTopic] = useState<FAQTopic | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
