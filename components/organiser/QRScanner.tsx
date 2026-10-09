@@ -23,13 +23,18 @@ interface ScanResult {
 
 interface Props {
   events: Event[]
+  /** Pre-fills the manual-entry field from a scanned ticket's QR link
+   * (?code=...) — opened via the phone's own camera app rather than this
+   * page's in-browser scanner, which Safari doesn't support. Only ever
+   * fills the field; staff/organiser still has to tap Check themselves. */
+  initialCode?: string
 }
 
-export default function QRScanner({ events }: Props) {
+export default function QRScanner({ events, initialCode }: Props) {
   const [selectedEventId, setSelectedEventId] = useState(events[0]?.id || '')
   const [scanning, setScanning] = useState(false)
-  const [manualMode, setManualMode] = useState(false)
-  const [manualCode, setManualCode] = useState('')
+  const [manualMode, setManualMode] = useState(!!initialCode)
+  const [manualCode, setManualCode] = useState(initialCode || '')
   const [result, setResult] = useState<ScanResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [cameraError, setCameraError] = useState('')

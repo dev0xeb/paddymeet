@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { X, Download, Check, FileText } from 'lucide-react'
 import QRCode from 'qrcode'
 import { downloadTicketImage, downloadTicketPDF } from '@/lib/ticketImage'
+import { buildTicketScanUrl } from '@/lib/qr'
 import Logo from '@/components/Logo'
 
 interface Props {
@@ -23,7 +24,7 @@ export default function TicketQRModal({ ticketCode, eventTitle, ticketTypeName, 
 
   useEffect(() => {
     if (open && ticketCode) {
-      QRCode.toDataURL(ticketCode, {
+      QRCode.toDataURL(buildTicketScanUrl(ticketCode), {
         width: 280,
         margin: 1,
         color: { dark: '#111827', light: '#ffffff' },

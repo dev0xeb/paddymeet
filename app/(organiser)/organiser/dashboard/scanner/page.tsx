@@ -3,7 +3,12 @@ import { redirect } from 'next/navigation'
 import OrganiserNav from '@/components/OrganiserNav'
 import QRScanner from '@/components/organiser/QRScanner'
 
-export default async function ScannerPage() {
+export default async function ScannerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string }>
+}) {
+  const { code } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -33,7 +38,7 @@ export default async function ScannerPage() {
           <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">Ticket Scanner</h1>
           <p className="text-sm text-gray-500">Scan attendee QR codes to validate and check in tickets at the door.</p>
         </div>
-        <QRScanner events={events || []} />
+        <QRScanner events={events || []} initialCode={code} />
       </div>
     </div>
   )

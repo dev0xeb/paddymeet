@@ -1,4 +1,5 @@
 import QRCode from 'qrcode'
+import { buildTicketScanUrl } from '@/lib/qr'
 
 export interface TicketImageData {
   eventTitle: string
@@ -118,7 +119,7 @@ export async function generateTicketCanvas(data: TicketImageData): Promise<HTMLC
   roundRect(ctx, qrBoxX, y, qrBoxSize, qrBoxSize, 16)
   ctx.stroke()
 
-  const qrDataUrl = await QRCode.toDataURL(ticketCode, { width: qrSize, margin: 0, color: { dark: '#111827', light: '#ffffff' } })
+  const qrDataUrl = await QRCode.toDataURL(buildTicketScanUrl(ticketCode), { width: qrSize, margin: 0, color: { dark: '#111827', light: '#ffffff' } })
   const qrImg = await loadImage(qrDataUrl)
   ctx.drawImage(qrImg, qrBoxX + qrBoxPadding, y + qrBoxPadding, qrSize, qrSize)
 

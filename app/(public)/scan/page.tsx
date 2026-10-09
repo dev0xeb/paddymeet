@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Shield, Camera, CheckCircle2, XCircle, AlertTriangle, ArrowRight, RefreshCw, LogOut, Users, QrCode } from 'lucide-react'
 
 interface EventInfo {
@@ -28,7 +29,14 @@ interface ScanResult {
   checked_in_at?: string
 }
 
-export default function StaffScannerPage() {
+function StaffScannerPage() {
+  const searchParams = useSearchParams()
+  // The code from a scanned ticket's QR link (?code=...) — only ever used
+  // to pre-fill the manual-entry field once staff is past the passkey
+  // gate below, never to submit anything on its own. Opening a link isn't
+  // the same as a human choosing to check someone in.
+  const codeFromLink = searchParams.get('code') || ''
+
   const [passkey, setPasskey] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -61,6 +69,7 @@ export default function StaffScannerPage() {
       } else {
         setEvent(data.event)
         setStats(data.stats)
+        if (codeFromLink) setManualCode(codeFromLink)
       }
     } catch {
       setError('Network error connecting to verification server.')
@@ -305,5 +314,13 @@ export default function StaffScannerPage() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function StaffScannerPageRoute() {
+  return (
+    <Suspense fallback={null}>
+      <StaffScannerPage />
+    </Suspense>
   )
 }

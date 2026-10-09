@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import QRCode from 'qrcode'
+import { buildTicketScanUrl } from '@/lib/qr'
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key')
 
@@ -39,7 +40,7 @@ export async function sendTicketEmail(data: TicketEmailData) {
   try {
     const ticketBlocks = await Promise.all(
       tickets.map(async (ticket) => {
-        const qrDataUrl = await QRCode.toDataURL(ticket.ticketCode, {
+        const qrDataUrl = await QRCode.toDataURL(buildTicketScanUrl(ticket.ticketCode), {
           width: 200,
           margin: 1,
           color: { dark: '#111827', light: '#ffffff' },
