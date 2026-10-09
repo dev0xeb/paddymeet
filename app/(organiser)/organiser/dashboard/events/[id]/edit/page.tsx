@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, Save, AlertCircle } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import Logo from '@/components/Logo'
+import VenueAutocomplete from '@/components/organiser/VenueAutocomplete'
 
 interface EventData {
   title: string
@@ -222,15 +223,14 @@ export default function EditEventPage() {
                 </div>
               </div>
 
-              <div>
-                <label className={labelClass}>Venue name <span className="text-red-400">*</span></label>
-                <input type="text" value={event.venue_name} onChange={e => update('venue_name', e.target.value)} className={inputClass} />
-              </div>
-
-              <div>
-                <label className={labelClass}>Venue address</label>
-                <input type="text" value={event.venue_address || ''} onChange={e => update('venue_address', e.target.value)} className={inputClass} />
-              </div>
+              <VenueAutocomplete
+                venueName={event.venue_name}
+                venueAddress={event.venue_address || ''}
+                onVenueNameChange={v => update('venue_name', v)}
+                onVenueAddressChange={v => update('venue_address', v)}
+                inputClass={inputClass}
+                labelClass={labelClass}
+              />
 
               <div className="grid grid-cols-2 gap-4">
                 <div>

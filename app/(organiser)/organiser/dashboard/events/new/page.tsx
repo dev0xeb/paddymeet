@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Check, Plus, Trash2, Info, Upload, X, ImageIcon 
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Logo from '@/components/Logo'
+import VenueAutocomplete from '@/components/organiser/VenueAutocomplete'
 
 type Step = 1 | 2 | 3 | 4
 
@@ -326,15 +327,14 @@ export default function SubmitEventPage() {
               </div>
             </div>
 
-            <div>
-              <label className={labelClass}>Venue name <span className="text-red-400">*</span></label>
-              <input type="text" placeholder="e.g. Eko Hotel Grounds" value={eventData.venue_name} onChange={e => update('venue_name', e.target.value)} className={inputClass} />
-            </div>
-
-            <div>
-              <label className={labelClass}>Venue address</label>
-              <input type="text" placeholder="Full address of the venue" value={eventData.venue_address} onChange={e => update('venue_address', e.target.value)} className={inputClass} />
-            </div>
+            <VenueAutocomplete
+              venueName={eventData.venue_name}
+              venueAddress={eventData.venue_address}
+              onVenueNameChange={v => update('venue_name', v)}
+              onVenueAddressChange={v => update('venue_address', v)}
+              inputClass={inputClass}
+              labelClass={labelClass}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <div>

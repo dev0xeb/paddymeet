@@ -13,6 +13,7 @@ import TicketSelector from '@/components/tickets/TicketSelector'
 import TicketGroupBrowser from '@/components/TicketGroupBrowser'
 import FollowOrganiserButton from '@/components/FollowOrganiserButton'
 import EventChatRoom from '@/components/EventChatRoom'
+import EventMap from '@/components/EventMap'
 import Logo from '@/components/Logo'
 
 interface TicketType {
@@ -232,6 +233,17 @@ export default async function EventDetailPage({
                   </div>
                 </div>
               </div>
+
+              {event.venue_name && (
+                <div className="mt-4">
+                  <EventMap
+                    venueName={event.venue_name}
+                    venueAddress={event.venue_address}
+                    city={event.city}
+                    state={event.state}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Description */}
