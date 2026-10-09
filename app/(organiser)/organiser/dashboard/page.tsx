@@ -5,7 +5,7 @@ import {
   Calendar, Ticket,
   CreditCard,
   Plus, Clock, CheckCircle2, XCircle, Eye, TrendingUp,
-  ArrowUpRight, Users, ShieldCheck, Sparkles, ChevronRight, AlertCircle
+  ArrowUpRight, Users, ShieldCheck, Sparkles, ChevronRight, AlertCircle, Heart
 } from 'lucide-react'
 import OrganiserNav from '@/components/OrganiserNav'
 import SupportChat from '@/components/SupportChat'
@@ -15,10 +15,11 @@ export default async function OrganiserDashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: organiser }, { data: events }, { data: settings }] = await Promise.all([
+  const [{ data: organiser }, { data: events }, { data: settings }, { count: followerCount }] = await Promise.all([
     supabase.from('organisers').select('*').eq('id', user.id).single(),
     supabase.from('events').select('*, ticket_types(*)').eq('organiser_id', user.id).order('created_at', { ascending: false }),
     supabase.from('platform_settings').select('commission_rate').eq('id', 1).single(),
+    supabase.from('follows').select('*', { count: 'exact', head: true }).eq('organiser_id', user.id),
   ])
 
   if (!organiser) redirect('/login')
@@ -105,7 +106,7 @@ export default async function OrganiserDashboardPage() {
         </div>
 
         {/* Top Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           
           {/* Revenue */}
           <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
@@ -170,6 +171,25 @@ export default async function OrganiserDashboardPage() {
               Awaiting admin check
             </div>
           </div>
+
+          {/* Followers */}
+          <Link
+            href="/organiser/dashboard/followers"
+            className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Followers</span>
+              <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-pink-400 shadow-sm">
+                <Heart className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">
+              {(followerCount ?? 0).toLocaleString()}
+            </div>
+            <div className="text-xs text-slate-500">
+              Explorers following you
+            </div>
+          </Link>
         </div>
 
         {/* Dashboard Grid (Main 2 Cols + Side Col) */}
