@@ -21,13 +21,18 @@ export default async function ScannerPage({
 
   if (!organiser) redirect('/login')
 
-  // Get organiser's live events for selection
+  // Get organiser's live, not-yet-ended events for selection — is_live
+  // never gets turned off once an event's date passes, so without the
+  // event_date filter this list kept offering events that already
+  // happened to scan tickets against.
+  const today = new Date().toISOString().split('T')[0]
   const { data: events } = await supabase
     .from('events')
     .select('id, title, event_date, venue_name')
     .eq('organiser_id', user.id)
     .eq('is_approved', true)
     .eq('is_live', true)
+    .gte('event_date', today)
     .order('event_date', { ascending: true })
 
   return (
