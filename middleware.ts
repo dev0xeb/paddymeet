@@ -1,6 +1,83 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// A tiny, unauthenticated single-row read via the service role key — RLS on
+// platform_settings only grants SELECT to logged-in users (migration 017),
+// and this has to work for anonymous visitors too. Fails closed to "off" on
+// any error: a broken maintenance check must never itself take the site
+// down for everyone.
+async function isMaintenanceModeOn(): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/platform_settings?select=maintenance_mode&id=eq.1`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        cache: 'no-store',
+      }
+    )
+    if (!res.ok) return false
+    const rows = await res.json()
+    return !!rows?.[0]?.maintenance_mode
+  } catch {
+    return false
+  }
+}
+
+// Separate, self-contained admin check used only while maintenance mode is
+// active — deliberately not sharing the protected-route auth logic further
+// below, which is tuned to fail OPEN (never log a real user out over a slow
+// network). This one fails CLOSED (show the maintenance page) on any
+// timeout or error instead, since granting an unverified bypass during a
+// declared maintenance window defeats the point of the gate.
+async function hasActiveAdminSession(request: NextRequest): Promise<boolean> {
+  const hasAuthCookie = request.cookies.getAll().some(
+    c => c.name.startsWith('sb-') && (c.name.endsWith('-auth-token') || c.value.length > 20)
+  )
+  if (!hasAuthCookie) return false
+
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll: () => {},
+        },
+      }
+    )
+
+    const TIMED_OUT = Symbol('timed_out')
+    const result = await Promise.race([
+      supabase.auth.getUser(),
+      new Promise<typeof TIMED_OUT>((resolve) => setTimeout(() => resolve(TIMED_OUT), 5000)),
+    ])
+    if (result === TIMED_OUT) return false
+
+    const user = result?.data?.user
+    if (!user) return false
+
+    const adminRes = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/admin_team?select=id&id=eq.${user.id}`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        cache: 'no-store',
+      }
+    )
+    if (!adminRes.ok) return false
+    const rows = await adminRes.json()
+    return Array.isArray(rows) && rows.length > 0
+  } catch {
+    return false
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
@@ -8,11 +85,37 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/webhooks') ||
+    pathname.startsWith('/api/cron') ||
+    pathname.startsWith('/api/health') ||
     pathname.startsWith('/favicon') ||
     pathname.endsWith('.webmanifest') ||
     pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|css|js|map|json)$/)
   ) {
     return NextResponse.next()
+  }
+
+  // Maintenance gate — admins keep full access (the admin area itself, its
+  // API, and the admin login endpoint it depends on), everyone else gets
+  // routed to a maintenance page (or a 503 for API calls, so fetch() callers
+  // like checkout see a clean error instead of an HTML page).
+  const isAdminArea = pathname.startsWith('/admin') || pathname.startsWith('/api/admin')
+  const isAdminLoginApi = pathname.startsWith('/api/auth/admin-login')
+  const isMaintenancePage = pathname === '/maintenance'
+
+  if (!isAdminArea && !isAdminLoginApi && !isMaintenancePage) {
+    if (await isMaintenanceModeOn()) {
+      if (!(await hasActiveAdminSession(request))) {
+        if (pathname.startsWith('/api/')) {
+          return NextResponse.json(
+            { error: 'Paddymeet is currently undergoing scheduled maintenance. Please try again shortly.' },
+            { status: 503 }
+          )
+        }
+        const url = request.nextUrl.clone()
+        url.pathname = '/maintenance'
+        return NextResponse.rewrite(url)
+      }
+    }
   }
 
   const isProtectedUserRoute =
