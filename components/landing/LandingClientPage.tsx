@@ -362,12 +362,6 @@ export default function LandingClientPage({ user, accountType = null, displayNam
       <div className="pm-ambient w-[34rem] h-[34rem] bg-[#ff5b1e] opacity-[0.10] -right-40 top-24" />
       <div className="pm-ambient w-[30rem] h-[30rem] bg-[#f2a93b] opacity-[0.07] -left-40 top-[140rem]" />
 
-      {/* Announcement bar */}
-      <div className="relative z-10 h-9 flex items-center justify-center gap-2 text-[11px] text-[#c9b8b0] bg-[#130c0f] border-b border-white/5 px-4 text-center">
-        <Sparkles size={12} className="text-[#f2a93b] flex-shrink-0" />
-        <span>Now live in Lagos &amp; Abuja</span>
-      </div>
-
       {/* Nav */}
       <header className="sticky top-0 z-30 px-4 pt-4">
         <nav className="pm-nav max-w-[1180px] mx-auto flex items-center gap-8 px-3 py-2.5 sm:pl-5">

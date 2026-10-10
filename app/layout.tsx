@@ -50,7 +50,10 @@ export const metadata: Metadata = {
     creator: "@paddymeet",
   },
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
     shortcut: "/favicon.png",
     apple: "/apple-touch-icon.png",
   },
