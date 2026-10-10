@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
-import QRCode from 'qrcode'
-import { buildTicketScanUrl } from '@/lib/qr'
+import { buildTicketScanUrl, generateQRCodeBuffer } from '@/lib/qr'
+import { createAdminClient } from '@/lib/supabase-admin'
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key')
 
@@ -34,22 +34,61 @@ interface TicketEmailData {
   tickets: TicketInfo[]
 }
 
+/**
+ * Most email clients (Gmail in particular) strip or refuse to render a
+ * base64 data: URI embedded directly in an <img src> — confirmed live, a
+ * real ticket email showed a broken-image icon where the QR code should
+ * be. Generating the PNG and uploading it to storage, then embedding its
+ * real public URL instead, is the only reliably renderable approach.
+ * Uploads to a deterministic path keyed by the ticket code (upsert: true)
+ * so re-sending the same ticket's email never errors on a duplicate and
+ * never needs a second upload.
+ */
+async function getOrCreateTicketQrUrl(ticketCode: string): Promise<string | null> {
+  try {
+    const buffer = await generateQRCodeBuffer(buildTicketScanUrl(ticketCode), {
+      width: 200,
+      margin: 1,
+      color: { dark: '#111827', light: '#ffffff' },
+    })
+
+    const admin = createAdminClient()
+    const path = `ticket-qr/${ticketCode}.png`
+    const { error: uploadError } = await admin.storage
+      .from('chat-media')
+      .upload(path, buffer, {
+        cacheControl: '31536000',
+        upsert: true,
+        contentType: 'image/png',
+      })
+
+    if (uploadError) {
+      console.error(`Ticket QR upload failed for ${ticketCode}:`, uploadError.message)
+      return null
+    }
+
+    const { data } = admin.storage.from('chat-media').getPublicUrl(path)
+    return data.publicUrl
+  } catch (err) {
+    console.error(`Ticket QR generation failed for ${ticketCode}:`, err instanceof Error ? err.message : err)
+    return null
+  }
+}
+
 export async function sendTicketEmail(data: TicketEmailData) {
   const { to, recipientName, eventTitle, eventDate, eventTime, venueName, tickets } = data
 
   try {
     const ticketBlocks = await Promise.all(
       tickets.map(async (ticket) => {
-        const qrDataUrl = await QRCode.toDataURL(buildTicketScanUrl(ticket.ticketCode), {
-          width: 200,
-          margin: 1,
-          color: { dark: '#111827', light: '#ffffff' },
-        })
+        const qrImageUrl = await getOrCreateTicketQrUrl(ticket.ticketCode)
         return `
           <div style="background: #f9fafb; border-radius: 16px; padding: 20px; margin-bottom: 16px; text-align: center;">
             <div style="font-size: 11px; font-weight: 700; color: #f97316; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">${ticket.ticketTypeName}</div>
             ${ticket.attendeeName ? `<div style="font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 10px;">${ticket.attendeeName}</div>` : ''}
-            <img src="${qrDataUrl}" width="160" height="160" alt="Ticket QR Code" style="display: block; margin: 0 auto 10px; border-radius: 8px;" />
+            ${qrImageUrl
+              ? `<img src="${qrImageUrl}" width="160" height="160" alt="Ticket QR Code" style="display: block; margin: 0 auto 10px; border-radius: 8px;" />`
+              : ''}
             <div style="font-size: 14px; font-weight: 800; color: #111827; font-family: monospace; letter-spacing: 1px;">${ticket.ticketCode}</div>
           </div>
         `
