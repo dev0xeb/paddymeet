@@ -164,7 +164,15 @@ export async function POST(request: NextRequest) {
     promo: validPromo,
   })
 
-  if (!skipPaystack && Math.abs(amountPaid - expected.total) > 1) {
+  // Only reject underpayment. Paying MORE than expected is never a fraud
+  // risk — the platform still gets what it's owed either way — and it
+  // happens legitimately whenever Paystack's "customer bears the
+  // transaction fee" setting grosses up what the customer is actually
+  // charged (confirmed live: a real customer was charged exactly the
+  // ticket price plus a ~1.5% Paystack fee, which this check used to
+  // reject outright as a "mismatch" — taking their money and issuing
+  // nothing, with no record of the payment anywhere in our database).
+  if (!skipPaystack && amountPaid < expected.total - 1) {
     return NextResponse.json({
       error: `Payment amount does not match the ticket price. If you were charged, contact support with reference ${reference}.`,
     }, { status: 400 })

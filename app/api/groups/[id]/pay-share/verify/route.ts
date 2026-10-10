@@ -62,8 +62,14 @@ export async function POST(
     amountPaid = verifyData.data.amount / 100
 
     // Never trust the client for the amount — recompute what this many
-    // spots should actually cost from the group's own stored per-member price.
-    if (Math.abs(amountPaid - expectedAmount) > 1) {
+    // spots should actually cost from the group's own stored per-member
+    // price. Only reject underpayment, never overpayment — a customer
+    // being charged MORE than expected is never a fraud risk (confirmed
+    // live: Paystack's "customer bears the transaction fee" setting
+    // grossed up a real payment by ~1.5%, which this check rejected as a
+    // "mismatch" after the money had already been taken, with no ticket
+    // issued and no record of the payment anywhere in our database).
+    if (amountPaid < expectedAmount - 1) {
       return NextResponse.json({
         error: `Payment amount does not match the group's price. If you were charged, contact support with reference ${reference}.`,
       }, { status: 400 })

@@ -162,7 +162,10 @@ export async function POST(request: NextRequest) {
       promo: validPromo,
     })
 
-    if (Math.abs(amountPaid - expected.total) > 1) {
+    // Only reject underpayment — overpayment is never a fraud risk, and
+    // happens legitimately when Paystack's "customer bears the transaction
+    // fee" setting grosses up what the customer is actually charged.
+    if (amountPaid < expected.total - 1) {
       console.error(`Webhook amount mismatch for reference ${reference}: expected ${expected.total}, got ${amountPaid}`)
       return NextResponse.json({ received: true, warning: 'Amount mismatch — no tickets issued' }, { status: 200 })
     }
@@ -459,10 +462,13 @@ async function handleGroupPayment(
   // Never trust the payment metadata for the amount — recompute what this
   // many spots should actually cost from the group's own stored per-member
   // price, and refuse to grant paid spots if the real Paystack-confirmed
-  // amount doesn't match (e.g. a client that tampered with the amount sent
-  // to Paystack while keeping expensive-group metadata).
+  // amount comes in under that (e.g. a client that tampered with the
+  // amount sent to Paystack while keeping expensive-group metadata).
+  // Overpayment is never rejected — it's never a fraud risk, and happens
+  // legitimately when Paystack's "customer bears the transaction fee"
+  // setting grosses up what the customer is actually charged.
   const expectedAmount = (group.amount_per_member || 0) * spotCount
-  if (Math.abs(amountPaid - expectedAmount) > 1) {
+  if (amountPaid < expectedAmount - 1) {
     console.error(`Group payment amount mismatch for group ${groupId}, reference ${reference}: expected ${expectedAmount}, got ${amountPaid}`)
     return
   }
