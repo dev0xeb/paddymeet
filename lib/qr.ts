@@ -11,7 +11,10 @@ import QRCode from 'qrcode'
  * before the code can actually be used to check a ticket in.
  */
 export function buildTicketScanUrl(ticketCode: string): string {
-  return `https://paddymeet.com/scan?code=${encodeURIComponent(ticketCode)}`
+  // www.paddymeet.com is the canonical production domain (paddymeet.com
+  // 308-redirects to it) — pointing here directly avoids that extra
+  // redirect hop on every scanned ticket.
+  return `https://www.paddymeet.com/scan?code=${encodeURIComponent(ticketCode)}`
 }
 
 export interface QRCodeOptions {
