@@ -32,7 +32,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-base font-extrabold text-gray-900 mb-3">1. Agreement to Terms</h2>
             <p>By accessing or using Paddymeet (&quot;Platform&quot;), you agree to be bound by these Terms of Use. These terms apply to all visitors, users, and others who access or use the Platform. If you disagree with any part of these terms, you do not have permission to access the Platform.</p>
-            <p className="mt-3">Paddymeet is operated by <strong>Paddymeet Inc</strong>, registered in Nigeria, with offices at 14 Bode Thomas Street, Surulere, Lagos, Nigeria.</p>
+            <p className="mt-3">Paddymeet is operated by <strong>Paddymeet Inc</strong>, registered in Nigeria.</p>
           </section>
 
           <section>
@@ -157,7 +157,6 @@ export default function TermsPage() {
             <p>If you have any questions about these Terms of Use, please contact us at:</p>
             <div className="mt-3 p-4 bg-gray-50 rounded-xl">
               <p className="font-bold text-gray-900">Paddymeet Inc</p>
-              <p>14 Bode Thomas Street, Surulere, Lagos, Nigeria</p>
               <p>Email: legal@paddymeet.com</p>
               <p>Website: paddymeet.com</p>
             </div>

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, MapPin } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import type { Metadata } from 'next'
 import Logo from '@/components/Logo'
 import ContactSection from '@/components/contact/ContactSection'
@@ -31,24 +31,6 @@ export default function ContactPage() {
         </div>
 
         <ContactSection />
-
-        <div className="bg-gray-50 rounded-2xl p-8">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
-              <MapPin className="w-5 h-5 text-orange-500" />
-            </div>
-            <div>
-              <h2 className="text-base font-extrabold text-gray-900 mb-1">Our Office</h2>
-              <p className="text-sm text-gray-500">
-                Paddymeet Inc<br />
-                14 Bode Thomas Street<br />
-                Surulere, Lagos<br />
-                Nigeria
-              </p>
-              <p className="text-sm text-gray-400 mt-3">We are a remote-first team. Walk-in visits are by appointment only.</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

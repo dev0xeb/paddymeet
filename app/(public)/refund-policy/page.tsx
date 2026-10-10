@@ -92,7 +92,6 @@ export default function RefundPolicyPage() {
             <div className="p-4 bg-gray-50 rounded-xl">
               <p className="font-bold text-gray-900">Paddymeet Inc — Support Team</p>
               <p>Email: support@paddymeet.com</p>
-              <p>14 Bode Thomas Street, Surulere, Lagos, Nigeria</p>
             </div>
           </section>
 

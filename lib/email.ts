@@ -135,7 +135,7 @@ export async function sendTicketEmail(data: TicketEmailData) {
           </div>
 
           <p style="text-align: center; font-size: 11px; color: #9ca3af; margin-top: 16px;">
-            Paddymeet Inc · 14 Bode Thomas Street, Surulere, Lagos
+            Paddymeet Inc
           </p>
         </div>
       `,
@@ -197,7 +197,7 @@ export async function sendCheckInEmail(data: CheckInEmailData) {
           </div>
 
           <p style="text-align: center; font-size: 11px; color: #9ca3af; margin-top: 16px;">
-            Paddymeet Inc · 14 Bode Thomas Street, Surulere, Lagos
+            Paddymeet Inc
           </p>
         </div>
       `,
@@ -244,7 +244,7 @@ export async function sendAnnouncementEmails(recipients: AnnouncementEmailRecipi
         </div>
 
         <p style="text-align: center; font-size: 11px; color: #9ca3af; margin-top: 16px;">
-          Paddymeet Inc · 14 Bode Thomas Street, Surulere, Lagos
+          Paddymeet Inc
         </p>
       </div>
     `,

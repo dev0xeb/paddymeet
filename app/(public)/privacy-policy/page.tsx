@@ -138,7 +138,6 @@ export default function PrivacyPage() {
             <p>If you have any questions or concerns about this Privacy Policy, please contact us:</p>
             <div className="mt-3 p-4 bg-gray-50 rounded-xl">
               <p className="font-bold text-gray-900">Paddymeet Inc — Privacy Team</p>
-              <p>14 Bode Thomas Street, Surulere, Lagos, Nigeria</p>
               <p>Email: privacy@paddymeet.com</p>
             </div>
           </section>
