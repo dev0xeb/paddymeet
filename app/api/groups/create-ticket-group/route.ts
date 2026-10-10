@@ -1,10 +1,18 @@
 import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // The capacity compare-and-swap below writes ticket_types under RLS,
+  // which the buyer's own session can't do (same reason /api/tickets/verify
+  // uses the admin client) — this was silently matching 0 rows every time,
+  // so "Start a New Group" has been failing with "Could not reserve a slot"
+  // for every user.
+  const adminClient = createAdminClient()
 
   const body = await request.json()
   const { event_id, ticket_type_id, name } = body
@@ -45,7 +53,7 @@ export async function POST(request: NextRequest) {
   // created more tables than the organiser's stated capacity allowed.
   let reserved = false
   for (let attempt = 0; attempt < 3 && !reserved; attempt++) {
-    const { count: activeTables } = await supabase
+    const { count: activeTables } = await adminClient
       .from('groups')
       .select('*', { count: 'exact', head: true })
       .eq('ticket_type_id', ticket_type_id)
@@ -57,7 +65,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'This group ticket is sold out' }, { status: 400 })
     }
 
-    const { data: reserveRows } = await supabase
+    const { data: reserveRows } = await adminClient
       .from('ticket_types')
       .update({ quantity_sold: currentSold + 1 })
       .eq('id', ticket_type_id)
@@ -92,7 +100,7 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (groupError) {
-    await supabase.from('ticket_types').update({ quantity_sold: ticketType.quantity_sold || 0 }).eq('id', ticket_type_id)
+    await adminClient.from('ticket_types').update({ quantity_sold: ticketType.quantity_sold || 0 }).eq('id', ticket_type_id)
     return NextResponse.json({ error: groupError.message }, { status: 400 })
   }
 

@@ -21,6 +21,20 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { organiser_id, amount, orders_count, note } = body
 
+  if (!organiser_id || !(Number(amount) > 0)) {
+    return NextResponse.json({ error: 'organiser_id and a positive amount are required' }, { status: 400 })
+  }
+
+  const { data: organiser } = await adminClient
+    .from('organisers')
+    .select('id')
+    .eq('id', organiser_id)
+    .single()
+
+  if (!organiser) {
+    return NextResponse.json({ error: 'Organiser not found' }, { status: 404 })
+  }
+
   const { data: payout, error } = await adminClient
     .from('payouts')
     .insert({

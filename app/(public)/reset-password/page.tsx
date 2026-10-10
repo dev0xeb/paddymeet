@@ -19,16 +19,39 @@ export default function ResetPasswordPage() {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    // Supabase automatically handles the token from the URL hash
     const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
+
+    const establishSession = async () => {
+      // This client (@supabase/ssr's createBrowserClient) defaults to the
+      // PKCE flow, so Supabase's recovery link carries a ?code= query
+      // param that must be explicitly exchanged for a session — it is NOT
+      // a hash-fragment session the client auto-detects on load, which is
+      // what this page previously assumed (and why a valid, freshly-
+      // clicked reset link always showed "invalid or expired").
+      const code = new URLSearchParams(window.location.search).get('code')
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+        if (exchangeError) {
+          setError('This reset link is invalid or has expired. Please request a new one.')
+          setChecking(false)
+          return
+        }
+        setValidSession(true)
+        setChecking(false)
+        return
+      }
+
+      // Fallback: an already-established session (e.g. hash-fragment flow).
+      const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setValidSession(true)
       } else {
         setError('This reset link is invalid or has expired. Please request a new one.')
       }
       setChecking(false)
-    })
+    }
+
+    establishSession()
   }, [])
 
   const handleReset = async () => {

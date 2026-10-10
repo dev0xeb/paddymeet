@@ -13,6 +13,20 @@ export async function GET(
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const adminClient = createAdminClient()
+
+    // Was missing entirely — any logged-in user (not just admins) could
+    // read any other user's private support ticket thread by calling this
+    // route directly with their ticket id.
+    const { data: admin } = await adminClient
+      .from('admin_team')
+      .select('department')
+      .eq('id', user.id)
+      .single()
+
+    if (!admin || !['super_admin', 'support', 'operations'].includes(admin.department)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { data: messages, error } = await adminClient
       .from('support_messages')
       .select('*')

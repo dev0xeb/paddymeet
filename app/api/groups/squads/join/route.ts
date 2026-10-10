@@ -72,6 +72,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: joinError.message }, { status: 500 })
   }
 
+  // Re-check capacity after inserting, against a fresh count rather than
+  // the pre-insert `members.length` read above — two users hitting step 3's
+  // check at the same moment with exactly one spot left could both pass it
+  // and both insert. This can't stop the over-insert, but it catches it
+  // immediately after and undoes this request's own row rather than
+  // leaving the squad over capacity.
+  const { count: memberCountNow } = await supabase
+    .from('group_members')
+    .select('*', { count: 'exact', head: true })
+    .eq('group_id', squad_id)
+
+  if ((memberCountNow ?? 0) > maxCapacity) {
+    await supabase
+      .from('group_members')
+      .delete()
+      .eq('group_id', squad_id)
+      .eq('user_id', user.id)
+    return NextResponse.json({ error: `This squad is already full (${maxCapacity}/${maxCapacity} spots taken).` }, { status: 400 })
+  }
+
   // 6. Fetch user profile to post an announcement
   const { data: profile } = await supabase
     .from('users')
@@ -85,13 +105,13 @@ export async function POST(request: NextRequest) {
   await supabase.from('group_messages').insert({
     group_id: squad_id,
     user_id: user.id,
-    message: `👋 ${displayName} joined the squad! (${members.length + 1}/${maxCapacity})`,
+    message: `👋 ${displayName} joined the squad! (${memberCountNow}/${maxCapacity})`,
   })
 
   return NextResponse.json({
     success: true,
     squad_id,
-    new_member_count: members.length + 1,
-    is_full: members.length + 1 >= maxCapacity,
+    new_member_count: memberCountNow,
+    is_full: (memberCountNow ?? 0) >= maxCapacity,
   })
 }

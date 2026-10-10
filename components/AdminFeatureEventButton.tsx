@@ -29,9 +29,12 @@ export default function AdminFeatureEventButton({ eventId, isFeatured }: Props) 
       })
       if (res.ok) {
         router.refresh()
+      } else {
+        const data = await res.json().catch(() => ({}))
+        alert(data.error || 'Could not update this event. Please try again.')
       }
     } catch {
-      // ignore
+      alert('Network error. Please try again.')
     } finally {
       setLoading(false)
     }

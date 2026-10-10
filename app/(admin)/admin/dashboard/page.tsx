@@ -23,6 +23,8 @@ export default async function AdminDashboardPage() {
 
   if (!admin) redirect('/admin-login')
 
+  const todayStr = new Date().toISOString().split('T')[0]
+
   const [
     { count: totalUsers },
     { count: totalOrganisers },
@@ -38,7 +40,9 @@ export default async function AdminDashboardPage() {
     adminClient.from('users').select('*', { count: 'exact', head: true }),
     adminClient.from('organisers').select('*', { count: 'exact', head: true }),
     adminClient.from('organisers').select('*', { count: 'exact', head: true }).eq('is_verified', false),
-    adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_approved', true).eq('is_live', true),
+    // is_live is never auto-flipped when an event's date passes, so this
+    // stat needs its own "hasn't happened yet" filter too.
+    adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_approved', true).eq('is_live', true).gte('event_date', todayStr),
     adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_approved', false).eq('is_rejected', false),
     adminClient.from('tickets').select('*', { count: 'exact', head: true }),
     adminClient.from('users').select('id, username, city, state, created_at').order('created_at', { ascending: false }).limit(5),

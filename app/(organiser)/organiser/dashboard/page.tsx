@@ -41,8 +41,12 @@ export default async function OrganiserDashboardPage() {
     .order('created_at', { ascending: false })
 
   const totalRevenue = orders?.reduce((sum, o) => sum + (Number(o.total_paid) || 0), 0) || 0
+  const totalServiceFees = orders?.reduce((sum, o) => sum + (Number(o.service_fee) || 0), 0) || 0
   const feeAmount = totalRevenue * (platformFeePercent / 100)
-  const netEstimatedPayout = Math.max(0, totalRevenue - feeAmount)
+  // Must match the Revenue/Payouts pages' formula (gross - service fees -
+  // commission) — this used to skip the service-fee subtraction, showing a
+  // systematically higher "Estimated Payout" here than those pages agreed on.
+  const netEstimatedPayout = Math.max(0, totalRevenue - totalServiceFees - feeAmount)
   const totalTickets = orders?.length || 0
   const recentOrders = orders?.slice(0, 5) || []
   const liveEvents = events?.filter(e => e.is_live && e.is_approved && !(e.event_date && e.event_date < new Date().toISOString().split('T')[0])).length || 0

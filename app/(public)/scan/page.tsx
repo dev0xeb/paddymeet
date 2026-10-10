@@ -168,7 +168,7 @@ function StaffScannerPage() {
               </label>
               <input
                 type="text"
-                placeholder="Enter event passkey or ID"
+                placeholder="Enter event passkey"
                 value={passkey}
                 onChange={e => setPasskey(e.target.value.toUpperCase())}
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-sm font-mono text-white outline-none focus:border-orange-500 transition-all placeholder:text-gray-500"

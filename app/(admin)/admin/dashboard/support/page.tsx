@@ -135,9 +135,11 @@ export default function AdminSupportPage() {
         if (selectedTicket?.id === ticketId) {
           setSelectedTicket(prev => prev ? { ...prev, status: nextStatus } : null)
         }
+      } else {
+        alert(data.error || 'Could not update ticket status. Please try again.')
       }
     } catch {
-      // ignore
+      alert('Network error. Please try again.')
     }
   }
 
@@ -154,9 +156,11 @@ export default function AdminSupportPage() {
         if (selectedTicket?.id === ticketId) {
           setSelectedTicket(prev => prev ? { ...prev, priority: nextPriority } : null)
         }
+      } else {
+        alert(data.error || 'Could not update ticket priority. Please try again.')
       }
     } catch {
-      // ignore
+      alert('Network error. Please try again.')
     }
   }
 

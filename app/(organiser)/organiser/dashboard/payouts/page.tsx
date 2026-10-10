@@ -31,6 +31,7 @@ export default async function OrganiserPayoutsPage() {
     .from('orders')
     .select('total_paid, service_fee, created_at')
     .in('event_id', eventIds)
+    .eq('payment_status', 'completed')
 
   const grossRevenue = allOrders?.reduce((sum, o) => sum + (o.total_paid || 0), 0) || 0
   const totalFees = allOrders?.reduce((sum, o) => sum + (o.service_fee || 0), 0) || 0

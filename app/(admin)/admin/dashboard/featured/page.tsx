@@ -24,6 +24,8 @@ export default async function AdminFeaturedPage() {
     redirect('/admin/dashboard')
   }
 
+  const todayStr = new Date().toISOString().split('T')[0]
+
   const [
     { data: featuredEvents },
     { data: liveEvents },
@@ -34,12 +36,16 @@ export default async function AdminFeaturedPage() {
       .eq('is_featured', true)
       .eq('is_approved', true)
       .order('event_date', { ascending: true }),
+    // is_live is never auto-flipped when an event's date passes — without
+    // this filter, a past event with a stale is_live=true could show up
+    // here as eligible to pin to the public homepage hero.
     adminClient
       .from('events')
       .select('*, organisers(id, org_name, is_verified), ticket_types(price, name)')
       .eq('is_approved', true)
       .eq('is_live', true)
       .eq('is_featured', false)
+      .gte('event_date', todayStr)
       .order('event_date', { ascending: true })
       .limit(30),
   ])

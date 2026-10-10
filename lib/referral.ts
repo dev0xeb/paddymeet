@@ -20,8 +20,12 @@ export async function awardReferralDiscount(
 
   if (!profile?.referred_by || profile.referral_converted) return
 
+  // Count orders, not ticket rows — a single first purchase can create many
+  // ticket rows at once (quantity > 1, or any group ticket, which always
+  // inserts group_size rows), which made the old ticket-row count look like
+  // a repeat purchase and silently skip the reward on the very first order.
   const { count } = await supabase
-    .from('tickets')
+    .from('orders')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user_id)
 

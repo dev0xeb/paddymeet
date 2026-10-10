@@ -39,6 +39,7 @@ export default async function OrganiserManageEventPage({
     .from('orders')
     .select('*')
     .eq('event_id', id)
+    .eq('payment_status', 'completed')
     .order('created_at', { ascending: false })
     .limit(10)
 

@@ -88,6 +88,7 @@ export default async function OrganiserTicketsPage({
     .from('orders')
     .select('total_paid, service_fee')
     .in('event_id', eventIds)
+    .eq('payment_status', 'completed')
 
   const totalRevenue = allOrders?.reduce((sum, o) => sum + (o.total_paid || 0), 0) || 0
   const totalServiceFees = allOrders?.reduce((sum, o) => sum + (o.service_fee || 0), 0) || 0

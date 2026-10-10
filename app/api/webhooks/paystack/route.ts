@@ -560,6 +560,11 @@ async function handleGroupPayment(
     if (orderInsertError) {
       console.error(`Group payment webhook: order insert failed for group ${groupId}, reference ${reference}:`, orderInsertError.message)
     }
+
+    // Group ticket purchases never triggered the referred-friend reward at
+    // all (only the solo-ticket paths did) — a referred user whose first
+    // purchase was a group ticket never converted their referrer's bonus.
+    await awardReferralDiscount(adminClient, userId)
   }
 
   // Check if group is full

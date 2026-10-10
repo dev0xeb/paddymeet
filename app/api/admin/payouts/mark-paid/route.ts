@@ -21,8 +21,18 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { organiser_id, amount, orders_count, payment_method, payment_reference, note } = body
 
-  if (!organiser_id || !amount || !payment_reference) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  if (!organiser_id || !(Number(amount) > 0) || !payment_reference) {
+    return NextResponse.json({ error: 'organiser_id, a positive amount, and payment_reference are required' }, { status: 400 })
+  }
+
+  const { data: organiser } = await adminClient
+    .from('organisers')
+    .select('id')
+    .eq('id', organiser_id)
+    .single()
+
+  if (!organiser) {
+    return NextResponse.json({ error: 'Organiser not found' }, { status: 404 })
   }
 
   const { data: payout, error } = await adminClient

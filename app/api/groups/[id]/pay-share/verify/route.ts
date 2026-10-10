@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { sendTicketEmail } from '@/lib/email'
 import { generateTicketCode } from '@/lib/ticketCode'
+import { awardReferralDiscount } from '@/lib/referral'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface AttendeeInput {
@@ -18,11 +20,18 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // The buyer's own session can't write tickets/orders for OTHER members of
+  // the group under RLS (same reason /api/tickets/verify moved to the admin
+  // client) — and when this group completes, this request issues tickets to
+  // every paid member, not just the caller. Auth stays on the session client
+  // above; every actual read/write below goes through the admin client.
+  const adminClient = createAdminClient()
+
   const body = await request.json()
   const { reference, spots, attendees } = body
   const spotCount: number = spots || 1
 
-  const { data: group } = await supabase
+  const { data: group } = await adminClient
     .from('groups')
     .select('*, ticket_types(*), events(title, event_date, start_time, venue_name)')
     .eq('id', groupId)
@@ -65,7 +74,7 @@ export async function POST(
   // payment (it can win the race against this very request — that's the
   // point of having it), don't insert a duplicate row or re-issue tickets.
   if (reference !== 'FREE') {
-    const { data: existingMembers } = await supabase
+    const { data: existingMembers } = await adminClient
       .from('group_members')
       .select('id, attendee_name, ticket_id')
       .eq('payment_reference', reference)
@@ -74,7 +83,7 @@ export async function POST(
       // Re-read the group's status fresh rather than trusting the copy
       // fetched at the top of this request — the webhook may have just
       // completed it moments ago.
-      const { data: freshGroup } = await supabase
+      const { data: freshGroup } = await adminClient
         .from('groups')
         .select('status')
         .eq('id', groupId)
@@ -82,7 +91,7 @@ export async function POST(
 
       const issuedTicketIds = existingMembers.map((m) => m.ticket_id).filter(Boolean) as string[]
       const { data: issuedTickets } = issuedTicketIds.length > 0
-        ? await supabase.from('tickets').select('id, ticket_code').in('id', issuedTicketIds)
+        ? await adminClient.from('tickets').select('id, ticket_code').in('id', issuedTicketIds)
         : { data: [] as { id: string, ticket_code: string }[] }
       const ticketCodeById = new Map((issuedTickets || []).map((t) => [t.id, t.ticket_code]))
 
@@ -110,7 +119,7 @@ export async function POST(
   // inserted rows. Falls back to the plain check-then-insert below if
   // that migration hasn't been run yet (same behavior this route always
   // had — a narrower race, not a regression).
-  const { data: claimResult, error: claimError } = await supabase.rpc('claim_group_seats', {
+  const { data: claimResult, error: claimError } = await adminClient.rpc('claim_group_seats', {
     p_group_id: groupId,
     p_user_id: user.id,
     p_role: role,
@@ -131,7 +140,7 @@ export async function POST(
     if (!claim?.claimed) {
       return NextResponse.json({ error: 'Not enough spots remaining in this group' }, { status: 400 })
     }
-    const { data: fetchedMembers, error: fetchError } = await supabase
+    const { data: fetchedMembers, error: fetchError } = await adminClient
       .from('group_members')
       .select('*')
       .in('id', (claim.inserted_ids || []) as string[])
@@ -141,7 +150,7 @@ export async function POST(
     insertedMembers = fetchedMembers
   } else {
     // Re-check capacity right before committing
-    const { count: currentPaid } = await supabase
+    const { count: currentPaid } = await adminClient
       .from('group_members')
       .select('*', { count: 'exact', head: true })
       .eq('group_id', groupId)
@@ -155,7 +164,7 @@ export async function POST(
     // (group_id, user_id) — a single payer can hold several spots, so each
     // row for this purchase needs its own seat number, continuing on from
     // any seats this user already holds in the group.
-    const { data: existingSeats } = await supabase
+    const { data: existingSeats } = await adminClient
       .from('group_members')
       .select('seat_number')
       .eq('group_id', groupId)
@@ -177,7 +186,7 @@ export async function POST(
       attendee_phone: a.phone || null,
     }))
 
-    const { data: fallbackInserted, error: insertError } = await supabase
+    const { data: fallbackInserted, error: insertError } = await adminClient
       .from('group_members')
       .insert(memberRows)
       .select()
@@ -190,7 +199,7 @@ export async function POST(
 
   // Record the order for revenue tracking
   if (amountPaid > 0) {
-    await supabase.from('orders').insert({
+    await adminClient.from('orders').insert({
       user_id: user.id,
       event_id: group.event_id,
       group_id: groupId,
@@ -205,10 +214,15 @@ export async function POST(
     })
   }
 
+  // Group ticket purchases never triggered the referred-friend reward at
+  // all (only the solo-ticket paths did) — fire it here too, for whichever
+  // member's payment this request is completing.
+  await awardReferralDiscount(adminClient, user.id)
+
   const ticketType = Array.isArray(group.ticket_types) ? group.ticket_types[0] : group.ticket_types
   const event = Array.isArray(group.events) ? group.events[0] : group.events
 
-  const { data: buyerProfile } = await supabase
+  const { data: buyerProfile } = await adminClient
     .from('users')
     .select('email, full_name')
     .eq('id', user.id)
@@ -217,7 +231,7 @@ export async function POST(
   // Freshly counted rather than derived from a pre-insert read + spotCount —
   // this request's own just-committed rows (and any concurrent one's) are
   // both reflected here, so this can't under- or over-count.
-  const { count: paidCountNow } = await supabase
+  const { count: paidCountNow } = await adminClient
     .from('group_members')
     .select('*', { count: 'exact', head: true })
     .eq('group_id', groupId)
@@ -232,7 +246,7 @@ export async function POST(
     // requests would independently fetch every paid member and insert a
     // full duplicate set of tickets (and duplicate confirmation emails)
     // for the whole group.
-    const { data: completionRows } = await supabase
+    const { data: completionRows } = await adminClient
       .from('groups')
       .update({ status: 'completed' })
       .eq('id', groupId)
@@ -250,7 +264,7 @@ export async function POST(
     }
 
     // Group is full — issue tickets to every paid member
-    const { data: allPaidMembers } = await supabase
+    const { data: allPaidMembers } = await adminClient
       .from('group_members')
       .select('*')
       .eq('group_id', groupId)
@@ -270,10 +284,14 @@ export async function POST(
       attendee_phone: m.attendee_phone,
     }))
 
-    const { data: createdTickets } = await supabase
+    const { data: createdTickets, error: ticketsInsertError } = await adminClient
       .from('tickets')
       .insert(ticketsToCreate)
       .select()
+
+    if (ticketsInsertError) {
+      console.error(`pay-share/verify: ticket insert failed for completed group ${groupId}:`, ticketsInsertError.message)
+    }
 
     // No ticket_types.quantity_sold increment here — this table's single
     // unit of capacity was already claimed when the group was first
@@ -292,7 +310,7 @@ export async function POST(
         const member = allPaidMembers[i]
         ticketCodeByMemberId[member.id] = ticket.ticket_code
 
-        await supabase.from('group_members').update({ ticket_id: ticket.id }).eq('id', member.id)
+        await adminClient.from('group_members').update({ ticket_id: ticket.id }).eq('id', member.id)
 
         const destEmail = member.attendee_email || (member.user_id === user.id ? buyerProfile?.email : null)
         if (destEmail) {
@@ -309,7 +327,7 @@ export async function POST(
           })
         }
 
-        await supabase.from('notifications').insert({
+        await adminClient.from('notifications').insert({
           user_id: member.user_id,
           title: 'Group ticket confirmed! 🎉',
           message: `Your group "${group.name}" is complete. Your ticket for ${event?.title} has been issued.`,
@@ -331,7 +349,7 @@ export async function POST(
 
   // Not full yet — notify other paid members of progress
   const remaining = group.max_members - totalPaidNow
-  const { data: otherPaidMembers } = await supabase
+  const { data: otherPaidMembers } = await adminClient
     .from('group_members')
     .select('user_id')
     .eq('group_id', groupId)
@@ -340,7 +358,7 @@ export async function POST(
 
   if (otherPaidMembers && otherPaidMembers.length > 0) {
     const uniqueUserIds = [...new Set(otherPaidMembers.map(m => m.user_id))]
-    await supabase.from('notifications').insert(
+    await adminClient.from('notifications').insert(
       uniqueUserIds.map(uid => ({
         user_id: uid,
         title: 'Group update',

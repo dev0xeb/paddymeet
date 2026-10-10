@@ -1,6 +1,15 @@
+import { createClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
+  // Was reachable with no auth at all — anyone could use this as a free,
+  // unrate-limited "resolve this account number to its owner's real name"
+  // oracle, and burn the site's Paystack quota in the process. Not covered
+  // by middleware (that only gates /organiser page routes, not /api/organiser/*).
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { account_number, bank_code } = await request.json()
 
   if (!account_number || !bank_code) {

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { sendTicketEmail } from '@/lib/email'
 import { generateTicketCode } from '@/lib/ticketCode'
 import { awardReferralDiscount } from '@/lib/referral'
@@ -29,10 +30,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'event_id, ticket_type_id and quantity are required' }, { status: 400 })
   }
 
+  // This route's writes need the admin client — the buyer's own session
+  // can't write ticket_types/tickets/groups under RLS (same reason
+  // /api/tickets/verify and the Paystack webhook use it), and this route
+  // previously used the session client throughout, meaning its capacity
+  // compare-and-swap below silently matched 0 rows and claim-free was
+  // failing for every user on the first attempt.
+  const adminClient = createAdminClient()
+
   // This route bypasses Paystack entirely, so it must independently verify
   // the ticket is actually free — otherwise it's an unauthenticated way to
   // mint paid tickets for nothing.
-  const { data: ticketType } = await supabase
+  const { data: ticketType } = await adminClient
     .from('ticket_types')
     .select('price, quantity, quantity_sold')
     .eq('id', ticket_type_id)
@@ -43,6 +52,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'This ticket type requires payment and cannot be claimed for free' }, { status: 400 })
   }
 
+  // Reject claims for an event that isn't actually approved and live yet —
+  // every other ticket-issuing path already re-checks this; this route was
+  // missing it, meaning anyone who knew a pending event's free ticket_type
+  // id could claim a confirmed ticket for an event admin never approved.
+  const { data: eventForClaim } = await adminClient
+    .from('events')
+    .select('is_approved, is_live')
+    .eq('id', event_id)
+    .single()
+
+  if (!eventForClaim?.is_approved || !eventForClaim?.is_live) {
+    return NextResponse.json({ error: 'This event is not open for ticket sales yet.' }, { status: 400 })
+  }
+
   // Atomic capacity check — same guarded-update pattern as the paid path
   // (app/api/tickets/verify/route.ts) so two concurrent claims can't both
   // succeed past the last free ticket.
@@ -51,7 +74,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No free tickets remaining for this ticket type.' }, { status: 409 })
   }
 
-  const { data: capacityRows, error: capacityError } = await supabase
+  const { data: capacityRows, error: capacityError } = await adminClient
     .from('ticket_types')
     .update({ quantity_sold: currentSold + quantity })
     .eq('id', ticket_type_id)
@@ -84,14 +107,14 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  const { data: createdTickets, error } = await supabase
+  const { data: createdTickets, error } = await adminClient
     .from('tickets')
     .insert(tickets)
     .select()
 
   if (error) {
     // Give back the capacity we just reserved — no tickets were actually created.
-    await supabase
+    await adminClient
       .from('ticket_types')
       .update({ quantity_sold: currentSold })
       .eq('id', ticket_type_id)
@@ -100,7 +123,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Auto-add user to event groups
-  const { data: eventGroups } = await supabase
+  const { data: eventGroups } = await adminClient
     .from('groups')
     .select('id, group_type')
     .eq('event_id', event_id)
@@ -108,14 +131,14 @@ export async function POST(request: NextRequest) {
 
   if (eventGroups && eventGroups.length > 0) {
     for (const group of eventGroups) {
-      const { data: existing } = await supabase
+      const { data: existing } = await adminClient
         .from('group_members')
         .select('id')
         .eq('group_id', group.id)
         .eq('user_id', user_id)
         .limit(1)
       if ((existing?.length ?? 0) === 0) {
-        await supabase.from('group_members').insert({
+        await adminClient.from('group_members').insert({
           group_id: group.id,
           user_id,
           role: 'member',
@@ -123,13 +146,13 @@ export async function POST(request: NextRequest) {
       }
     }
   } else {
-    const { data: event } = await supabase
+    const { data: event } = await adminClient
       .from('events')
       .select('title')
       .eq('id', event_id)
       .single()
 
-    const { data: newGroup } = await supabase
+    const { data: newGroup } = await adminClient
       .from('groups')
       .insert({
         event_id,
@@ -143,7 +166,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (newGroup) {
-      await supabase.from('group_members').insert({
+      await adminClient.from('group_members').insert({
         group_id: newGroup.id,
         user_id,
         role: 'member',
@@ -152,7 +175,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Send confirmation notification
-  await supabase
+  await adminClient
     .from('notifications')
     .insert({
       user_id,
@@ -164,19 +187,19 @@ export async function POST(request: NextRequest) {
 
   // Send emails — group tickets by destination email
   if (createdTickets && createdTickets.length > 0) {
-    const { data: emailEvent } = await supabase
+    const { data: emailEvent } = await adminClient
       .from('events')
       .select('title, event_date, start_time, venue_name')
       .eq('id', event_id)
       .single()
 
-    const { data: emailUser } = await supabase
+    const { data: emailUser } = await adminClient
       .from('users')
       .select('email')
       .eq('id', user_id)
       .single()
 
-    const { data: emailTicketType } = await supabase
+    const { data: emailTicketType } = await adminClient
       .from('ticket_types')
       .select('name')
       .eq('id', ticket_type_id)
@@ -215,7 +238,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Referral discount trigger — check if this is the user's first ticket
-  await awardReferralDiscount(supabase, user_id)
+  await awardReferralDiscount(adminClient, user_id)
 
   return NextResponse.json({ success: true, tickets: createdTickets })
 }

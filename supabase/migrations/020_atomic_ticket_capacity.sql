@@ -38,7 +38,7 @@ BEGIN
   END IF;
 
   UPDATE public.ticket_types
-  SET quantity_sold = v_real_sold + p_quantity, updated_at = NOW()
+  SET quantity_sold = v_real_sold + p_quantity
   WHERE id = p_ticket_type_id;
 
   RETURN TRUE;
@@ -77,7 +77,7 @@ BEGIN
   END IF;
 
   UPDATE public.ticket_types
-  SET quantity_sold = v_active_tables + 1, updated_at = NOW()
+  SET quantity_sold = v_active_tables + 1
   WHERE id = p_ticket_type_id;
 
   RETURN TRUE;
@@ -100,7 +100,7 @@ BEGIN
     AND status IN ('recruiting', 'completed');
 
   UPDATE public.ticket_types
-  SET quantity_sold = v_active_tables, updated_at = NOW()
+  SET quantity_sold = v_active_tables
   WHERE id = p_ticket_type_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -119,7 +119,7 @@ WHERE tt.id = sub.ticket_type_id
   AND tt.quantity_sold IS DISTINCT FROM sub.real_count;
 
 UPDATE public.ticket_types
-SET quantity_sold = 0, updated_at = NOW()
+SET quantity_sold = 0
 WHERE is_group_ticket = FALSE
   AND quantity_sold <> 0
   AND id NOT IN (
@@ -141,7 +141,7 @@ WHERE tt.id = sub.ticket_type_id
   AND tt.quantity_sold IS DISTINCT FROM sub.active_tables;
 
 UPDATE public.ticket_types
-SET quantity_sold = 0, updated_at = NOW()
+SET quantity_sold = 0
 WHERE is_group_ticket = TRUE
   AND quantity_sold <> 0
   AND id NOT IN (

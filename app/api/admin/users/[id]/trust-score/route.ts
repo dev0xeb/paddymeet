@@ -18,7 +18,11 @@ export async function PUT(
   }
 
   const body = await request.json()
-  const trustScore = Math.max(0, Math.min(100, body.trust_score))
+  const rawScore = Number(body.trust_score)
+  if (!Number.isFinite(rawScore)) {
+    return NextResponse.json({ error: 'trust_score must be a number' }, { status: 400 })
+  }
+  const trustScore = Math.max(0, Math.min(100, rawScore))
 
   // Get tier thresholds
   const { data: settings } = await adminClient

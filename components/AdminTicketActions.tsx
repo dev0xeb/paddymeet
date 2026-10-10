@@ -31,9 +31,12 @@ export default function AdminTicketActions({ ticketId, ticketCode, currentStatus
       })
       if (res.ok) {
         router.refresh()
+      } else {
+        const data = await res.json().catch(() => ({}))
+        alert(data.error || 'Could not update this ticket. Please try again.')
       }
     } catch {
-      // ignore
+      alert('Network error. Please try again.')
     } finally {
       setLoading(false)
     }

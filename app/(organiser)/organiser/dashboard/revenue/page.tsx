@@ -40,12 +40,14 @@ export default async function OrganiserRevenuePage({
     .from('orders')
     .select('id, total_paid, service_fee, created_at, event_id')
     .in('event_id', eventIds)
+    .eq('payment_status', 'completed')
     .order('created_at', { ascending: false })
 
   const { data: pagedOrders, count } = await supabase
     .from('orders')
     .select('id, total_paid, service_fee, created_at, event_id, events(title)', { count: 'exact' })
     .in('event_id', eventIds)
+    .eq('payment_status', 'completed')
     .order('created_at', { ascending: false })
     .range(offset, offset + pageSize - 1)
 
@@ -57,16 +59,21 @@ export default async function OrganiserRevenuePage({
   const netRevenue = grossRevenue - totalFees - paddymeetCommission
 
   // Revenue by event
+  const todayStr = new Date().toISOString().split('T')[0]
   const revenueByEvent = events?.map(event => {
     const eventOrders = allOrders?.filter(o => o.event_id === event.id) || []
     const revenue = eventOrders.reduce((sum, o) => sum + (o.total_paid || 0), 0)
     const fees = eventOrders.reduce((sum, o) => sum + (o.service_fee || 0), 0)
+    // is_live is never auto-flipped when an event's date passes, so it has
+    // to be combined with event_date to mean "currently live" here too.
+    const isCurrentlyLive = !!event.is_live && !(event.event_date && event.event_date < todayStr)
     return {
       ...event,
       revenue,
       fees,
       net: revenue - fees - revenue * commissionRate,
       orders: eventOrders.length,
+      isCurrentlyLive,
     }
   }).sort((a, b) => b.revenue - a.revenue) || []
 
@@ -132,9 +139,9 @@ export default async function OrganiserRevenuePage({
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="text-xs font-bold text-gray-900 truncate">{event.title}</div>
                           <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold flex-shrink-0 ${
-                            event.is_live ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'
+                            event.isCurrentlyLive ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'
                           }`}>
-                            {event.is_live ? 'Live' : 'Ended'}
+                            {event.isCurrentlyLive ? 'Live' : 'Ended'}
                           </span>
                         </div>
                         <div className="text-sm font-extrabold text-gray-900 flex-shrink-0 ml-2">
