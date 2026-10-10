@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Eye, EyeOff, Shield, Loader2, AlertCircle } from 'lucide-react'
 import Logo from '@/components/Logo'
 
@@ -121,6 +122,12 @@ export default function AdminLoginPage() {
               )}
             </button>
           </form>
+
+          <div className="text-center mt-4">
+            <Link href="/forgot-password?redirect=admin-login" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
       </div>

@@ -1,16 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Mail, Check, Eye, EyeOff, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Logo from '@/components/Logo'
 
 type Step = 'email' | 'code' | 'done'
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // Lets /admin-login's own "Forgot password?" link send an admin back to
+  // the right login page afterward, instead of always landing them on the
+  // explorer/organiser one.
+  const loginHref = searchParams.get('redirect') === 'admin-login' ? '/admin-login' : '/login'
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -69,7 +74,7 @@ export default function ForgotPasswordPage() {
       setError(updateError.message)
     } else {
       setStep('done')
-      setTimeout(() => router.push('/login'), 3000)
+      setTimeout(() => router.push(loginHref), 3000)
     }
     setLoading(false)
   }
@@ -79,7 +84,7 @@ export default function ForgotPasswordPage() {
 
       {/* Nav */}
       <nav className="h-16 flex items-center justify-between px-6 bg-white border-b border-gray-100">
-        <Link href="/login" className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+        <Link href={loginHref} className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to Login
         </Link>
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
@@ -101,7 +106,7 @@ export default function ForgotPasswordPage() {
               <p className="text-sm text-gray-500 leading-relaxed mb-6">
                 Your password has been reset successfully. Redirecting you to login...
               </p>
-              <Link href="/login"
+              <Link href={loginHref}
                 className="block w-full py-3.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors text-center"
               >
                 Go to Login
@@ -275,7 +280,7 @@ export default function ForgotPasswordPage() {
                 </button>
 
                 <div className="text-center">
-                  <Link href="/login" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
+                  <Link href={loginHref} className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
                     Remember your password? <span className="font-bold text-orange-500">Log in</span>
                   </Link>
                 </div>
@@ -285,5 +290,13 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ForgotPasswordForm />
+    </Suspense>
   )
 }
