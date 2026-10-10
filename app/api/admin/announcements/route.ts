@@ -124,6 +124,7 @@ export async function POST(request: NextRequest) {
   const userIds = recipients.map(r => r.id)
 
   // Create notifications in database
+  let pushResult: { sent: number, failed: number } | null = null
   if (channel === 'push' || channel === 'both') {
     const notifications = userIds.map(userId => ({
       user_id: userId,
@@ -133,12 +134,27 @@ export async function POST(request: NextRequest) {
       is_read: false,
     }))
 
-    // Insert in batches of 100
+    // Insert in batches of 100 — each batch is one statement, so a single
+    // bad row (e.g. a user_id with no matching auth.users row) fails that
+    // whole batch atomically. This used to never check the result, so a
+    // failed batch was reported as a success with a nonzero "sent" count
+    // while delivering zero notifications.
+    let pushSent = 0
+    let pushFailed = 0
     for (let i = 0; i < notifications.length; i += 100) {
-      await adminClient
+      const batch = notifications.slice(i, i + 100)
+      const { error: pushInsertError } = await adminClient
         .from('notifications')
-        .insert(notifications.slice(i, i + 100))
+        .insert(batch)
+
+      if (pushInsertError) {
+        console.error('Announcement push insert failed:', pushInsertError.message)
+        pushFailed += batch.length
+      } else {
+        pushSent += batch.length
+      }
     }
+    pushResult = { sent: pushSent, failed: pushFailed }
   }
 
   // Send emails
@@ -169,6 +185,8 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     success: true,
     sent_to: userIds.length,
+    push_sent: pushResult?.sent ?? null,
+    push_failed: pushResult?.failed ?? null,
     email_sent: emailResult?.sent ?? null,
     email_failed: emailResult?.failed ?? null,
   })
