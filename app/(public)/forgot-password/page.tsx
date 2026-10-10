@@ -121,7 +121,7 @@ export default function ForgotPasswordPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                    Reset code
+                    Enter OTP
                   </label>
                   <input
                     type="text"
@@ -184,8 +184,14 @@ export default function ForgotPasswordPage() {
                     onKeyDown={e => e.key === 'Enter' && handleReset()}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 outline-none focus:border-orange-400 focus:bg-white transition-all"
                   />
-                  {confirmPassword.length > 0 && password !== confirmPassword && (
-                    <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+                  {confirmPassword.length > 0 && (
+                    password === confirmPassword ? (
+                      <p className="flex items-center gap-1.5 text-xs text-green-600 mt-1">
+                        <Check className="w-3.5 h-3.5" /> Passwords match
+                      </p>
+                    ) : (
+                      <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+                    )
                   )}
                 </div>
 
@@ -206,7 +212,7 @@ export default function ForgotPasswordPage() {
                 <div className="flex items-center justify-between text-xs">
                   <button
                     type="button"
-                    onClick={sendCode}
+                    onClick={() => { setCode(''); sendCode() }}
                     disabled={loading}
                     className="text-gray-500 hover:text-gray-700 transition-colors font-semibold disabled:opacity-60"
                   >
@@ -214,7 +220,13 @@ export default function ForgotPasswordPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setStep('email'); setCode(''); setError('') }}
+                    onClick={() => {
+                      setStep('email')
+                      setCode('')
+                      setPassword('')
+                      setConfirmPassword('')
+                      setError('')
+                    }}
                     className="text-gray-500 hover:text-gray-700 transition-colors font-semibold"
                   >
                     Use a different email
