@@ -395,8 +395,9 @@ export default async function DashboardPage() {
                       const isFeatured = evt.is_featured
 
                       return (
-                        <div
+                        <Link
                           key={evt.id}
+                          href={`/events/${evt.id}`}
                           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-xl border border-slate-200/80 hover:border-orange-300 hover:shadow-md transition-all bg-slate-50/50 group"
                         >
                           <div className="flex items-start gap-4 min-w-0">
@@ -452,14 +453,13 @@ export default async function DashboardPage() {
                                 {minPrice === 0 ? 'Free Entry' : `₦${minPrice.toLocaleString()}`}
                               </div>
                             </div>
-                            <Link
-                              href={`/events/${evt.id}`}
-                              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold rounded-xl shadow-sm shadow-orange-600/20 active:scale-[0.98] transition-all"
+                            <span
+                              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-orange-600 group-hover:bg-orange-500 text-white text-xs font-bold rounded-xl shadow-sm shadow-orange-600/20 transition-all"
                             >
                               <Ticket className="w-3.5 h-3.5" /> Book Pass
-                            </Link>
+                            </span>
                           </div>
-                        </div>
+                        </Link>
                       )
                     })}
                   </div>
