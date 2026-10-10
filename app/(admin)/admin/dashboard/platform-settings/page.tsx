@@ -44,6 +44,7 @@ export default function AdminPlatformSettingsPage() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const [maintenanceConfirmModal, setMaintenanceConfirmModal] = useState(false)
+  const [maintenanceSaving, setMaintenanceSaving] = useState(false)
 
   const fetchSettings = async () => {
     try {
@@ -67,11 +68,39 @@ export default function AdminPlatformSettingsPage() {
     setSettings(prev => ({ ...prev, [field]: val }))
   }
 
+  // Maintenance mode is an emergency control — it saves itself immediately
+  // on confirm/toggle rather than waiting for the separate "Save Platform
+  // Rules" button below, which an admin could easily skip after confirming
+  // the toggle, leaving them believing the site is locked down for a
+  // critical update while it's actually still fully live.
+  const saveMaintenanceMode = async (value: boolean) => {
+    setMaintenanceSaving(true)
+    setError('')
+    const updated = { ...settings, maintenance_mode: value }
+    try {
+      const res = await fetch('/api/admin/platform-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setError(data.error)
+      } else {
+        setSettings(updated)
+      }
+    } catch {
+      setError('Failed to update maintenance mode. Please try again.')
+    } finally {
+      setMaintenanceSaving(false)
+    }
+  }
+
   const handleMaintenanceToggle = () => {
     if (!settings.maintenance_mode) {
       setMaintenanceConfirmModal(true)
     } else {
-      updateField('maintenance_mode', false)
+      saveMaintenanceMode(false)
     }
   }
 
@@ -309,12 +338,18 @@ export default function AdminPlatformSettingsPage() {
                       ? 'Public visitors see a maintenance screen. Only logged-in administrators can access the system.'
                       : 'All public pages, event booking, and checkout flows are running normally.'}
                   </div>
+                  {maintenanceSaving && (
+                    <div className="text-[11px] text-orange-600 font-semibold mt-1 flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Updating live site...
+                    </div>
+                  )}
                 </div>
 
                 <button
                   type="button"
+                  disabled={maintenanceSaving}
                   onClick={handleMaintenanceToggle}
-                  className={`w-12 h-6 rounded-full transition-all flex-shrink-0 relative ${
+                  className={`w-12 h-6 rounded-full transition-all flex-shrink-0 relative disabled:opacity-60 ${
                     settings.maintenance_mode ? 'bg-rose-600' : 'bg-slate-300'
                   }`}
                 >
@@ -379,11 +414,12 @@ export default function AdminPlatformSettingsPage() {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  updateField('maintenance_mode', true)
+                disabled={maintenanceSaving}
+                onClick={async () => {
                   setMaintenanceConfirmModal(false)
+                  await saveMaintenanceMode(true)
                 }}
-                className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
+                className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm disabled:opacity-60"
               >
                 Yes, Enable Maintenance Mode
               </button>
