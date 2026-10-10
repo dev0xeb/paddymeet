@@ -45,6 +45,7 @@ export default async function EventDetailPage({
     { data: mainGroup },
     { data: userTickets },
     { data: userProfile },
+    { data: eventGroups },
   ] = await Promise.all([
     supabase
       .from('events')
@@ -62,6 +63,10 @@ export default async function EventDetailPage({
     user
       ? supabase.from('users').select('referral_discount_percent').eq('id', user.id).single()
       : Promise.resolve({ data: null }),
+    // Every group tied to this event (main + ticket groups), used below to
+    // check for a paid group-ticket seat that hasn't converted to an
+    // issued ticket yet (tickets only get created once a group fills up).
+    supabase.from('groups').select('id').eq('event_id', id),
   ])
 
   let event = publicEvent
@@ -95,6 +100,21 @@ export default async function EventDetailPage({
     .select('*', { count: 'exact', head: true })
     .eq('group_id', mainGroup?.id || '')
 
+  // A group ticket only converts to an actual `tickets` row once the whole
+  // group fills up — someone who's already paid into a still-recruiting
+  // group (like a 2/5-filled table) has no ticket yet, so the plain
+  // userTickets check above shut them out of the Ticket Holders Lounge
+  // chat entirely despite having genuinely paid for their spot.
+  const eventGroupIds = (eventGroups || []).map(g => g.id)
+  const { count: paidGroupSeatCount } = user && eventGroupIds.length > 0
+    ? await supabase
+        .from('group_members')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('payment_status', 'paid')
+        .in('group_id', eventGroupIds)
+    : { count: 0 }
+
   const gradients = [
     'from-purple-900 via-pink-900 to-orange-900',
     'from-green-900 via-teal-900 to-blue-900',
@@ -104,9 +124,9 @@ export default async function EventDetailPage({
   ]
   const gradient = gradients[id.charCodeAt(0) % gradients.length]
 
-  // Check if user has a ticket or is the organiser
+  // Check if user has a ticket, a paid-but-not-yet-issued group seat, or is the organiser
   const isOrganiser = user && event.organiser_id === user.id
-  const hasAccess = (userTickets?.length ?? 0) > 0 || !!isOrganiser
+  const hasAccess = (userTickets?.length ?? 0) > 0 || (paidGroupSeatCount ?? 0) > 0 || !!isOrganiser
   const isPreviewOnly = !event.is_approved || !event.is_live
 
   const referralDiscount = userProfile?.referral_discount_percent || 0
