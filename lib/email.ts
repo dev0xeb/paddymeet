@@ -105,7 +105,7 @@ export async function sendTicketEmail(data: TicketEmailData) {
 
             <div style="background: linear-gradient(135deg, #f97316, #ec4899); padding: 32px 24px; text-align: center;">
               <div style="font-size: 24px; font-weight: 900; color: white; letter-spacing: -0.5px;">
-                <img src="https://paddymeet.com/brand/paddymeet-logo-kit/paddymeet-logo-horizontal-white-medium.png" alt="PaddyMeet" height="28" style="height: 28px; width: auto;" />
+                <img src="https://www.paddymeet.com/brand/horizontal/paddymeet-horizontal-white.png" alt="PaddyMeet" width="160" height="40" style="width: 160px; height: auto;" />
               </div>
             </div>
 
@@ -170,7 +170,7 @@ export async function sendCheckInEmail(data: CheckInEmailData) {
 
             <div style="background: linear-gradient(135deg, #16a34a, #22c55e); padding: 32px 24px; text-align: center;">
               <div style="font-size: 24px; font-weight: 900; color: white; letter-spacing: -0.5px;">
-                <img src="https://paddymeet.com/brand/paddymeet-logo-kit/paddymeet-logo-horizontal-white-medium.png" alt="PaddyMeet" height="28" style="height: 28px; width: auto;" />
+                <img src="https://www.paddymeet.com/brand/horizontal/paddymeet-horizontal-white.png" alt="PaddyMeet" width="160" height="40" style="width: 160px; height: auto;" />
               </div>
             </div>
 
@@ -230,7 +230,7 @@ export async function sendAnnouncementEmails(recipients: AnnouncementEmailRecipi
         <div style="background: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid #f0f0f0;">
 
           <div style="background: linear-gradient(135deg, #f97316, #ec4899); padding: 32px 24px; text-align: center;">
-            <img src="https://paddymeet.com/brand/paddymeet-logo-kit/paddymeet-logo-horizontal-white-medium.png" alt="PaddyMeet" height="28" style="height: 28px; width: auto;" />
+            <img src="https://www.paddymeet.com/brand/horizontal/paddymeet-horizontal-white.png" alt="PaddyMeet" width="160" height="40" style="width: 160px; height: auto;" />
           </div>
 
           <div style="padding: 32px 24px;">

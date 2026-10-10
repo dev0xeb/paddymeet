@@ -1,11 +1,11 @@
 import { Wrench } from 'lucide-react'
-import Logo from '@/components/Logo'
+import Logo from '@/components/brand/Logo'
 
 export default function MaintenancePage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
-        <Logo theme="color" className="h-8 w-auto mx-auto mb-8" />
+        <Logo variant="horizontal" tone="color" className="h-8 w-auto mx-auto mb-8" />
         <div className="w-16 h-16 bg-orange-50 border border-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <Wrench className="w-7 h-7 text-orange-500" />
         </div>

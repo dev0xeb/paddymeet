@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, Shield, Loader2, AlertCircle } from 'lucide-react'
-import Logo from '@/components/Logo'
+import Logo from '@/components/brand/Logo'
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('')
@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
             <Shield className="w-6 h-6 text-orange-500" />
           </div>
           <div className="text-xl font-bold text-white tracking-tight">
-            <Logo theme="white" className="h-7 w-auto" />
+            <Logo variant="stacked" tone="reversed" className="h-10 w-auto" />
           </div>
           <p className="text-xs text-slate-500 mt-1 font-medium">Administrator Command Centre</p>
         </div>

@@ -8,7 +8,7 @@ import {
   Megaphone, Search, UserCheck, Database
 } from 'lucide-react'
 import LogoutButton from '@/components/LogoutButton'
-import Logo from '@/components/Logo'
+import Logo from '@/components/brand/Logo'
 
 interface Props {
   fullName: string
@@ -55,7 +55,7 @@ export default function AdminSidebar({ fullName, department, pendingEventsCount,
             <Menu className="w-4 h-4" />
           </label>
           <Link href="/" className="text-lg font-bold text-white tracking-tight flex-shrink-0">
-            <Logo theme="white" className="h-6 w-auto" />
+            <Logo variant="horizontal" tone="reversed" className="h-6 w-auto" />
           </Link>
           <div className="hidden sm:block h-5 w-px bg-slate-700" />
           <span className="hidden sm:inline-flex text-xs font-semibold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">

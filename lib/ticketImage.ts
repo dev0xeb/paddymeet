@@ -80,9 +80,10 @@ export async function generateTicketCanvas(data: TicketImageData): Promise<HTMLC
   ctx.fillRect(0, 0, width, headerHeight)
   ctx.restore()
 
-  // Logo — white lockup, sized for the orange/pink header
-  const logoImg = await loadImage('/brand/paddymeet-logo-kit/svg/logo-horizontal-white.svg')
-  const logoHeight = 34
+  // Logo — white symbol mark, sized for the orange/pink header (matches
+  // the same ticket-view treatment used in TicketQRModal)
+  const logoImg = await loadImage('/brand/symbol/paddymeet-symbol-white.svg')
+  const logoHeight = 40
   const logoWidth = logoHeight * (logoImg.naturalWidth / logoImg.naturalHeight)
   ctx.drawImage(logoImg, width / 2 - logoWidth / 2, headerHeight / 2 - logoHeight / 2, logoWidth, logoHeight)
 

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import type { Metadata } from 'next'
-import Logo from '@/components/Logo'
+import Logo from '@/components/brand/Logo'
 
 export const metadata: Metadata = {
   title: 'Careers',
@@ -16,7 +16,7 @@ export default function CareersPage() {
           <ArrowLeft className="w-4 h-4" /> Home
         </Link>
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          <Logo theme="color" className="h-7 w-auto" />
+          <Logo variant="horizontal" tone="color" className="h-7 w-auto" />
         </Link>
         <Link href="/signup" className="px-5 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-full hover:bg-orange-600 transition-colors">
           Get Started

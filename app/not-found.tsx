@@ -1,13 +1,13 @@
 import Link from 'next/link'
 import { ArrowLeft, Search } from 'lucide-react'
-import Logo from '@/components/Logo'
+import Logo from '@/components/brand/Logo'
 
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <nav className="h-16 flex items-center justify-between px-6 bg-white border-b border-gray-100">
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          <Logo theme="color" className="h-7 w-auto" />
+          <Logo variant="horizontal" tone="color" className="h-7 w-auto" />
         </Link>
       </nav>
 
