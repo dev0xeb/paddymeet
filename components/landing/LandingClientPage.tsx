@@ -882,7 +882,7 @@ export default function LandingClientPage({ user, accountType = null, displayNam
         </div>
 
         <div className="max-w-[1180px] mx-auto py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#6b5b56]">
-          <span>© 2026 PaddyMeet, Lagos / Abuja</span>
+          <span>© 2026 PaddyMeet</span>
           <span>Instagram · X · TikTok · LinkedIn</span>
         </div>
       </footer>
