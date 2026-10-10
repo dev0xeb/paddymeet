@@ -10,7 +10,7 @@ import {
   LayoutDashboard, LogOut, MapPin, Megaphone, Menu, MessageCircle, Moon, QrCode, Search, Send, ShieldCheck,
   Sparkles, Star, Ticket, TrendingUp, UserCheck, Users, X, type LucideIcon,
 } from 'lucide-react'
-import Logo from '@/components/Logo'
+import Logo from '@/components/brand/Logo'
 import { createClient } from '@/lib/supabase'
 
 export interface LiveEvent {
@@ -63,7 +63,7 @@ function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <Link href="/" aria-label="PaddyMeet home">
-      <Logo theme="white" className={compact ? 'h-6 w-auto' : 'h-7 w-auto'} />
+      <Logo variant="horizontal" tone="reversed" className={compact ? 'h-6 w-auto' : 'h-7 w-auto'} />
     </Link>
   )
 }

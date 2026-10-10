@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Save, AlertCircle } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
-import Logo from '@/components/Logo'
+import Logo from '@/components/brand/Logo'
 import VenueAutocomplete from '@/components/organiser/VenueAutocomplete'
 
 interface EventData {
@@ -115,7 +115,7 @@ export default function EditEventPage() {
           </span>
         </div>
         <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
-          <Logo theme="color" className="h-6 w-auto" />
+          <Logo variant="horizontal" tone="color" className="h-6 w-auto" />
         </Link>
         <div className="w-24" />
       </nav>

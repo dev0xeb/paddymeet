@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import type { Metadata } from 'next'
-import Logo from '@/components/Logo'
+import Logo from '@/components/brand/Logo'
 
 export const metadata: Metadata = {
   title: 'Refund Policy',
@@ -16,7 +16,7 @@ export default function RefundPolicyPage() {
           <ArrowLeft className="w-4 h-4" /> Home
         </Link>
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          <Logo theme="color" className="h-7 w-auto" />
+          <Logo variant="horizontal" tone="color" className="h-7 w-auto" />
         </Link>
         <div className="w-20" />
       </nav>

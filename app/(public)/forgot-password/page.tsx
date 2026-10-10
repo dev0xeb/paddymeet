@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, Mail, Check, Eye, EyeOff, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Logo from '@/components/Logo'
+import Logo from '@/components/brand/Logo'
 
 type Step = 'email' | 'code' | 'done'
 
@@ -88,7 +88,7 @@ function ForgotPasswordForm() {
           <ArrowLeft className="w-4 h-4" /> Back to Login
         </Link>
         <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-          <Logo theme="color" className="h-7 w-auto" />
+          <Logo variant="stacked" tone="color" className="h-7 w-auto" />
         </Link>
         <div className="w-24" />
       </nav>

@@ -22,7 +22,7 @@ import {
   Tag
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import Logo from '@/components/Logo'
+import Logo from '@/components/brand/Logo'
 
 const PRESET_INTERESTS = [
   'Day Parties', 'Sports Events', 'Jazz & Soul', 'Rooftop Parties',
@@ -229,7 +229,7 @@ export default function UserSettingsPage() {
           </Link>
           <div className="h-4 w-px bg-slate-200 hidden sm:block" />
           <Link href="/" className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-1">
-            <Logo theme="color" className="h-7 w-auto" />
+            <Logo variant="horizontal" tone="color" className="h-7 w-auto" />
           </Link>
         </div>
 
