@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Shield, Camera, CheckCircle2, XCircle, AlertTriangle, ArrowRight, RefreshCw, LogOut, Users, QrCode } from 'lucide-react'
+import jsQR from 'jsqr'
 
 interface EventInfo {
   id: string
@@ -49,6 +50,9 @@ function StaffScannerPage() {
   const [lastResult, setLastResult] = useState<ScanResult | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const resultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleLogin = async (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault()
@@ -77,15 +81,29 @@ function StaffScannerPage() {
     setLoading(false)
   }
 
-  const handleScanCode = async (code: string) => {
-    if (!code.trim() || !event || scanning) return
+  const handleScanCode = async (rawCode: string) => {
+    // A camera-decoded QR holds the full scan link
+    // (https://www.paddymeet.com/scan?code=PM-XXXXX, see lib/qr.ts), not
+    // the bare ticket code — extract just the code so this works whether
+    // it came from in-page detection or someone pasting a full link into
+    // manual entry. A plain typed code passes through unchanged.
+    let code = rawCode.trim()
+    try {
+      const url = new URL(code)
+      const codeParam = url.searchParams.get('code')
+      if (codeParam) code = codeParam
+    } catch {
+      // Not a URL — already a bare code.
+    }
+
+    if (!code || !event || scanning) return
     setScanning(true)
 
     try {
       const res = await fetch('/api/scanner/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticket_code: code.trim(), event_id: event.id, passkey }),
+        body: JSON.stringify({ ticket_code: code, event_id: event.id, passkey }),
       })
       const data = await res.json()
 
@@ -112,6 +130,55 @@ function StaffScannerPage() {
     }
     setManualCode('')
     setScanning(false)
+
+    // The camera stays live the whole time — only the detection loop
+    // pauses while this result is shown, so the same code isn't
+    // immediately re-detected. Auto-resumes after a few seconds so the
+    // line keeps moving without staff tapping anything; "Ready for Next
+    // Guest" skips the wait.
+    if (resultTimeoutRef.current) clearTimeout(resultTimeoutRef.current)
+    resultTimeoutRef.current = setTimeout(() => {
+      resultTimeoutRef.current = null
+      setLastResult(null)
+      if (streamRef.current && !scanIntervalRef.current) startQRDetection()
+    }, 2500)
+  }
+
+  const startQRDetection = () => {
+    // jsQR decodes frames in pure JS via canvas pixel data — works
+    // identically on every browser/OS, unlike the native BarcodeDetector
+    // API (not available on desktop at all, and unreliable even on the
+    // Android/Chrome combination it's meant for).
+    scanIntervalRef.current = setInterval(() => {
+      const video = videoRef.current
+      const canvas = canvasRef.current
+      if (!video || !canvas || video.readyState < 2 || video.videoWidth === 0) return
+
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      if (!ctx) return
+
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      let imageData: ImageData
+      try {
+        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      } catch {
+        return
+      }
+
+      // 'dontInvert' matches how this app's own ticket QR codes are
+      // generated (dark modules on a light background, see lib/qr.ts).
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' })
+      if (code?.data) {
+        if (scanIntervalRef.current) {
+          clearInterval(scanIntervalRef.current)
+          scanIntervalRef.current = null
+        }
+        handleScanCode(code.data)
+      }
+    }, 250)
   }
 
   const startCamera = async () => {
@@ -122,9 +189,26 @@ function StaffScannerPage() {
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        videoRef.current.play().catch(() => {})
       }
+      startQRDetection()
     } catch {
       console.warn('Camera access denied or unavailable')
+    }
+  }
+
+  const stopCameraAndDetection = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop())
+      streamRef.current = null
+    }
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current)
+      scanIntervalRef.current = null
+    }
+    if (resultTimeoutRef.current) {
+      clearTimeout(resultTimeoutRef.current)
+      resultTimeoutRef.current = null
     }
   }
 
@@ -133,16 +217,13 @@ function StaffScannerPage() {
       startCamera()
     }
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop())
-      }
+      stopCameraAndDetection()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event])
 
   const handleLogout = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop())
-    }
+    stopCameraAndDetection()
     setEvent(null)
     setPasskey('')
     setLastResult(null)
@@ -268,7 +349,14 @@ function StaffScannerPage() {
             )}
 
             <button
-              onClick={() => setLastResult(null)}
+              onClick={() => {
+                if (resultTimeoutRef.current) {
+                  clearTimeout(resultTimeoutRef.current)
+                  resultTimeoutRef.current = null
+                }
+                setLastResult(null)
+                if (streamRef.current && !scanIntervalRef.current) startQRDetection()
+              }}
               className="mt-6 w-full py-3 bg-white text-gray-900 font-extrabold text-sm rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
             >
               <RefreshCw className="w-4 h-4" /> Ready for Next Guest
@@ -285,6 +373,7 @@ function StaffScannerPage() {
                 muted
                 className="absolute inset-0 w-full h-full object-cover"
               />
+              <canvas ref={canvasRef} className="hidden" />
               <div className="relative z-10 w-48 h-48 border-2 border-orange-500/80 rounded-2xl animate-pulse pointer-events-none flex items-center justify-center">
                 <QrCode className="w-12 h-12 text-orange-500/40" />
               </div>
