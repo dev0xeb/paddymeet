@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Camera, CameraOff, Check, X, AlertCircle, QrCode, RefreshCw, Keyboard } from 'lucide-react'
+import jsQR from 'jsqr'
 
 interface Event {
   id: string
@@ -113,44 +114,49 @@ export default function QRScanner({ events, initialCode }: Props) {
   }
 
   const startQRDetection = () => {
-    // Use BarcodeDetector API if available (Chrome/Edge on Android)
-    const BarcodeDetector = (window as unknown as Record<string, unknown>).BarcodeDetector as {
-      new (config: { formats: string[] }): {
-        detect: (source: HTMLVideoElement) => Promise<Array<{ rawValue: string }>>
-      }
-    } | undefined
+    // jsQR decodes frames in pure JS via canvas pixel data — works
+    // identically on every browser/OS. The native BarcodeDetector API this
+    // used to rely on isn't available on desktop browsers at all, and
+    // proved unreliable even on the Android/Chrome combination it's meant
+    // for (camera visibly live, detection silently never firing) —
+    // confirmed live on both platforms, so there's no reliable native path
+    // left to fall back to.
+    scanIntervalRef.current = setInterval(() => {
+      const video = videoRef.current
+      const canvas = canvasRef.current
+      if (!video || !canvas || video.readyState < 2 || video.videoWidth === 0) return
 
-    if (BarcodeDetector) {
-      const detector = new BarcodeDetector({ formats: ['qr_code'] })
-      scanIntervalRef.current = setInterval(async () => {
-        // HAVE_CURRENT_DATA (2) is enough for the detector to read a frame —
-        // waiting for HAVE_ENOUGH_DATA (4) made detection start later than
-        // it needed to, and on some devices never reliably reached 4 at all
-        // despite the camera visibly showing a live picture.
-        if (!videoRef.current || videoRef.current.readyState < 2) return
-        try {
-          const codes = await detector.detect(videoRef.current)
-          if (codes.length > 0) {
-            const code = codes[0].rawValue
-            // Pause detection only — the camera itself keeps running so the
-            // next guest can be scanned immediately after this result,
-            // instead of the whole camera stopping and needing to be
-            // reopened for every single scan.
-            if (scanIntervalRef.current) {
-              clearInterval(scanIntervalRef.current)
-              scanIntervalRef.current = null
-            }
-            await processTicketCode(code)
-          }
-        } catch {
-          // BarcodeDetector not ready yet
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      if (!ctx) return
+
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      let imageData: ImageData
+      try {
+        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      } catch {
+        return
+      }
+
+      // 'dontInvert' matches how this app's own ticket QR codes are
+      // generated (dark modules on a light background, see lib/qr.ts) —
+      // the fastest mode, since there's no need to also check for an
+      // inverted color scheme that never occurs here.
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' })
+      if (code?.data) {
+        // Pause detection only — the camera itself keeps running so the
+        // next guest can be scanned immediately after this result,
+        // instead of the whole camera stopping and needing to be
+        // reopened for every single scan.
+        if (scanIntervalRef.current) {
+          clearInterval(scanIntervalRef.current)
+          scanIntervalRef.current = null
         }
-      }, 300)
-    } else {
-      // Fallback: canvas-based scan hint (manual entry fallback)
-      setCameraError('QR scanning not supported on this browser. Please use manual entry or try Chrome on Android.')
-      stopCamera()
-    }
+        processTicketCode(code.data)
+      }
+    }, 250)
   }
 
   useEffect(() => {
