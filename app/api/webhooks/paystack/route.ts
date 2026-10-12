@@ -69,6 +69,10 @@ export async function POST(request: NextRequest) {
 
     const reference = data.reference
     const amountPaid = data.amount / 100
+    // Paystack's own documented transaction field — included directly in
+    // this same webhook payload. Recorded purely for reconciliation; never
+    // part of any amount check or payout math.
+    const paystackFee = (data.fees ?? 0) / 100
     const metadata = data.metadata || {}
 
     // 2. Check idempotency: Has this reference already been processed?
@@ -273,6 +277,7 @@ export async function POST(request: NextRequest) {
         promo_code_used: validPromo?.code || null,
         buyer_name: buyer_name || data.customer?.first_name ? `${data.customer?.first_name || ''} ${data.customer?.last_name || ''}`.trim() : null,
         buyer_phone: buyer_phone || data.customer?.phone || null,
+        paystack_fee: paystackFee,
       })
       .select()
       .single()
@@ -572,6 +577,7 @@ async function handleGroupPayment(
       payment_status: 'completed',
       buyer_name: attendeeList[0]?.name || null,
       buyer_phone: attendeeList[0]?.phone || null,
+      paystack_fee: (data.fees ?? 0) / 100,
     })
     if (orderInsertError) {
       console.error(`Group payment webhook: order insert failed for group ${groupId}, reference ${reference}:`, orderInsertError.message)

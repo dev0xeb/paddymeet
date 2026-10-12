@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   // fails like any other bogus reference.
   const skipPaystack = process.env.NEXT_PUBLIC_SKIP_PAYSTACK === 'true' && reference?.startsWith('TEST-BYPASS-')
 
-  let verifyData: { status: boolean; data: { status: string; amount: number } }
+  let verifyData: { status: boolean; data: { status: string; amount: number; fees?: number } }
 
   if (skipPaystack) {
     const { data: bypassTicketType } = await db
@@ -80,6 +80,11 @@ export async function POST(request: NextRequest) {
   }
 
   const amountPaid = verifyData.data.amount / 100
+  // Paystack's own documented transaction field — what it actually
+  // deducted for processing this charge, available in the same verify
+  // response we're already reading. Recorded purely for reconciliation;
+  // it's never part of any amount check or payout math.
+  const paystackFee = (verifyData.data.fees ?? 0) / 100
 
   // Idempotency check: if webhook already fulfilled this payment, return the created tickets
   const { data: existingOrder } = await db
@@ -310,6 +315,7 @@ export async function POST(request: NextRequest) {
       promo_code_used: validPromo?.code || null,
       buyer_name: buyer_name || null,
       buyer_phone: buyer_phone || null,
+      paystack_fee: paystackFee,
     })
     .select()
     .single()

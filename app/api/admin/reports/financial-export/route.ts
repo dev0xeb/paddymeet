@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     let query = adminClient
       .from('orders')
-      .select('id, payment_reference, amount, service_fee, total_paid, payment_status, discount_applied, promo_code_used, buyer_name, buyer_phone, created_at, events(id, title, organiser_id, organisers(org_name))')
+      .select('id, payment_reference, amount, service_fee, paystack_fee, total_paid, payment_status, discount_applied, promo_code_used, buyer_name, buyer_phone, created_at, events(id, title, organiser_id, organisers(org_name))')
       .order('created_at', { ascending: false })
 
     // Date filtering
@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
       'Buyer Phone',
       'Ticket Subtotal (NGN)',
       'Platform Fee (NGN)',
+      'Paystack Fee (NGN)',
       'Total Paid (NGN)',
       'Discount %',
       'Promo Code',
@@ -111,6 +112,7 @@ export async function GET(request: NextRequest) {
         escape(o.buyer_phone || '—'),
         o.amount || 0,
         o.service_fee || 0,
+        o.paystack_fee || 0,
         o.total_paid || 0,
         o.discount_applied || 0,
         escape(o.promo_code_used || '—'),

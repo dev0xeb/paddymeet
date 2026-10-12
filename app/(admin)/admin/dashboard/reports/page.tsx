@@ -33,7 +33,7 @@ export default async function AdminReportsPage() {
     { data: tickets },
     { data: settings },
   ] = await Promise.all([
-    adminClient.from('orders').select('id, amount, service_fee, total_paid, payment_status, created_at, event_id, events(title, city, organiser_id, organisers(org_name))'),
+    adminClient.from('orders').select('id, amount, service_fee, total_paid, paystack_fee, payment_status, created_at, event_id, events(title, city, organiser_id, organisers(org_name))'),
     adminClient.from('users').select('id, city, state, created_at'),
     adminClient.from('organisers').select('id, org_name, is_verified, created_at'),
     adminClient.from('events').select('id, title, city, event_date, is_approved, is_live, created_at, organisers(org_name)'),
@@ -45,10 +45,15 @@ export default async function AdminReportsPage() {
   const totalGross = completedOrders.reduce((sum, o) => sum + (o.total_paid || 0), 0)
   const totalFees = completedOrders.reduce((sum, o) => sum + (o.service_fee || 0), 0)
   const totalTicketSubtotal = completedOrders.reduce((sum, o) => sum + (o.amount || 0), 0)
+  const totalPaystackFees = completedOrders.reduce((sum, o) => sum + (o.paystack_fee || 0), 0)
   const feePercent = settings?.commission_rate ?? 5.0
   const platformCommission = totalTicketSubtotal * (feePercent / 100)
   const organiserPayouts = totalTicketSubtotal - platformCommission
-  const platformNetEarnings = totalFees + platformCommission
+  // Paystack's own cut, deducted from what actually settles into the
+  // platform's account — not reflected in orders.total_paid (what the
+  // buyer was charged), so it has to be subtracted separately here to show
+  // what the platform actually nets, not just what it collected on paper.
+  const platformNetEarnings = totalFees + platformCommission - totalPaystackFees
   const avgOrderValue = completedOrders.length > 0 ? Math.round(totalGross / completedOrders.length) : 0
 
   // City breakdown
@@ -118,7 +123,9 @@ export default async function AdminReportsPage() {
             <div className="text-2xl font-extrabold text-slate-900 tracking-tight mb-0.5">
               ₦{platformNetEarnings.toLocaleString()}
             </div>
-            <div className="text-[11px] text-slate-400 font-medium">5.0% commission + service fees</div>
+            <div className="text-[11px] text-slate-400 font-medium">
+              {feePercent}% commission + service fees, net of ₦{totalPaystackFees.toLocaleString()} in Paystack fees
+            </div>
           </div>
 
           <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">

@@ -43,6 +43,11 @@ export async function POST(
 
   // Verify payment with Paystack (skip for free group tickets where reference === 'FREE')
   let amountPaid = 0
+  // Paystack's own documented transaction field — what it actually
+  // deducted for processing this charge, available in the same verify
+  // response. Recorded purely for reconciliation; never part of any
+  // amount check or payout math.
+  let paystackFee = 0
   if (reference === 'FREE') {
     // A "FREE" reference is only legitimate if this group is actually free —
     // otherwise it's an unauthenticated way to skip payment on a paid group.
@@ -60,6 +65,7 @@ export async function POST(
       return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
     }
     amountPaid = verifyData.data.amount / 100
+    paystackFee = (verifyData.data.fees ?? 0) / 100
 
     // Never trust the client for the amount — recompute what this many
     // spots should actually cost from the group's own stored per-member
@@ -217,6 +223,7 @@ export async function POST(
       payment_status: 'completed',
       buyer_name: attendeeList[0]?.name || null,
       buyer_phone: attendeeList[0]?.phone || null,
+      paystack_fee: paystackFee,
     })
   }
 
