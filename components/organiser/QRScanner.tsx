@@ -42,6 +42,7 @@ export default function QRScanner({ events, initialCode }: Props) {
   const streamRef = useRef<MediaStream | null>(null)
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const resultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -51,6 +52,10 @@ export default function QRScanner({ events, initialCode }: Props) {
     if (scanIntervalRef.current) {
       clearInterval(scanIntervalRef.current)
       scanIntervalRef.current = null
+    }
+    if (resultTimeoutRef.current) {
+      clearTimeout(resultTimeoutRef.current)
+      resultTimeoutRef.current = null
     }
     setScanning(false)
   }
@@ -74,6 +79,18 @@ export default function QRScanner({ events, initialCode }: Props) {
       setResult({ valid: false, status: 'not_found', reason: 'Network error. Please try again.' })
     }
     setLoading(false)
+
+    // The camera itself never stops between scans — only the detection
+    // loop pauses while this result is up, so the same code isn't
+    // immediately re-detected. Auto-resumes after a few seconds so the
+    // door line keeps moving without anyone having to tap anything;
+    // "Scan Next Ticket" (handleReset) skips the wait.
+    if (resultTimeoutRef.current) clearTimeout(resultTimeoutRef.current)
+    resultTimeoutRef.current = setTimeout(() => {
+      resultTimeoutRef.current = null
+      setResult(null)
+      if (streamRef.current && !scanIntervalRef.current) startQRDetection()
+    }, 2500)
   }
 
   const startCamera = async () => {
@@ -106,12 +123,23 @@ export default function QRScanner({ events, initialCode }: Props) {
     if (BarcodeDetector) {
       const detector = new BarcodeDetector({ formats: ['qr_code'] })
       scanIntervalRef.current = setInterval(async () => {
-        if (!videoRef.current || videoRef.current.readyState !== 4) return
+        // HAVE_CURRENT_DATA (2) is enough for the detector to read a frame —
+        // waiting for HAVE_ENOUGH_DATA (4) made detection start later than
+        // it needed to, and on some devices never reliably reached 4 at all
+        // despite the camera visibly showing a live picture.
+        if (!videoRef.current || videoRef.current.readyState < 2) return
         try {
           const codes = await detector.detect(videoRef.current)
           if (codes.length > 0) {
             const code = codes[0].rawValue
-            stopCamera()
+            // Pause detection only — the camera itself keeps running so the
+            // next guest can be scanned immediately after this result,
+            // instead of the whole camera stopping and needing to be
+            // reopened for every single scan.
+            if (scanIntervalRef.current) {
+              clearInterval(scanIntervalRef.current)
+              scanIntervalRef.current = null
+            }
             await processTicketCode(code)
           }
         } catch {
@@ -128,7 +156,7 @@ export default function QRScanner({ events, initialCode }: Props) {
   useEffect(() => {
     if (!scanning || !videoRef.current || !streamRef.current) return
     videoRef.current.srcObject = streamRef.current
-    videoRef.current.play()
+    videoRef.current.play().catch(() => {})
     startQRDetection()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scanning])
@@ -141,8 +169,13 @@ export default function QRScanner({ events, initialCode }: Props) {
   }
 
   const handleReset = () => {
+    if (resultTimeoutRef.current) {
+      clearTimeout(resultTimeoutRef.current)
+      resultTimeoutRef.current = null
+    }
     setResult(null)
     setManualCode('')
+    if (streamRef.current && !scanIntervalRef.current) startQRDetection()
   }
 
   useEffect(() => {
