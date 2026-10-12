@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import OrganiserNav from '@/components/OrganiserNav'
+import EventsLiveRefresher from '@/components/organiser/EventsLiveRefresher'
 import {
   Plus, Calendar, MapPin, Clock,
   CheckCircle, XCircle, Eye, MoreHorizontal
@@ -60,6 +61,7 @@ export default async function OrganiserEventsPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <EventsLiveRefresher organiserId={user.id} />
       <OrganiserNav orgName={organiser.org_name} pendingEvents={pendingCount ?? 0} />
 
       <div className="pt-24 md:pt-16 max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">

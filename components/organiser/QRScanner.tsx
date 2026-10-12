@@ -55,6 +55,27 @@ export default function QRScanner({ events, initialCode }: Props) {
     setScanning(false)
   }
 
+  const processTicketCode = async (code: string) => {
+    if (!code.trim()) return
+    setLoading(true)
+    setResult(null)
+    try {
+      const res = await fetch('/api/organiser/scan-ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ticket_code: code.trim().toUpperCase(),
+          event_id: selectedEventId || undefined,
+        }),
+      })
+      const data = await res.json()
+      setResult(data)
+    } catch {
+      setResult({ valid: false, status: 'not_found', reason: 'Network error. Please try again.' })
+    }
+    setLoading(false)
+  }
+
   const startCamera = async () => {
     setCameraError('')
     setResult(null)
@@ -63,12 +84,12 @@ export default function QRScanner({ events, initialCode }: Props) {
         video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
       })
       streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        videoRef.current.play()
-      }
+      // Just requests the stream and flips scanning on here — the <video>
+      // element only exists in the DOM once scanning is true (see the
+      // {scanning && <video .../>} block below), so videoRef.current was
+      // always still null at this point. The effect below attaches the
+      // stream once that element has actually mounted.
       setScanning(true)
-      startQRDetection()
     } catch {
       setCameraError('Camera access denied. Please allow camera access or use manual entry.')
     }
@@ -104,26 +125,13 @@ export default function QRScanner({ events, initialCode }: Props) {
     }
   }
 
-  const processTicketCode = async (code: string) => {
-    if (!code.trim()) return
-    setLoading(true)
-    setResult(null)
-    try {
-      const res = await fetch('/api/organiser/scan-ticket', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ticket_code: code.trim().toUpperCase(),
-          event_id: selectedEventId || undefined,
-        }),
-      })
-      const data = await res.json()
-      setResult(data)
-    } catch {
-      setResult({ valid: false, status: 'not_found', reason: 'Network error. Please try again.' })
-    }
-    setLoading(false)
-  }
+  useEffect(() => {
+    if (!scanning || !videoRef.current || !streamRef.current) return
+    videoRef.current.srcObject = streamRef.current
+    videoRef.current.play()
+    startQRDetection()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scanning])
 
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
