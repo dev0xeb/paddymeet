@@ -23,7 +23,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'This promo code has expired' }, { status: 400 })
   }
 
-  if (promo.uses_count >= promo.max_uses) {
+  // max_uses is intentionally nullable (an "unlimited uses" code) — without
+  // this guard, `promo.uses_count >= promo.max_uses` evaluates `0 >= null`
+  // as true (JS coerces null to 0 in a numeric comparison), so every
+  // unlimited-use code was rejected as "reached its usage limit" on the
+  // very first attempt, before ever actually being used.
+  if (promo.max_uses && promo.uses_count >= promo.max_uses) {
     return NextResponse.json({ error: 'This promo code has reached its usage limit' }, { status: 400 })
   }
 
