@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { createAdminClient } from '@/lib/supabase-admin'
+import { getTierThresholds, tierForScore } from '@/lib/trustScore'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function PUT(
@@ -24,26 +25,8 @@ export async function PUT(
   }
   const trustScore = Math.max(0, Math.min(100, rawScore))
 
-  // Get tier thresholds
-  const { data: settings } = await adminClient
-    .from('platform_settings')
-    .select('newbie_min, social_min, crew_min, elite_min, legendary_min')
-    .eq('id', 1)
-    .single()
-
-  const thresholds = {
-    Legendary: settings?.legendary_min ?? 80,
-    Elite: settings?.elite_min ?? 60,
-    Crew: settings?.crew_min ?? 40,
-    Social: settings?.social_min ?? 20,
-    Newbie: settings?.newbie_min ?? 0,
-  }
-
-  let tier = 'Newbie'
-  if (trustScore >= thresholds.Legendary) tier = 'Legendary'
-  else if (trustScore >= thresholds.Elite) tier = 'Elite'
-  else if (trustScore >= thresholds.Crew) tier = 'Crew'
-  else if (trustScore >= thresholds.Social) tier = 'Social'
+  const thresholds = await getTierThresholds(adminClient)
+  const tier = tierForScore(trustScore, thresholds)
 
   const { error } = await adminClient
     .from('users')

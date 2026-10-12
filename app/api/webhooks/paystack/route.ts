@@ -154,12 +154,22 @@ export async function POST(request: NextRequest) {
       if (isValid) validPromo = promo
     }
 
+    // Must be read live, not hardcoded — this is exactly what admins change
+    // in Platform Settings and expect to take effect immediately.
+    const { data: feeSettings } = await adminClient
+      .from('platform_settings')
+      .select('service_fee_rate')
+      .eq('id', 1)
+      .single()
+    const serviceFeeRate = (feeSettings?.service_fee_rate ?? 5) / 100
+
     const expected = computeOrderTotal({
       price: ticketType.price,
       quantity,
       isGroupTicket: ticketType.is_group_ticket,
       referralDiscountPercent,
       promo: validPromo,
+      serviceFeeRate,
     })
 
     // Only reject underpayment — overpayment is never a fraud risk, and

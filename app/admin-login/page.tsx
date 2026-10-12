@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
             <Shield className="w-6 h-6 text-orange-500" />
           </div>
           <div className="text-xl font-bold text-white tracking-tight">
-            <Logo variant="stacked" tone="reversed" className="h-10 w-auto" />
+            <Logo variant="stacked" tone="reversed" className="h-10 w-auto mx-auto" />
           </div>
           <p className="text-xs text-slate-500 mt-1 font-medium">Administrator Command Centre</p>
         </div>

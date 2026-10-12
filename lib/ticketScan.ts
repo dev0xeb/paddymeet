@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendCheckInEmail } from '@/lib/email'
+import { createAdminClient } from '@/lib/supabase-admin'
+import { getTierThresholds, tierForScore } from '@/lib/trustScore'
 
 // Gates are considered open this long before the event's official start time.
 // A scan attempted earlier than this is rejected as "too early".
@@ -145,6 +147,36 @@ export async function validateAndCheckInTicket({
       ticketTypeName: ticketType?.name || 'General',
       checkedInAt,
     }).catch((err) => console.error('Check-in email failed to send:', err))
+  }
+
+  // Reward actually showing up: +1 trust score per successful gate
+  // check-in. Uses the admin client regardless of which client was passed
+  // in — the caller scanning this ticket (an organiser, or passkey-
+  // authenticated door staff) is essentially never the ticket's own
+  // user_id, so this write would otherwise be blocked by the
+  // users-can-only-update-their-own-row RLS policy. Best-effort: a failure
+  // here must never undo or block a check-in that's already succeeded.
+  if (ticket.user_id) {
+    try {
+      const admin = createAdminClient()
+      const { data: ticketOwner } = await admin
+        .from('users')
+        .select('trust_score')
+        .eq('id', ticket.user_id)
+        .single()
+
+      if (ticketOwner) {
+        const newScore = Math.min(100, (ticketOwner.trust_score || 0) + 1)
+        const thresholds = await getTierThresholds(admin)
+        const newTier = tierForScore(newScore, thresholds)
+        await admin
+          .from('users')
+          .update({ trust_score: newScore, tier: newTier })
+          .eq('id', ticket.user_id)
+      }
+    } catch (err) {
+      console.error('Trust score increment on check-in failed:', err instanceof Error ? err.message : err)
+    }
   }
 
   return {

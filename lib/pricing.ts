@@ -3,7 +3,14 @@
 // server-side (to independently recompute what a payment SHOULD have been,
 // rather than trusting the amount the client asked Paystack to charge).
 
-export const SERVICE_FEE_RATE = 0.05
+// Fallback only, used if a live platform_settings.service_fee_rate fetch
+// ever fails — every real call site is expected to pass the current admin-
+// configured rate explicitly. This used to be a hardcoded constant applied
+// everywhere regardless of what was actually saved in platform_settings —
+// confirmed live, the DB had service_fee_rate set to 7% while every real
+// checkout silently charged 5% instead, with no connection between the two
+// at all.
+export const DEFAULT_SERVICE_FEE_RATE = 0.05
 
 export interface PromoInfo {
   discount_type: string
@@ -16,6 +23,8 @@ export interface OrderTotalInput {
   isGroupTicket: boolean
   referralDiscountPercent?: number
   promo?: PromoInfo | null
+  /** Decimal (e.g. 0.07 for 7%) — the live platform_settings.service_fee_rate. */
+  serviceFeeRate?: number
 }
 
 export interface OrderTotalResult {
@@ -34,6 +43,7 @@ export function computeOrderTotal({
   isGroupTicket,
   referralDiscountPercent = 0,
   promo = null,
+  serviceFeeRate = DEFAULT_SERVICE_FEE_RATE,
 }: OrderTotalInput): OrderTotalResult {
   const subtotal = isGroupTicket ? price : price * quantity
   const referralDiscountAmount = Math.round(subtotal * (referralDiscountPercent / 100))
@@ -44,7 +54,7 @@ export function computeOrderTotal({
     : 0
   const totalDiscount = referralDiscountAmount + promoDiscountAmount
   const discountedSubtotal = Math.max(0, subtotal - totalDiscount)
-  const serviceFee = Math.round(discountedSubtotal * SERVICE_FEE_RATE)
+  const serviceFee = Math.round(discountedSubtotal * serviceFeeRate)
   const total = discountedSubtotal + serviceFee
 
   return { subtotal, referralDiscountAmount, promoDiscountAmount, totalDiscount, discountedSubtotal, serviceFee, total }

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Plus, Minus, Check, ArrowRight, Ticket, Download, FileText, User as UserIcon, AlertTriangle } from 'lucide-react'
 import { downloadTicketImage, downloadTicketPDF } from '@/lib/ticketImage'
-import { computeOrderTotal } from '@/lib/pricing'
+import { computeOrderTotal, DEFAULT_SERVICE_FEE_RATE } from '@/lib/pricing'
+import { createClient } from '@/lib/supabase'
 
 interface TicketType {
   id: string
@@ -83,6 +84,24 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const [reservationId, setReservationId] = useState<string | null>(null)
   const [reservationTimeLeft, setReservationTimeLeft] = useState<number | null>(null)
 
+  // Must reflect whatever's actually live in Platform Settings, not a
+  // hardcoded guess — this is also what the server independently
+  // recomputes and compares the real Paystack charge against, so a stale
+  // rate here wouldn't just mislabel the total, it would undercharge (or
+  // overcharge) buyers relative to what the server expects.
+  const [serviceFeeRatePercent, setServiceFeeRatePercent] = useState(DEFAULT_SERVICE_FEE_RATE * 100)
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('platform_settings')
+      .select('service_fee_rate')
+      .eq('id', 1)
+      .single()
+      .then(({ data }) => {
+        if (data?.service_fee_rate != null) setServiceFeeRatePercent(data.service_fee_rate)
+      })
+  }, [])
+
   const discountPercent = user.referral_discount_percent || 0
   const {
     subtotal,
@@ -96,6 +115,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
     isGroupTicket: ticketType.is_group_ticket,
     referralDiscountPercent: discountPercent,
     promo: promoApplied,
+    serviceFeeRate: serviceFeeRatePercent / 100,
   })
 
   const extraAttendeeCount = ticketType.is_group_ticket ? Math.max(0, ticketType.group_size - 1) : Math.max(0, quantity - 1)
