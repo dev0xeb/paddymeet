@@ -376,6 +376,7 @@ export default function QRScanner({ events, initialCode }: Props) {
                   placeholder="e.g. PM-1234567-ABCDE"
                   className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono text-gray-900 outline-none focus:border-orange-400 transition-all"
                   autoFocus
+                  autoComplete="off"
                 />
                 <button
                   type="submit"
