@@ -61,8 +61,24 @@ export default function QRScanner({ events, initialCode }: Props) {
     setScanning(false)
   }
 
-  const processTicketCode = async (code: string) => {
-    if (!code.trim()) return
+  const processTicketCode = async (rawCode: string) => {
+    // A camera-decoded QR holds the full scan link
+    // (https://www.paddymeet.com/scan?code=PM-XXXXX, see lib/qr.ts), not
+    // the bare ticket code — sending that whole URL through as ticket_code
+    // can never match anything, which is why every scan was coming back
+    // "not found" the moment detection actually started working. Manual
+    // entry already only ever contains the bare code, so this is a no-op
+    // for that path.
+    let code = rawCode.trim()
+    try {
+      const url = new URL(code)
+      const codeParam = url.searchParams.get('code')
+      if (codeParam) code = codeParam
+    } catch {
+      // Not a URL — already a bare code, use as-is.
+    }
+
+    if (!code) return
     setLoading(true)
     setResult(null)
     try {
@@ -70,7 +86,7 @@ export default function QRScanner({ events, initialCode }: Props) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ticket_code: code.trim().toUpperCase(),
+          ticket_code: code.toUpperCase(),
           event_id: selectedEventId || undefined,
         }),
       })
