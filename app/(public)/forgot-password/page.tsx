@@ -36,13 +36,25 @@ function ForgotPasswordForm() {
     // (the same class of problem this app's ticket QR links were already
     // built to avoid). A code sitting as plain text in the email body can't
     // be auto-fetched the same way, so this flow uses that instead of a link.
-    const supabase = createClient()
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email)
-
-    if (resetError) {
-      setError(resetError.message)
-    } else {
-      setStep('code')
+    //
+    // Routed through our own API (instead of calling supabase.auth
+    // .resetPasswordForEmail directly) so the server can confirm this email
+    // actually belongs to an account before Supabase ever sends anything —
+    // calling it directly let ANY email in, registered or not.
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong. Please try again.')
+      } else {
+        setStep('code')
+      }
+    } catch {
+      setError('Something went wrong. Please try again.')
     }
     setLoading(false)
   }
