@@ -6,6 +6,7 @@ import { ArrowRight, Eye, EyeOff, Check, Shield, Users, Mic } from 'lucide-react
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Logo from '@/components/brand/Logo'
+import Turnstile from '@/components/Turnstile'
 
 const REMEMBER_KEY = 'pm_device_trusted'
 const REMEMBER_DAYS = 30
@@ -39,6 +40,9 @@ export default function LoginPage() {
   const [resending, setResending] = useState(false)
   const [error, setError] = useState('')
   const [accountType, setAccountType] = useState<string>('')
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileKey, setTurnstileKey] = useState(0)
+  const turnstileRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
   const router = useRouter()
 
   const inputClass = "w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 outline-none focus:border-orange-400 focus:bg-white transition-all"
@@ -46,6 +50,10 @@ export default function LoginPage() {
   const handleLogin = async () => {
     if (!email || !password) {
       setError('Please enter your email and password.')
+      return
+    }
+    if (turnstileRequired && !turnstileToken) {
+      setError('Please complete the verification challenge.')
       return
     }
     setLoading(true)
@@ -56,6 +64,21 @@ export default function LoginPage() {
     // (a rejected SDK call, a network hiccup) now surfaces an error and
     // re-enables the form instead of hanging silently.
     try {
+      // Login authenticates straight against Supabase client-side — there's
+      // no API route of ours in front of signInWithPassword to gate with a
+      // server-side CAPTCHA check, so this is checked first instead. A
+      // credential-stuffing bot gets stopped here, before it ever reaches
+      // Supabase's own rate limits.
+      const verifyRes = await fetch('/api/turnstile/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: turnstileToken }),
+      })
+      if (!verifyRes.ok) {
+        setError('Verification failed. Please try again.')
+        return
+      }
+
       const supabase = createClient()
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
@@ -122,6 +145,11 @@ export default function LoginPage() {
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
+      // The token is single-use regardless of outcome — Cloudflare
+      // invalidates it the moment /api/turnstile/verify checks it, so a
+      // retry always needs a fresh one.
+      setTurnstileToken('')
+      setTurnstileKey(k => k + 1)
       setLoading(false)
     }
   }
@@ -294,6 +322,8 @@ export default function LoginPage() {
                 </div>
               </div>
 
+              <Turnstile key={turnstileKey} onVerify={setTurnstileToken} />
+
               {error && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 mb-4">
                   {error}
@@ -302,7 +332,7 @@ export default function LoginPage() {
 
               <button
                 onClick={handleLogin}
-                disabled={loading}
+                disabled={loading || (turnstileRequired && !turnstileToken)}
                 className={`w-full flex items-center justify-center gap-2 py-4 text-white text-sm font-bold rounded-xl transition-colors mb-4 ${
                   loading ? 'bg-gray-300 cursor-not-allowed' :
                   loginAs === 'organiser' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-orange-500 hover:bg-orange-600'

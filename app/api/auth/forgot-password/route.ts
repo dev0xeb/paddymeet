@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase-admin'
+import { verifyTurnstileToken, getClientIp } from '@/lib/turnstile'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Supabase's own resetPasswordForEmail sends a real recovery email (and, on
@@ -11,10 +12,18 @@ import { NextRequest, NextResponse } from 'next/server'
 // are registered).
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
+    const { email, turnstileToken } = await request.json()
 
     if (!email || typeof email !== 'string' || !email.trim()) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+    }
+
+    // This endpoint now says outright whether an email is registered (see
+    // comment below) — without a human check in front of it, a bot could
+    // enumerate every registered email on the platform by brute force.
+    const verified = await verifyTurnstileToken(turnstileToken, getClientIp(request))
+    if (!verified) {
+      return NextResponse.json({ error: 'Verification failed. Please try again.' }, { status: 400 })
     }
 
     const normalisedEmail = email.trim().toLowerCase()

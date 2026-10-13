@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { Users, Mic, ArrowRight, Check, X, Gift } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import Logo from '@/components/brand/Logo'
+import Turnstile from '@/components/Turnstile'
 
 export default function SignUpPage() {
   return (
@@ -152,6 +153,9 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState('')
   const [termsChecked, setTermsChecked] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileKey, setTurnstileKey] = useState(0)
+  const turnstileRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '',
     age: 0, username: '', password: '', confirmPassword: '', gender: '',
@@ -207,7 +211,7 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
 
   const step2Valid = !!(formData.state && formData.city)
   const step3Valid = selected.length > 0
-  const step4Valid = termsChecked
+  const step4Valid = termsChecked && (!turnstileRequired || !!turnstileToken)
   const canSubmit = !!(step1Valid && step2Valid && step3Valid && step4Valid && !loading)
 
   const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 outline-none focus:border-orange-400 focus:bg-white transition-all"
@@ -232,12 +236,14 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'explorer', ...formData, interests: selected }),
+        body: JSON.stringify({ type: 'explorer', ...formData, interests: selected, turnstileToken }),
       })
       const data = await res.json()
       if (data.error) {
         setError(data.error)
         setLoading(false)
+        setTurnstileToken('')
+        setTurnstileKey(k => k + 1)
       } else {
         // Sign in immediately to establish user session
         const supabase = createClient()
@@ -493,6 +499,9 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
               </div>
 
               {!termsChecked && <p className="text-xs text-red-400 mb-4">Please agree to the terms and privacy policy</p>}
+
+              <Turnstile key={turnstileKey} onVerify={setTurnstileToken} />
+
               {error && <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 mb-4">{error}</div>}
 
               <div className="flex gap-3">
@@ -522,6 +531,9 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState('')
   const [termsChecked, setTermsChecked] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileKey, setTurnstileKey] = useState(0)
+  const turnstileRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
   const [formData, setFormData] = useState({
     orgName: '', contactName: '', role: '', email: '',
     phone: '', password: '', confirmPassword: '', website: '', description: '',
@@ -543,7 +555,8 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
 
   const formValid = !!(formData.orgName && formData.contactName && formData.role &&
     formData.email && formData.phone && phoneValid && passwordValid && passwordsMatch &&
-    formData.description && selected.length > 0 && termsChecked)
+    formData.description && selected.length > 0 && termsChecked &&
+    (!turnstileRequired || !!turnstileToken))
 
   const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 outline-none focus:border-blue-400 focus:bg-white transition-all"
 
@@ -558,12 +571,14 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'organiser', ...formData, eventTypes: selected }),
+        body: JSON.stringify({ type: 'organiser', ...formData, eventTypes: selected, turnstileToken }),
       })
       const data = await res.json()
       if (data.error) {
         setError(data.error)
         setLoading(false)
+        setTurnstileToken('')
+        setTurnstileKey(k => k + 1)
       } else {
         // Sign in client-side to ensure session cookies are established
         const supabase = createClient()
@@ -707,6 +722,8 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
                   {' '}and understand my account will only be fully activated after manual verification.
                 </p>
               </div>
+
+              <Turnstile key={turnstileKey} onVerify={setTurnstileToken} />
 
               {error && <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 mb-4">{error}</div>}
 

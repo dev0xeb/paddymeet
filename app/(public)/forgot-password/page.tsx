@@ -6,6 +6,7 @@ import { ArrowLeft, Mail, Check, Eye, EyeOff, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Logo from '@/components/brand/Logo'
+import Turnstile from '@/components/Turnstile'
 
 type Step = 'email' | 'code' | 'done'
 
@@ -24,9 +25,13 @@ function ForgotPasswordForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileKey, setTurnstileKey] = useState(0)
+  const turnstileRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
   const sendCode = async () => {
     if (!email.trim()) { setError('Please enter your email address'); return }
+    if (turnstileRequired && !turnstileToken) { setError('Please complete the verification challenge'); return }
     setLoading(true)
     setError('')
 
@@ -45,11 +50,13 @@ function ForgotPasswordForm() {
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstileToken }),
       })
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || 'Something went wrong. Please try again.')
+        setTurnstileToken('')
+        setTurnstileKey(k => k + 1)
       } else {
         setStep('code')
       }
@@ -226,11 +233,16 @@ function ForgotPasswordForm() {
                   {loading ? 'Updating...' : 'Update Password'}
                 </button>
 
+                {/* A fresh token is required here too — Turnstile tokens are
+                    single-use, so the one already spent sending the first
+                    code can't be reused for a resend. */}
+                <Turnstile key={`resend-${turnstileKey}`} onVerify={setTurnstileToken} />
+
                 <div className="flex items-center justify-between text-xs">
                   <button
                     type="button"
                     onClick={() => { setCode(''); sendCode() }}
-                    disabled={loading}
+                    disabled={loading || (turnstileRequired && !turnstileToken)}
                     className="text-gray-500 hover:text-gray-700 transition-colors font-semibold disabled:opacity-60"
                   >
                     Resend code
@@ -277,6 +289,8 @@ function ForgotPasswordForm() {
                   />
                 </div>
 
+                <Turnstile key={turnstileKey} onVerify={setTurnstileToken} />
+
                 {error && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
                     {error}
@@ -285,7 +299,7 @@ function ForgotPasswordForm() {
 
                 <button
                   onClick={sendCode}
-                  disabled={loading}
+                  disabled={loading || (turnstileRequired && !turnstileToken)}
                   className="w-full py-3.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Sending...' : 'Send Reset Code'}

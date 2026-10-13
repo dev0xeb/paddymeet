@@ -1,14 +1,20 @@
 import { createAdminClient } from '@/lib/supabase-admin'
+import { verifyTurnstileToken, getClientIp } from '@/lib/turnstile'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
     const adminClient = createAdminClient()
     const body = await request.json()
-    const { type, ...formData } = body
+    const { type, turnstileToken, ...formData } = body
 
     if (!formData.email || !formData.password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
+    }
+
+    const verified = await verifyTurnstileToken(turnstileToken, getClientIp(request))
+    if (!verified) {
+      return NextResponse.json({ error: 'Verification failed. Please try again.' }, { status: 400 })
     }
 
     const email = formData.email.trim().toLowerCase()
