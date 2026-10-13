@@ -6,9 +6,9 @@ import { NextRequest, NextResponse } from 'next/server'
 // given, registered or not — it doesn't check our own users/organisers/
 // admin_team tables first. So this route does that check server-side, and
 // only forwards to Supabase when the email actually belongs to an account
-// here. Either way the response is identical — no error, no "not found" —
-// so the HTTP response itself can't be used to enumerate which emails are
-// registered.
+// here. An unmatched email gets an explicit "not found" error back (a
+// deliberate choice to prioritize clear feedback over hiding which emails
+// are registered).
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json()
@@ -26,11 +26,14 @@ export async function POST(request: NextRequest) {
       adminClient.from('admin_team').select('id').eq('email', normalisedEmail).maybeSingle(),
     ])
 
-    if (explorer || organiser || admin) {
-      const { error } = await adminClient.auth.resetPasswordForEmail(normalisedEmail)
-      if (error) {
-        console.error('resetPasswordForEmail error:', error)
-      }
+    if (!explorer && !organiser && !admin) {
+      return NextResponse.json({ error: 'No account found with this email address.' }, { status: 404 })
+    }
+
+    const { error } = await adminClient.auth.resetPasswordForEmail(normalisedEmail)
+    if (error) {
+      console.error('resetPasswordForEmail error:', error)
+      return NextResponse.json({ error: 'Could not send a reset code. Please try again.' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

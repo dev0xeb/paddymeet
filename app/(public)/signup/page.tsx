@@ -304,41 +304,41 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">First name <span className="text-red-400">*</span></label>
-                  <input type="text" placeholder="Tunde" value={formData.firstName} onChange={e => update('firstName', e.target.value)} className={inputClass} />
+                  <input type="text" value={formData.firstName} onChange={e => update('firstName', e.target.value)} className={inputClass} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Last name <span className="text-red-400">*</span></label>
-                  <input type="text" placeholder="Adeyemi" value={formData.lastName} onChange={e => update('lastName', e.target.value)} className={inputClass} />
+                  <input type="text" value={formData.lastName} onChange={e => update('lastName', e.target.value)} className={inputClass} />
                 </div>
               </div>
 
               <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email address <span className="text-red-400">*</span></label>
-                <input type="email" placeholder="tunde@email.com" value={formData.email} onChange={e => update('email', e.target.value)} className={inputClass} />
+                <input type="email" value={formData.email} onChange={e => update('email', e.target.value)} className={inputClass} />
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Phone number <span className="text-red-400">*</span></label>
-                  <input type="tel" placeholder="08012345678" value={formData.phone} onChange={e => update('phone', e.target.value)} className={`${inputClass} ${formData.phone && !phoneValid ? 'border-red-300 focus:border-red-400' : ''}`} />
+                  <input type="tel" value={formData.phone} onChange={e => update('phone', e.target.value)} className={`${inputClass} ${formData.phone && !phoneValid ? 'border-red-300 focus:border-red-400' : ''}`} />
                   {formData.phone && !phoneValid && (
                     <p className="text-xs text-red-400 mt-1">Enter a valid Nigerian number e.g. 08012345678</p>
                   )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Age <span className="text-red-400">*</span></label>
-                  <input type="number" placeholder="24" min="16" max="99" value={formData.age || ''} onChange={e => update('age', parseInt(e.target.value) || 0)} className={inputClass} />
+                  <input type="number" min="16" max="99" value={formData.age || ''} onChange={e => update('age', parseInt(e.target.value) || 0)} className={inputClass} />
                 </div>
               </div>
 
               <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Username <span className="text-red-400">*</span></label>
-                <input type="text" placeholder="@your_username" value={formData.username} onChange={e => update('username', e.target.value)} className={inputClass} />
+                <input type="text" value={formData.username} onChange={e => update('username', e.target.value)} className={inputClass} />
               </div>
 
               <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Password <span className="text-red-400">*</span></label>
-                <input type="password" placeholder="Min. 8 characters" value={formData.password} onChange={e => update('password', e.target.value)} className={inputClass} />
+                <input type="password" value={formData.password} onChange={e => update('password', e.target.value)} className={inputClass} />
                 <PasswordStrength password={formData.password} />
               </div>
 
@@ -346,7 +346,6 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Confirm Password <span className="text-red-400">*</span></label>
                 <input
                   type="password"
-                  placeholder="Re-enter your password"
                   value={formData.confirmPassword}
                   onChange={e => update('confirmPassword', e.target.value)}
                   className={inputClass + (formData.confirmPassword ? (passwordsMatch ? ' border-green-300 focus:border-green-400' : ' border-red-300 focus:border-red-400') : '')}
@@ -469,7 +468,6 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
                   <Gift className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Enter referral code"
                     value={formData.referralCode}
                     onChange={e => update('referralCode', e.target.value.toUpperCase())}
                     className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 outline-none focus:border-orange-400 focus:bg-white transition-all font-mono"
@@ -625,28 +623,28 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
 
               <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Organisation name <span className="text-red-400">*</span></label>
-                <input type="text" placeholder="e.g. Lagos Nights Ltd" value={formData.orgName} onChange={e => update('orgName', e.target.value)} className={inputClass} />
+                <input type="text" value={formData.orgName} onChange={e => update('orgName', e.target.value)} className={inputClass} />
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Contact person <span className="text-red-400">*</span></label>
-                  <input type="text" placeholder="Full name" value={formData.contactName} onChange={e => update('contactName', e.target.value)} className={inputClass} />
+                  <input type="text" value={formData.contactName} onChange={e => update('contactName', e.target.value)} className={inputClass} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Your role <span className="text-red-400">*</span></label>
-                  <input type="text" placeholder="e.g. CEO, Manager" value={formData.role} onChange={e => update('role', e.target.value)} className={inputClass} />
+                  <input type="text" value={formData.role} onChange={e => update('role', e.target.value)} className={inputClass} />
                 </div>
               </div>
 
               <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Business email <span className="text-red-400">*</span></label>
-                <input type="email" placeholder="events@yourorganisation.com" value={formData.email} onChange={e => update('email', e.target.value)} className={inputClass} />
+                <input type="email" value={formData.email} onChange={e => update('email', e.target.value)} className={inputClass} />
               </div>
 
               <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Phone number <span className="text-red-400">*</span></label>
-                <input type="tel" placeholder="08012345678" value={formData.phone} onChange={e => update('phone', e.target.value)} className={`${inputClass} ${formData.phone && !phoneValid ? 'border-red-300 focus:border-red-400' : ''}`} />
+                <input type="tel" value={formData.phone} onChange={e => update('phone', e.target.value)} className={`${inputClass} ${formData.phone && !phoneValid ? 'border-red-300 focus:border-red-400' : ''}`} />
                 {formData.phone && !phoneValid && (
                   <p className="text-xs text-red-400 mt-1">Enter a valid Nigerian number e.g. 08012345678</p>
                 )}
@@ -654,7 +652,7 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
 
               <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Password <span className="text-red-400">*</span></label>
-                <input type="password" placeholder="Min. 8 characters" value={formData.password} onChange={e => update('password', e.target.value)} className={inputClass} />
+                <input type="password" value={formData.password} onChange={e => update('password', e.target.value)} className={inputClass} />
                 <PasswordStrength password={formData.password} />
               </div>
 
@@ -662,7 +660,6 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Confirm Password <span className="text-red-400">*</span></label>
                 <input
                   type="password"
-                  placeholder="Re-enter your password"
                   value={formData.confirmPassword}
                   onChange={e => update('confirmPassword', e.target.value)}
                   className={inputClass + (formData.confirmPassword ? (passwordsMatch ? ' border-green-300 focus:border-green-400' : ' border-red-300 focus:border-red-400') : '')}
@@ -677,7 +674,7 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
 
               <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Website or social media</label>
-                <input type="url" placeholder="https://instagram.com/yourpage" value={formData.website} onChange={e => update('website', e.target.value)} className={inputClass} />
+                <input type="url" value={formData.website} onChange={e => update('website', e.target.value)} className={inputClass} />
               </div>
 
               <div className="mb-4">
@@ -696,7 +693,7 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
 
               <div className="mb-6">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Brief description <span className="text-red-400">*</span></label>
-                <textarea rows={3} placeholder="Tell us about your organisation and the events you run..." value={formData.description} onChange={e => update('description', e.target.value)} className={inputClass + ' resize-none leading-relaxed'} />
+                <textarea rows={3} value={formData.description} onChange={e => update('description', e.target.value)} className={inputClass + ' resize-none leading-relaxed'} />
               </div>
 
               <div onClick={() => setTermsChecked(!termsChecked)}
