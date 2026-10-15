@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { createAdminClient } from '@/lib/supabase-admin'
-import { getTierThresholds, tierForScore } from '@/lib/trustScore'
+import { getTierThresholds, tierForScore, MAX_TRUST_SCORE } from '@/lib/trustScore'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function PUT(
@@ -23,7 +23,7 @@ export async function PUT(
   if (!Number.isFinite(rawScore)) {
     return NextResponse.json({ error: 'trust_score must be a number' }, { status: 400 })
   }
-  const trustScore = Math.max(0, Math.min(100, rawScore))
+  const trustScore = Math.max(0, Math.min(MAX_TRUST_SCORE, rawScore))
 
   const thresholds = await getTierThresholds(adminClient)
   const tier = tierForScore(trustScore, thresholds)

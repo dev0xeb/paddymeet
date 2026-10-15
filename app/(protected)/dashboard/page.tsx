@@ -18,6 +18,7 @@ import {
   CreditCard,
   Headphones
 } from 'lucide-react'
+import { MAX_TRUST_SCORE } from '@/lib/trustScore'
 import UserAvatarMenu from '@/components/UserAvatarMenu'
 import SupportChat from '@/components/SupportChat'
 import OpenGroupButton from '@/components/OpenGroupButton'
@@ -204,7 +205,7 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              {trustScore} <span className="text-sm font-semibold text-slate-400">/ 100</span>
+              {trustScore} <span className="text-sm font-semibold text-slate-400">/ {MAX_TRUST_SCORE}</span>
             </div>
             <div className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
               <span className={`inline-block w-1.5 h-1.5 rounded-full ${currentTierTheme.bar}`} />
@@ -591,7 +592,7 @@ export default async function DashboardPage() {
                   <span className="flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-orange-500" /> Platform Trust Score
                   </span>
-                  <span className="font-extrabold text-slate-900">{trustScore} / 100</span>
+                  <span className="font-extrabold text-slate-900">{trustScore} / {MAX_TRUST_SCORE}</span>
                 </div>
                 <div className="h-2 bg-slate-200/70 rounded-full overflow-hidden mb-2">
                   <div

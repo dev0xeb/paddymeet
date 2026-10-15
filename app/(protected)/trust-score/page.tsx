@@ -21,21 +21,14 @@ import {
 import UserAvatarMenu from '@/components/UserAvatarMenu'
 import NotificationsBell from '@/components/NotificationsBell'
 import Logo from '@/components/brand/Logo'
-
-const TIER_THRESHOLDS = [
-  { tier: 'Newbie', min: 0, max: 49, color: 'text-slate-500 bg-slate-100 border-slate-200' },
-  { tier: 'Social', min: 50, max: 69, color: 'text-blue-600 bg-blue-50 border-blue-200' },
-  { tier: 'Crew', min: 70, max: 79, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
-  { tier: 'Elite', min: 80, max: 89, color: 'text-orange-600 bg-orange-50 border-orange-200' },
-  { tier: 'Legendary', min: 90, max: 100, color: 'text-purple-600 bg-purple-50 border-purple-200' },
-]
+import { getTierThresholds, tierForScore, MAX_TRUST_SCORE } from '@/lib/trustScore'
 
 export default async function TrustScorePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: profile }, { data: tickets }, { data: groupMemberships }] = await Promise.all([
+  const [{ data: profile }, { data: tickets }, { data: groupMemberships }, thresholds] = await Promise.all([
     supabase
       .from('users')
       .select('id, username, full_name, tier, trust_score, phone, city, state, avatar_url')
@@ -48,11 +41,43 @@ export default async function TrustScorePage() {
     supabase
       .from('group_members')
       .select('id, payment_status')
-      .eq('user_id', user.id)
+      .eq('user_id', user.id),
+    getTierThresholds(supabase),
   ])
 
   const trustScore = profile?.trust_score ?? 50
-  const tier = profile?.tier || (trustScore >= 90 ? 'Legendary' : trustScore >= 80 ? 'Elite' : trustScore >= 70 ? 'Crew' : trustScore >= 50 ? 'Social' : 'Newbie')
+  const tier = profile?.tier || tierForScore(trustScore, thresholds)
+
+  // Tier Roadmap rows, built from the live Platform Settings thresholds
+  // rather than a hardcoded copy — this used to show its own fixed 0-100
+  // breakdown regardless of what was actually configured, or what a user's
+  // real stored tier was.
+  const tierOrder = ['Newbie', 'Social', 'Crew', 'Elite', 'Legendary'] as const
+  const tierDescriptions: Record<typeof tierOrder[number], string> = {
+    Newbie: 'Standard ticket purchasing and public event discovery.',
+    Social: 'Create social squad groups and join open split tables.',
+    Crew: 'Priority customer support and reduced table hold times.',
+    Elite: 'VIP Table Host status, fast-track QR passes, and exclusive discounts.',
+    Legendary: 'Direct access to sold-out cabanas, zero hold deposit, and VIP perks.',
+  }
+  const tierMinima: Record<typeof tierOrder[number], number> = {
+    Newbie: thresholds.Newbie,
+    Social: thresholds.Social,
+    Crew: thresholds.Crew,
+    Elite: thresholds.Elite,
+    Legendary: thresholds.Legendary,
+  }
+  const tierRoadmap = tierOrder.map((name, i) => {
+    const min = tierMinima[name]
+    const nextMin = i < tierOrder.length - 1 ? tierMinima[tierOrder[i + 1]] : MAX_TRUST_SCORE + 1
+    const max = Math.max(min, nextMin - 1)
+    return {
+      tier: `${name} (${min}–${max})`,
+      desc: tierDescriptions[name],
+      unlocked: trustScore >= min,
+      current: trustScore >= min && trustScore < nextMin,
+    }
+  })
 
   const attendedTickets = tickets?.filter(t => t.status === 'used' || t.attended) || []
   const paidGroups = groupMemberships?.filter(m => m.payment_status === 'paid') || []
@@ -135,7 +160,7 @@ export default async function TrustScorePage() {
                 {trustScore}
               </div>
               <div className="text-xs font-semibold text-slate-300 mt-1 uppercase tracking-wider">
-                out of 100
+                out of {MAX_TRUST_SCORE}
               </div>
             </div>
 
@@ -145,12 +170,12 @@ export default async function TrustScorePage() {
           <div className="mt-6 pt-6 border-t border-slate-700/60">
             <div className="flex items-center justify-between text-xs font-bold text-slate-300 mb-2">
               <span>Tier Progress</span>
-              <span>{trustScore}% Complete</span>
+              <span>{Math.round((trustScore / MAX_TRUST_SCORE) * 100)}% Complete</span>
             </div>
             <div className="h-3 bg-slate-700 rounded-full overflow-hidden p-0.5">
               <div
                 className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, Math.max(10, trustScore))}%` }}
+                style={{ width: `${Math.min(100, Math.max(5, (trustScore / MAX_TRUST_SCORE) * 100))}%` }}
               />
             </div>
           </div>
@@ -226,38 +251,7 @@ export default async function TrustScorePage() {
           <p className="text-xs text-slate-500 mb-6">Unlock exclusive platform privileges as your score increases</p>
 
           <div className="space-y-3">
-            {[
-              {
-                tier: 'Newbie (0–49)',
-                desc: 'Standard ticket purchasing and public event discovery.',
-                unlocked: trustScore >= 0,
-                current: trustScore < 50,
-              },
-              {
-                tier: 'Social (50–69)',
-                desc: 'Create social squad groups and join open split tables.',
-                unlocked: trustScore >= 50,
-                current: trustScore >= 50 && trustScore < 70,
-              },
-              {
-                tier: 'Crew (70–79)',
-                desc: 'Priority customer support and reduced table hold times.',
-                unlocked: trustScore >= 70,
-                current: trustScore >= 70 && trustScore < 80,
-              },
-              {
-                tier: 'Elite (80–89)',
-                desc: 'VIP Table Host status, fast-track QR passes, and exclusive discounts.',
-                unlocked: trustScore >= 80,
-                current: trustScore >= 80 && trustScore < 90,
-              },
-              {
-                tier: 'Legendary (90–100)',
-                desc: 'Direct access to sold-out cabanas, zero hold deposit, and VIP perks.',
-                unlocked: trustScore >= 90,
-                current: trustScore >= 90,
-              },
-            ].map((t) => (
+            {tierRoadmap.map((t) => (
               <div
                 key={t.tier}
                 className={`p-4 rounded-xl border flex items-center justify-between gap-4 transition-all ${

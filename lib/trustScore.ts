@@ -1,5 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+// The ceiling every trust_score is clamped to, everywhere it's written —
+// ticket check-in increments, admin manual overrides, and anywhere a score
+// is rendered as a percentage of its max.
+export const MAX_TRUST_SCORE = 200
+
 export interface TierThresholds {
   Legendary: number
   Elite: number
@@ -23,10 +28,10 @@ export async function getTierThresholds(supabase: SupabaseClient): Promise<TierT
     .single()
 
   return {
-    Legendary: settings?.legendary_min ?? 80,
-    Elite: settings?.elite_min ?? 60,
-    Crew: settings?.crew_min ?? 40,
-    Social: settings?.social_min ?? 20,
+    Legendary: settings?.legendary_min ?? 180,
+    Elite: settings?.elite_min ?? 140,
+    Crew: settings?.crew_min ?? 100,
+    Social: settings?.social_min ?? 60,
     Newbie: settings?.newbie_min ?? 0,
   }
 }

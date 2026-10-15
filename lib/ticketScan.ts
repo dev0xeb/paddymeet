@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendCheckInEmail } from '@/lib/email'
 import { createAdminClient } from '@/lib/supabase-admin'
-import { getTierThresholds, tierForScore } from '@/lib/trustScore'
+import { getTierThresholds, tierForScore, MAX_TRUST_SCORE } from '@/lib/trustScore'
 
 // Gates are considered open this long before the event's official start time.
 // A scan attempted earlier than this is rejected as "too early".
@@ -166,7 +166,7 @@ export async function validateAndCheckInTicket({
         .single()
 
       if (ticketOwner) {
-        const newScore = Math.min(100, (ticketOwner.trust_score || 0) + 1)
+        const newScore = Math.min(MAX_TRUST_SCORE, (ticketOwner.trust_score || 0) + 1)
         const thresholds = await getTierThresholds(admin)
         const newTier = tierForScore(newScore, thresholds)
         await admin

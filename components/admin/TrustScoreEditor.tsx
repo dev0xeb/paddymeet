@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Check, Loader2, Plus, Minus, ShieldCheck, ShieldAlert } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { MAX_TRUST_SCORE } from '@/lib/trustScore'
 
 interface Thresholds {
   newbie: number
@@ -20,10 +21,10 @@ interface Props {
 
 const defaultThresholds: Thresholds = {
   newbie: 0,
-  social: 20,
-  crew: 40,
-  elite: 60,
-  legendary: 80,
+  social: 60,
+  crew: 100,
+  elite: 140,
+  legendary: 180,
 }
 
 export default function TrustScoreEditor({
@@ -47,7 +48,7 @@ export default function TrustScoreEditor({
   const currentTier = getTierInfo(score)
 
   const handleAdjust = (delta: number) => {
-    const next = Math.max(0, Math.min(100, score + delta))
+    const next = Math.max(0, Math.min(MAX_TRUST_SCORE, score + delta))
     setScore(next)
   }
 
@@ -79,19 +80,19 @@ export default function TrustScoreEditor({
         <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${currentTier.color}`}>
           {currentTier.name}
         </span>
-        <span className="text-xs font-mono font-bold text-slate-700">{score}/100</span>
+        <span className="text-xs font-mono font-bold text-slate-700">{score}/{MAX_TRUST_SCORE}</span>
       </div>
 
       {/* Progress Bar */}
       <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-300 ${
-            score >= 80 ? 'bg-orange-500' :
-            score >= 60 ? 'bg-purple-500' :
-            score >= 40 ? 'bg-blue-500' :
-            score >= 20 ? 'bg-emerald-500' : 'bg-slate-400'
+            score >= thresholds.legendary ? 'bg-orange-500' :
+            score >= thresholds.elite ? 'bg-purple-500' :
+            score >= thresholds.crew ? 'bg-blue-500' :
+            score >= thresholds.social ? 'bg-emerald-500' : 'bg-slate-400'
           }`}
-          style={{ width: `${score}%` }}
+          style={{ width: `${(score / MAX_TRUST_SCORE) * 100}%` }}
         />
       </div>
 
@@ -109,9 +110,9 @@ export default function TrustScoreEditor({
         <input
           type="number"
           min="0"
-          max="100"
+          max={MAX_TRUST_SCORE}
           value={score}
-          onChange={e => setScore(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+          onChange={e => setScore(Math.max(0, Math.min(MAX_TRUST_SCORE, parseInt(e.target.value) || 0)))}
           className="w-14 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 text-center outline-none focus:border-orange-500 shadow-sm"
         />
 

@@ -26,10 +26,10 @@ const defaultSettings: PlatformSettings = {
   commission_rate: 5,
   service_fee_rate: 5,
   newbie_min: 0,
-  social_min: 20,
-  crew_min: 40,
-  elite_min: 60,
-  legendary_min: 80,
+  social_min: 60,
+  crew_min: 100,
+  elite_min: 140,
+  legendary_min: 180,
   max_group_size: 20,
   payout_hold_days: 2,
   maintenance_mode: false,
@@ -265,7 +265,7 @@ export default function AdminPlatformSettingsPage() {
                     <input
                       type="number"
                       min="0"
-                      max="100"
+                      max="200"
                       value={settings[field]}
                       onChange={e => updateField(field, parseInt(e.target.value) || 0)}
                       className={inputClass}

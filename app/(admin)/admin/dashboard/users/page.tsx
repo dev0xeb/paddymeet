@@ -6,6 +6,7 @@ import {
   Search, Shield, MapPin, Calendar,
   MoreHorizontal, UserX, UserCheck, ChevronLeft, ChevronRight
 } from 'lucide-react'
+import { MAX_TRUST_SCORE } from '@/lib/trustScore'
 
 export default async function AdminUsersPage({
   searchParams,
@@ -153,7 +154,7 @@ export default async function AdminUsersPage({
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden w-16">
                       <div
                         className="h-full bg-orange-400 rounded-full"
-                        style={{ width: `${Math.min(100, u.trust_score || 50)}%` }}
+                        style={{ width: `${Math.min(100, ((u.trust_score || 50) / MAX_TRUST_SCORE) * 100)}%` }}
                       />
                     </div>
                   </div>
