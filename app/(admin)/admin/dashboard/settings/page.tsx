@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import {
   Plus, Trash2, Shield, Clock, Check, X, Eye, EyeOff,
-  UserPlus, Sparkles, AlertCircle, Loader2, Users, Lock
+  UserPlus, Sparkles, AlertCircle, Loader2, Users, Lock, ShieldCheck
 } from 'lucide-react'
+import MfaSetup from '@/components/admin/MfaSetup'
 
 interface AdminMember {
   id: string
@@ -14,6 +15,7 @@ interface AdminMember {
   is_active: boolean
   last_login: string | null
   created_at: string
+  mfa_enrolled: boolean
 }
 
 const departments = [
@@ -139,6 +141,29 @@ export default function AdminSettingsPage() {
     }
   }
 
+  const [resettingMfaId, setResettingMfaId] = useState<string | null>(null)
+  const [resetMfaConfirmId, setResetMfaConfirmId] = useState<string | null>(null)
+
+  const handleResetMfa = async (memberId: string, memberName: string) => {
+    setResetMfaConfirmId(null)
+    setResettingMfaId(memberId)
+    try {
+      const res = await fetch(`/api/admin/team/${memberId}/reset-mfa`, { method: 'POST' })
+      const data = await res.json()
+      if (data.error) {
+        setError(data.error)
+      } else {
+        setSuccess(`Two-factor authentication reset for ${memberName}`)
+        setTeam(prev => prev.map(m => m.id === memberId ? { ...m, mfa_enrolled: false } : m))
+        setTimeout(() => setSuccess(''), 4000)
+      }
+    } catch {
+      setError('Something went wrong.')
+    } finally {
+      setResettingMfaId(null)
+    }
+  }
+
   const handleRemove = async (memberId: string, memberName: string) => {
     setDeletingId(memberId)
     try {
@@ -191,6 +216,10 @@ export default function AdminSettingsPage() {
             <span>{success}</span>
           </div>
         )}
+
+        {/* Your own account's 2FA — distinct from the team roster below,
+            this only ever affects the currently signed-in admin. */}
+        <MfaSetup />
 
         {/* Department Filter Chips */}
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 mb-6">
@@ -286,6 +315,14 @@ export default function AdminSettingsPage() {
                           <span className={`w-1.5 h-1.5 rounded-full ${member.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                           {member.is_active ? 'Active' : 'Suspended'}
                         </button>
+
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
+                          member.mfa_enrolled
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : 'bg-slate-100 text-slate-500 border-slate-200'
+                        }`}>
+                          <ShieldCheck className="w-2.5 h-2.5" /> {member.mfa_enrolled ? '2FA On' : '2FA Off'}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
@@ -303,6 +340,36 @@ export default function AdminSettingsPage() {
 
                   {/* Right: Actions */}
                   <div className="flex items-center gap-2.5 self-end sm:self-center">
+                    {member.mfa_enrolled && (
+                      resetMfaConfirmId === member.id ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleResetMfa(member.id, member.full_name)}
+                            disabled={resettingMfaId === member.id}
+                            className="px-2.5 py-1.5 bg-rose-600 text-white text-xs font-bold rounded-xl hover:bg-rose-700 transition-colors"
+                          >
+                            {resettingMfaId === member.id ? 'Resetting...' : 'Confirm'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setResetMfaConfirmId(null)}
+                            className="px-2 py-1.5 bg-slate-100 text-slate-600 text-xs font-semibold rounded-xl"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setResetMfaConfirmId(member.id)}
+                          title="Clears their authenticator app enrollment — use if they've lost their device"
+                          className="px-2.5 py-1.5 bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-semibold rounded-xl border border-slate-200 hover:border-rose-200 transition-colors"
+                        >
+                          Reset 2FA
+                        </button>
+                      )
+                    )}
                     {member.department !== 'super_admin' ? (
                       <>
                         <select

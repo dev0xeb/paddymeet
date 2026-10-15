@@ -26,6 +26,18 @@ export default async function AdminLayout({
     redirect('/admin-login')
   }
 
+  // The login page already routes a 2FA-enrolled admin through the code
+  // challenge before landing here — but that's just a UI convenience. This
+  // is the check that actually enforces it: it runs on every admin page
+  // load, catches a still-aal1 session that reached here any other way
+  // (direct URL, stale cookie from before the admin enrolled, a script
+  // calling signInWithPassword directly), and is what makes MFA a real
+  // requirement rather than a login-page suggestion.
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
+    redirect('/admin-login/mfa')
+  }
+
   // Same counts the sidebar's Events/Organisers badges and the bell icon
   // need — fetched once here so every admin page gets a persistent,
   // consistently-populated sidebar instead of each page building (or, as

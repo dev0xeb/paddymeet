@@ -20,7 +20,13 @@ export async function GET() {
     .select('*')
     .order('created_at', { ascending: true })
 
-  return NextResponse.json({ team })
+  const teamWithMfa = await Promise.all((team || []).map(async (member) => {
+    const { data: factorData } = await adminClient.auth.admin.mfa.listFactors({ userId: member.id })
+    const mfaEnrolled = (factorData?.factors || []).some(f => f.status === 'verified')
+    return { ...member, mfa_enrolled: mfaEnrolled }
+  }))
+
+  return NextResponse.json({ team: teamWithMfa })
 }
 
 export async function POST(request: NextRequest) {

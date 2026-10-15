@@ -35,10 +35,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied: Not an administrator account' }, { status: 403 })
     }
 
+    // Password alone only gets the session to aal1. If this account has a
+    // verified authenticator app enrolled, nextLevel comes back 'aal2' and
+    // the admin still needs to clear the code-entry step before the
+    // dashboard (and every (admin) layout load) will actually let them in.
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    const needsMfa = !!aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2'
+
     return NextResponse.json({
       success: true,
       department: adminRecord.department,
-      redirect: '/admin/dashboard',
+      redirect: needsMfa ? '/admin-login/mfa' : '/admin/dashboard',
     })
   } catch (err) {
     console.error('Admin login error:', err)
