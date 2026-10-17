@@ -482,8 +482,19 @@ export default function LandingClientPage({ user, accountType = null, displayNam
             {/* Social proof strip */}
             <div className="flex items-center gap-3 mt-7">
               <div className="flex -space-x-2.5">
-                {['#ff5b1e', '#f2a93b', '#c96a4e', '#8a5a4a'].map((c, i) => (
-                  <span key={i} className="w-8 h-8 rounded-full border-2 border-[var(--pm-bg)]" style={{ background: c }} />
+                {[
+                  { c: '#ff5b1e', i: 'T' },
+                  { c: '#f2a93b', i: 'A' },
+                  { c: '#c96a4e', i: 'O' },
+                  { c: '#8a5a4a', i: 'C' },
+                ].map((p, i) => (
+                  <span
+                    key={i}
+                    className="w-8 h-8 rounded-full border-2 border-[var(--pm-bg)] flex items-center justify-center text-[11px] font-bold text-white"
+                    style={{ background: p.c }}
+                  >
+                    {p.i}
+                  </span>
                 ))}
               </div>
               <div>
