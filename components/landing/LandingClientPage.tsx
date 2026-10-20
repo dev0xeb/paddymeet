@@ -168,7 +168,10 @@ function EventCard({ event, index }: { event: LiveEvent; index: number }) {
   const hasGroupOption = (event.ticket_types?.length ?? 0) > 0
 
   return (
-    <article className="pm-event-card pm-card flex-shrink-0 w-[300px] sm:w-[320px] flex flex-col overflow-hidden">
+    <Link
+      href={`/events/${event.id}`}
+      className="pm-event-card pm-card flex-shrink-0 w-[300px] sm:w-[320px] flex flex-col overflow-hidden"
+    >
       <div className="relative h-[190px] overflow-hidden">
         <img src={imageSrc} alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
@@ -197,15 +200,12 @@ function EventCard({ event, index }: { event: LiveEvent; index: number }) {
               <div className="text-[11px] text-[#8c7c76] mt-0.5">Pay &amp; Share available</div>
             )}
           </div>
-          <Link
-            href={`/events/${event.id}`}
-            className="pm-btn pm-btn--primary text-[12px] px-4 py-2.5"
-          >
+          <span className="pm-btn pm-btn--primary text-[12px] px-4 py-2.5">
             Get Ticket
-          </Link>
+          </span>
         </div>
       </div>
-    </article>
+    </Link>
   )
 }
 
@@ -311,12 +311,30 @@ export default function LandingClientPage({ user, accountType = null, displayNam
 
   const displayList = liveEvents ?? []
 
+  // These pills are marketing labels, not the vibe/event_type values
+  // organisers actually pick from (Turnt/Chill/.../Romantic and
+  // Concert/Club Night/.../Food & Drinks — see the organiser event form).
+  // Matching a crude prefix of the label against those fields meant
+  // "Afrobeats", "Rooftop" and "Beach day" could never match anything —
+  // those exact words don't exist in either enum — so they always showed
+  // "No upcoming events" regardless of what was actually live. Matching a
+  // set of realistic keywords against title + vibe + event_type instead
+  // means a real event (type "Rave", vibe "Chill", or a title that
+  // mentions "Afrobeats"/"Beach"/"Rooftop") actually gets found.
+  const VIBE_KEYWORDS: Record<string, string[]> = {
+    'Rave & electronic': ['rave', 'electronic', 'club'],
+    'Afrobeats': ['afrobeat', 'amapiano', 'afro'],
+    'Rooftop': ['rooftop', 'lounge', 'chill'],
+    'Beach day': ['beach', 'day party', 'festival'],
+  }
+
   const finalEventList = vibe === 'All energy'
     ? displayList
-    : displayList.filter((e) =>
-        e.vibe?.toLowerCase().includes(vibe.toLowerCase().slice(0, 4)) ||
-        e.event_type?.toLowerCase().includes(vibe.toLowerCase().slice(0, 4))
-      )
+    : displayList.filter((e) => {
+        const keywords = VIBE_KEYWORDS[vibe] || []
+        const haystack = `${e.title} ${e.vibe ?? ''} ${e.event_type ?? ''}`.toLowerCase()
+        return keywords.some((k) => haystack.includes(k))
+      })
 
   const scrollCarousel = (direction: 'left' | 'right') => {
     carouselRef.current?.scrollBy({ left: direction === 'left' ? -340 : 340, behavior: 'smooth' })

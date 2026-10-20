@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { X, Plus, Minus, Check, ArrowRight, Ticket, Download, FileText, User as UserIcon, AlertTriangle } from 'lucide-react'
 import { downloadTicketImage, downloadTicketPDF } from '@/lib/ticketImage'
@@ -432,7 +433,14 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   const inputClass = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 outline-none focus:border-orange-400 transition-all"
   const labelClass = "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
 
-  return (
+  // Rendered via a portal straight into document.body — this used to mount
+  // wherever the triggering button happened to live (e.g. the event page's
+  // sticky ticket sidebar), and a sticky/transformed ancestor there could
+  // clip or re-stack a `fixed` child instead of letting it cover the whole
+  // viewport, which is how the map's own controls (z-index: 2, but inside
+  // their own stacking context) ended up visible through/around the modal
+  // instead of behind its backdrop.
+  return createPortal(
     <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -794,6 +802,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
