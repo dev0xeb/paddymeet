@@ -39,7 +39,18 @@ export async function POST(
 
   if (!group) return NextResponse.json({ error: 'Group not found' }, { status: 404 })
 
-  const expectedAmount = (group.amount_per_member || 0) * spotCount
+  // One flat fee per payment, same reasoning as every other checkout path —
+  // not multiplied by spotCount. A single person paying for 3 spots in one
+  // checkout is one transaction, not three.
+  const { data: feeSettings } = await adminClient
+    .from('platform_settings')
+    .select('service_fee_fixed')
+    .eq('id', 1)
+    .single()
+  const serviceFeeFixed = feeSettings?.service_fee_fixed ?? 100
+
+  const subtotal = (group.amount_per_member || 0) * spotCount
+  const expectedAmount = subtotal > 0 ? subtotal + serviceFeeFixed : 0
 
   // Verify payment with Paystack (skip for free group tickets where reference === 'FREE')
   let amountPaid = 0
@@ -118,7 +129,12 @@ export async function POST(
     }
   }
 
-  const amountPerSpot = amountPaid > 0 ? Math.round(amountPaid / spotCount) : 0
+  // The group's own stored per-spot price, not amountPaid / spotCount — now
+  // that a flat fee rides along on top of the spots themselves, dividing
+  // the fee-inclusive total evenly across spots would overstate what each
+  // seat actually cost (organiser revenue, trust-score history, etc. all
+  // read group_members.amount_paid expecting the real ticket price).
+  const amountPerSpot = group.amount_per_member || 0
   const attendeeList: AttendeeInput[] = attendees && attendees.length === spotCount
     ? attendees
     : Array.from({ length: spotCount }, () => ({ name: '', email: '', phone: '' }))
@@ -216,7 +232,7 @@ export async function POST(
       event_id: group.event_id,
       group_id: groupId,
       amount: amountPaid,
-      service_fee: 0,
+      service_fee: amountPaid > 0 ? serviceFeeFixed : 0,
       total_paid: amountPaid,
       payment_method: 'paystack',
       payment_reference: reference,

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { X, Check, ArrowRight, Users, Plus, Minus, Ticket, AlertTriangle } from 'lucide-react'
+import { createClient } from '@/lib/supabase'
+import { DEFAULT_SERVICE_FEE_FIXED } from '@/lib/pricing'
 
 interface Props {
   groupId: string
@@ -42,7 +44,26 @@ export default function GroupSharePaymentModal({
   const paystackReady = useRef(false)
 
   const extraAttendeeCount = Math.max(0, spotCount - 1)
-  const totalAmount = amountPerMember * spotCount
+
+  // One flat fee per payment — however many spots this person is covering
+  // in this single checkout, not multiplied by spotCount. Mirrors how the
+  // solo ticket flow already charges it once per transaction regardless
+  // of quantity.
+  const [serviceFeeFixed, setServiceFeeFixed] = useState(DEFAULT_SERVICE_FEE_FIXED)
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('platform_settings')
+      .select('service_fee_fixed')
+      .eq('id', 1)
+      .single()
+      .then(({ data }) => {
+        if (data?.service_fee_fixed != null) setServiceFeeFixed(data.service_fee_fixed)
+      })
+  }, [])
+
+  const subtotal = amountPerMember * spotCount
+  const totalAmount = subtotal > 0 ? subtotal + serviceFeeFixed : 0
 
   useEffect(() => {
     setAttendees(prev => {
@@ -209,7 +230,12 @@ export default function GroupSharePaymentModal({
                 <div className="text-2xl font-extrabold text-gray-900">
                   {totalAmount > 0 ? `₦${totalAmount.toLocaleString()}` : 'Free'}
                 </div>
-                {spotCount > 1 && <div className="text-xs text-gray-400 mt-1">₦{amountPerMember.toLocaleString()} × {spotCount} spots</div>}
+                {totalAmount > 0 && (
+                  <div className="text-xs text-gray-400 mt-1">
+                    {spotCount > 1 && <>₦{amountPerMember.toLocaleString()} × {spotCount} spots + </>}
+                    ₦{serviceFeeFixed.toLocaleString()} service fee
+                  </div>
+                )}
               </div>
 
               <button onClick={() => setStep('details')} className="w-full py-3.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">

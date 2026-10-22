@@ -484,13 +484,26 @@ async function handleGroupPayment(
   // Overpayment is never rejected — it's never a fraud risk, and happens
   // legitimately when Paystack's "customer bears the transaction fee"
   // setting grosses up what the customer is actually charged.
-  const expectedAmount = (group.amount_per_member || 0) * spotCount
+  // One flat fee per payment — same reasoning as pay-share/verify and
+  // every other checkout path — not multiplied by spotCount.
+  const { data: feeSettings } = await adminClient
+    .from('platform_settings')
+    .select('service_fee_fixed')
+    .eq('id', 1)
+    .single()
+  const serviceFeeFixed = feeSettings?.service_fee_fixed ?? 100
+
+  const subtotal = (group.amount_per_member || 0) * spotCount
+  const expectedAmount = subtotal > 0 ? subtotal + serviceFeeFixed : 0
   if (amountPaid < expectedAmount - 1) {
     console.error(`Group payment amount mismatch for group ${groupId}, reference ${reference}: expected ${expectedAmount}, got ${amountPaid}`)
     return
   }
 
-  const amountPerSpot = amountPaid > 0 ? Math.round(amountPaid / spotCount) : 0
+  // The group's own stored per-spot price, not amountPaid / spotCount —
+  // dividing the fee-inclusive total evenly across spots would overstate
+  // what each seat actually cost in group_members.amount_paid.
+  const amountPerSpot = group.amount_per_member || 0
   const attendeeList: AttendeeInput[] = metadata.attendees && metadata.attendees.length === spotCount
     ? metadata.attendees
     : Array.from({ length: spotCount }, () => ({ name: '', email: data.customer?.email || '', phone: '' }))
@@ -572,7 +585,7 @@ async function handleGroupPayment(
       event_id: group.event_id,
       group_id: groupId,
       amount: amountPaid,
-      service_fee: 0,
+      service_fee: amountPaid > 0 ? serviceFeeFixed : 0,
       total_paid: amountPaid,
       payment_method: 'paystack',
       payment_reference: reference,
