@@ -12,6 +12,13 @@
 // at all.
 export const DEFAULT_SERVICE_FEE_RATE = 0.05
 
+// Flat amount added on top of the percentage fee, on every paid
+// transaction — fell out of the pricing rewrite above when it moved from
+// a hardcoded constant to a live platform_settings lookup; this restores
+// it as its own configurable field (platform_settings.service_fee_fixed)
+// instead of folding it back in as another hardcoded number.
+export const DEFAULT_SERVICE_FEE_FIXED = 100
+
 export interface PromoInfo {
   discount_type: string
   discount_value: number
@@ -25,6 +32,8 @@ export interface OrderTotalInput {
   promo?: PromoInfo | null
   /** Decimal (e.g. 0.07 for 7%) — the live platform_settings.service_fee_rate. */
   serviceFeeRate?: number
+  /** Naira — the live platform_settings.service_fee_fixed, added on top of the % fee. */
+  serviceFeeFixed?: number
 }
 
 export interface OrderTotalResult {
@@ -44,6 +53,7 @@ export function computeOrderTotal({
   referralDiscountPercent = 0,
   promo = null,
   serviceFeeRate = DEFAULT_SERVICE_FEE_RATE,
+  serviceFeeFixed = DEFAULT_SERVICE_FEE_FIXED,
 }: OrderTotalInput): OrderTotalResult {
   const subtotal = isGroupTicket ? price : price * quantity
   const referralDiscountAmount = Math.round(subtotal * (referralDiscountPercent / 100))
@@ -54,7 +64,7 @@ export function computeOrderTotal({
     : 0
   const totalDiscount = referralDiscountAmount + promoDiscountAmount
   const discountedSubtotal = Math.max(0, subtotal - totalDiscount)
-  const serviceFee = Math.round(discountedSubtotal * serviceFeeRate)
+  const serviceFee = Math.round(discountedSubtotal * serviceFeeRate) + serviceFeeFixed
   const total = discountedSubtotal + serviceFee
 
   return { subtotal, referralDiscountAmount, promoDiscountAmount, totalDiscount, discountedSubtotal, serviceFee, total }

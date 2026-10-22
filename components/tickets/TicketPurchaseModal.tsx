@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { X, Plus, Minus, Check, ArrowRight, Ticket, Download, FileText, User as UserIcon, AlertTriangle } from 'lucide-react'
 import { downloadTicketImage, downloadTicketPDF } from '@/lib/ticketImage'
-import { computeOrderTotal, DEFAULT_SERVICE_FEE_RATE } from '@/lib/pricing'
+import { computeOrderTotal, DEFAULT_SERVICE_FEE_RATE, DEFAULT_SERVICE_FEE_FIXED } from '@/lib/pricing'
 import { createClient } from '@/lib/supabase'
 
 interface TicketType {
@@ -91,15 +91,17 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
   // rate here wouldn't just mislabel the total, it would undercharge (or
   // overcharge) buyers relative to what the server expects.
   const [serviceFeeRatePercent, setServiceFeeRatePercent] = useState(DEFAULT_SERVICE_FEE_RATE * 100)
+  const [serviceFeeFixed, setServiceFeeFixed] = useState(DEFAULT_SERVICE_FEE_FIXED)
   useEffect(() => {
     const supabase = createClient()
     supabase
       .from('platform_settings')
-      .select('service_fee_rate')
+      .select('service_fee_rate, service_fee_fixed')
       .eq('id', 1)
       .single()
       .then(({ data }) => {
         if (data?.service_fee_rate != null) setServiceFeeRatePercent(data.service_fee_rate)
+        if (data?.service_fee_fixed != null) setServiceFeeFixed(data.service_fee_fixed)
       })
   }, [])
 
@@ -117,6 +119,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
     referralDiscountPercent: discountPercent,
     promo: promoApplied,
     serviceFeeRate: serviceFeeRatePercent / 100,
+    serviceFeeFixed,
   })
 
   const extraAttendeeCount = ticketType.is_group_ticket ? Math.max(0, ticketType.group_size - 1) : Math.max(0, quantity - 1)

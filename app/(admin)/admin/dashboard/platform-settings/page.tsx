@@ -10,6 +10,7 @@ import ProcessGroupDeadlinesButton from '@/components/admin/ProcessGroupDeadline
 interface PlatformSettings {
   commission_rate: number
   service_fee_rate: number
+  service_fee_fixed: number
   newbie_min: number
   social_min: number
   crew_min: number
@@ -25,6 +26,7 @@ interface PlatformSettings {
 const defaultSettings: PlatformSettings = {
   commission_rate: 5,
   service_fee_rate: 5,
+  service_fee_fixed: 100,
   newbie_min: 0,
   social_min: 60,
   crew_min: 100,
@@ -193,7 +195,7 @@ export default function AdminPlatformSettingsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className={labelClass}>Platform Commission (%)</label>
                   <input
@@ -220,6 +222,20 @@ export default function AdminPlatformSettingsPage() {
                     className={inputClass}
                   />
                   <p className="text-[10px] text-slate-400 mt-1">Added to ticket checkout for buyers</p>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Buyer Service Fee (Fixed ₦)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="5000"
+                    step="10"
+                    value={settings.service_fee_fixed}
+                    onChange={e => updateField('service_fee_fixed', parseFloat(e.target.value) || 0)}
+                    className={inputClass}
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Flat amount added on top of the % fee, every transaction</p>
                 </div>
 
                 <div>

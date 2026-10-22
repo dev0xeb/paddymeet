@@ -162,10 +162,11 @@ export async function POST(request: NextRequest) {
     // in Platform Settings and expect to take effect immediately.
     const { data: feeSettings } = await adminClient
       .from('platform_settings')
-      .select('service_fee_rate')
+      .select('service_fee_rate, service_fee_fixed')
       .eq('id', 1)
       .single()
     const serviceFeeRate = (feeSettings?.service_fee_rate ?? 5) / 100
+    const serviceFeeFixed = feeSettings?.service_fee_fixed ?? 100
 
     const expected = computeOrderTotal({
       price: ticketType.price,
@@ -174,6 +175,7 @@ export async function POST(request: NextRequest) {
       referralDiscountPercent,
       promo: validPromo,
       serviceFeeRate,
+      serviceFeeFixed,
     })
 
     // Only reject underpayment — overpayment is never a fraud risk, and
