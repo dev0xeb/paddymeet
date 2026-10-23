@@ -273,6 +273,7 @@ export async function sendAnnouncementEmails(recipients: AnnouncementEmailRecipi
 }
 
 const CAREERS_RECIPIENT = 'careers@paddymeet.com'
+const CAREERS_FROM_EMAIL = 'Paddymeet Careers <tickets@paddymeet.com>'
 
 interface JobApplicationNotificationData {
   jobTitle: string
@@ -291,7 +292,7 @@ export async function sendJobApplicationNotification(data: JobApplicationNotific
 
   try {
     const result = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: CAREERS_FROM_EMAIL,
       to: CAREERS_RECIPIENT,
       subject: `New application: ${jobTitle}`,
       html: `
@@ -354,7 +355,7 @@ export async function sendApplicationStatusEmail(data: ApplicationStatusEmailDat
 
   try {
     const result = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: CAREERS_FROM_EMAIL,
       to,
       subject,
       html: `
