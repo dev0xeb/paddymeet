@@ -3,9 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
-  ArrowDown, ArrowRight, ArrowUpRight, BriefcaseBusiness, Check, ChevronDown,
-  Coffee, Compass, Globe2, HeartHandshake, Leaf, Lightbulb, MapPin, Menu,
-  Plus, Search, Sparkles, Target, UsersRound, X,
+  ArrowRight, ArrowUpRight, BriefcaseBusiness, Check, ChevronDown,
+  MapPin, Menu, Search, X,
 } from 'lucide-react'
 import Logo from '@/components/brand/Logo'
 
@@ -23,24 +22,6 @@ interface JobOpening {
 interface Props {
   openings: JobOpening[]
 }
-
-const values = [
-  ['01', 'Think boldly', 'Start with the real problem on the ground, not just the brief.', Lightbulb],
-  ['02', 'Stay curious', 'Ask questions early, and keep learning as the work moves.', Compass],
-  ['03', 'Move together', 'Share the context, make decisions in the open, and help each other move.', UsersRound],
-  ['04', 'Care deeply', 'Sweat the details people will actually feel on a Friday night.', HeartHandshake],
-  ['05', 'Make it matter', 'If it does not help someone get out the door, it does not ship.', Target],
-] as const
-
-const benefits = [
-  ['Flexible by design', 'Work from the place where you do your clearest thinking.', Globe2],
-  ['Room to grow', 'Real ownership, early, with room to grow into it.', Sparkles],
-  ['Health, held well', 'Practical support for your health and wellbeing.', Leaf],
-  ['Time that is yours', 'Generous time off, and no guilt about taking it.', Coffee],
-  ['A fair deal', 'Fair pay for the stage we are at, reviewed as we grow.', BriefcaseBusiness],
-  ['Belonging by design', 'A team where different backgrounds and perspectives have room.', HeartHandshake],
-  ['Good people, often', 'A small, sharp team that actually likes going out together.', UsersRound],
-] as const
 
 const processSteps = [
   ['01', 'Apply', 'Tell us what you’re good at and what you’re curious about.'],
@@ -140,9 +121,7 @@ export default function CareersPageClient({ openings }: Props) {
           <Logo variant="horizontal" tone="reversed" className="h-7 w-auto" />
         </Link>
         <nav className={`${mobileOpen ? 'flex' : 'hidden'} absolute left-0 right-0 top-16 flex-col gap-1 border border-white/10 bg-[#251a1c] p-2 shadow-2xl md:static md:flex md:flex-row md:items-center md:gap-8 md:border-0 md:bg-transparent md:p-0 md:shadow-none`} aria-label="Main navigation">
-          <a ref={firstMenuLinkRef} href="#why" onClick={() => setMobileOpen(false)} className="border-b border-white/10 px-3 py-3 text-xs font-semibold text-[#b9a8a0] hover:text-[#f7efe4] md:border-0 md:px-0 md:py-0">Why us</a>
-          <a href="#culture" onClick={() => setMobileOpen(false)} className="border-b border-white/10 px-3 py-3 text-xs font-semibold text-[#b9a8a0] hover:text-[#f7efe4] md:border-0 md:px-0 md:py-0">Culture</a>
-          <a href="#roles" onClick={() => setMobileOpen(false)} className="px-3 py-3 text-xs font-semibold text-[#b9a8a0] hover:text-[#f7efe4] md:px-0 md:py-0">Open roles <span className="ml-1 font-mono text-[10px] text-[#ff5b1e]">{String(openings.length).padStart(2, '0')}</span></a>
+          <a ref={firstMenuLinkRef} href="#roles" onClick={() => setMobileOpen(false)} className="px-3 py-3 text-xs font-semibold text-[#b9a8a0] hover:text-[#f7efe4] md:px-0 md:py-0">Open roles <span className="ml-1 font-mono text-[10px] text-[#ff5b1e]">{String(openings.length).padStart(2, '0')}</span></a>
         </nav>
         <button onClick={scrollToRoles} className="hidden items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-[#f7efe4] transition hover:border-[#ff5b1e] hover:text-[#ff8a52] md:flex">Join the team <ArrowUpRight size={14} /></button>
         <button ref={menuButtonRef} onClick={() => setMobileOpen((open) => !open)} aria-expanded={mobileOpen} aria-label={mobileOpen ? 'Close menu' : 'Open menu'} className="grid size-10 place-items-center text-[#f7efe4] md:hidden">{mobileOpen ? <X /> : <Menu />}</button>
@@ -151,10 +130,10 @@ export default function CareersPageClient({ openings }: Props) {
       <main id="top">
         <section className={`${sectionClass} grid items-center gap-12 py-20 md:grid-cols-[1fr_.8fr] md:gap-20 md:py-32`}>
           <div>
-            <p className={eyebrowClass}><span className="h-px w-6 bg-[#ff5b1e]" /> Join the team <span className="ml-auto text-[#8c7c76]">01 / 07</span></p>
+            <p className={eyebrowClass}><span className="h-px w-6 bg-[#ff5b1e]" /> Join the team <span className="ml-auto text-[#8c7c76]">01 / 04</span></p>
             <h1 className={`${headingClass} max-w-3xl text-[clamp(3.7rem,8vw,7.5rem)]`}>Build what’s<br /><em className="font-serif font-normal not-italic text-[#ff5b1e]">next</em> with us.</h1>
             <p className="mt-8 max-w-md text-base leading-7 text-[#b9a8a0]">We’re a small team building the platform that gets Lagos and Abuja out the door together. We care about how it gets built.</p>
-            <div className="mt-9 flex items-center gap-6"><button onClick={scrollToRoles} className="inline-flex min-h-12 items-center gap-3 rounded-full bg-[#ff5b1e] px-5 text-xs font-bold text-[#130c0f] shadow-[0_12px_28px_rgba(255,91,30,.18)] transition hover:-translate-y-0.5 hover:bg-[#ff8a52]">View open roles <ArrowRight size={16} /></button><a href="#culture" className="inline-flex items-center gap-2 text-xs font-bold hover:text-[#ff8a52]">Meet the team <ArrowDown size={15} className="text-[#ff5b1e]" /></a></div>
+            <div className="mt-9 flex items-center gap-6"><button onClick={scrollToRoles} className="inline-flex min-h-12 items-center gap-3 rounded-full bg-[#ff5b1e] px-5 text-xs font-bold text-[#130c0f] shadow-[0_12px_28px_rgba(255,91,30,.18)] transition hover:-translate-y-0.5 hover:bg-[#ff8a52]">View open roles <ArrowRight size={16} /></button></div>
           </div>
           <div role="img" aria-label="Abstract illustration representing ideas connecting across a team" className="relative min-h-[420px] md:min-h-[500px]">
             <div className="absolute inset-[17%_6%_7%] rounded-full bg-[radial-gradient(circle,rgba(255,91,30,.2),transparent_58%)] blur-xl" />
@@ -167,26 +146,10 @@ export default function CareersPageClient({ openings }: Props) {
           </div>
         </section>
 
-        <div className="-rotate-1 scale-[1.02] overflow-hidden bg-[#f2a93b] py-4 text-[#130c0f]"><div className="flex w-max items-center gap-8 whitespace-nowrap font-mono text-[11px] tracking-[.15em]"><span>WORK WITH INTENTION</span><span>✳</span><span>STAY CURIOUS</span><span>✳</span><span>MAKE GOOD THINGS</span><span>✳</span><span>WORK WITH INTENTION</span><span>✳</span></div></div>
-
-        <section id="why" className={`${sectionClass} grid gap-6 py-28 md:grid-cols-[70px_1fr_220px] md:gap-8 md:py-40`}>
-          <div className="flex items-center gap-3 font-mono text-[10px] text-[#ff5b1e]"><span>02</span><span className="h-px w-6 bg-[#ff5b1e]" /></div>
-          <div className="max-w-2xl"><p className={eyebrowClass}>A different kind of company</p><h2 className={`${headingClass} text-5xl md:text-7xl`}>Do your best work with people who <em className="font-serif font-normal not-italic text-[#ff5b1e]">care.</em></h2><div className="mt-8 grid gap-6 text-sm leading-7 text-[#b9a8a0] md:grid-cols-2"><p>The best work happens when people have room to think, trust to try, and enough time to get the details right.</p><p>We keep the team small, the work close, and the conversation honest. You’ll know what you’re working on, why it matters, and who is in the room.</p></div><a href="#culture" className="mt-8 inline-flex items-center gap-2 border-b border-white/20 pb-2 text-xs font-bold hover:text-[#ff8a52]">See how we work <ArrowUpRight size={14} className="text-[#ff5b1e]" /></a></div>
-          <div className="grid size-40 place-items-center self-end justify-self-start rounded-full border border-[#f2a93b] text-center font-mono text-xs leading-4 text-[#f2a93b] md:justify-self-end"><span>GOOD<br />WORK<br /><em className="font-serif text-base not-italic text-[#ff5b1e]">TAKES</em><br />CARE</span></div>
-        </section>
-
-        <section id="culture" className={`${sectionClass} py-20 md:py-32`}>
-          <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end"><div><p className={eyebrowClass}>03 / The way we work</p><h2 className={`${headingClass} text-5xl md:text-7xl`}>How we <em className="font-serif font-normal not-italic text-[#ff5b1e]">work.</em></h2></div><p className="max-w-xs text-sm leading-6 text-[#b9a8a0]">A few simple rules for doing good work together, without making work the whole of the night.</p></div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{values.map(([number, title, copy, Icon]) => <article key={title} className="group relative min-h-64 border border-white/10 bg-[#251a1c] p-5 transition hover:-translate-y-1 hover:border-[#ff5b1e]/60 hover:bg-[#2d1c1e]"><div className="flex items-center justify-between text-[#ff5b1e]"><span className="font-mono text-[10px] text-[#8c7c76]">{number}</span><Icon size={20} strokeWidth={1.6} /></div><h3 className="mt-16 font-display text-lg font-semibold tracking-tight">{title}</h3><p className="mt-3 text-xs leading-5 text-[#b9a8a0]">{copy}</p><span className="absolute bottom-5 right-5 grid size-6 place-items-center rounded-full border border-[#ff5b1e] text-[#ff5b1e] transition group-hover:rotate-90 group-hover:bg-[#ff5b1e] group-hover:text-[#130c0f]"><Plus size={14} /></span></article>)}</div>
-        </section>
-
-        <section className={`${sectionClass} grid gap-12 border-t border-white/10 py-24 md:grid-cols-[.72fr_1.28fr] md:gap-24 md:py-36`}>
-          <div><p className={eyebrowClass}>04 / The good stuff</p><h2 className={`${headingClass} text-5xl md:text-7xl`}>Everything you need to do <em className="font-serif font-normal not-italic text-[#ff5b1e]">meaningful</em> work.</h2><p className="mt-8 max-w-xs text-sm leading-7 text-[#b9a8a0]">We take care of the foundations so you can focus on the work that brought you here.</p></div>
-          <div className="grid gap-x-10 sm:grid-cols-2">{benefits.map(([title, copy, Icon]) => <div key={title} className="flex gap-4 border-t border-white/10 py-5"><span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#ff5b1e]/10 text-[#ff5b1e]"><Icon size={18} /></span><div><h3 className="font-display text-sm font-semibold">{title}</h3><p className="mt-1 text-xs leading-5 text-[#b9a8a0]">{copy}</p></div></div>)}</div>
-        </section>
+        <div className="-rotate-1 scale-[1.02] overflow-hidden bg-[#f2a93b] py-4 text-[#130c0f]"><div className="animate-marquee flex w-max items-center gap-8 whitespace-nowrap font-mono text-[11px] tracking-[.15em]">{[0, 1, 2].map((i) => <span key={i} className="flex items-center gap-8"><span>WORK WITH INTENTION</span><span>✳</span><span>STAY CURIOUS</span><span>✳</span><span>MAKE GOOD THINGS</span><span>✳</span></span>)}</div></div>
 
         <section id="roles" className={`${sectionClass} border-t border-white/10 py-24 md:py-32`}>
-          <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end"><div><p className={eyebrowClass}>05 / Open positions</p><h2 className={`${headingClass} max-w-2xl text-5xl md:text-7xl`}>Find your next <em className="font-serif font-normal not-italic text-[#ff5b1e]">opportunity.</em></h2></div><p className="max-w-xs text-sm leading-6 text-[#b9a8a0]">We’re hiring people who want to do solid work with a small, fast-moving team.</p></div>
+          <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end"><div><p className={eyebrowClass}>02 / Open positions</p><h2 className={`${headingClass} max-w-2xl text-5xl md:text-7xl`}>Find your next <em className="font-serif font-normal not-italic text-[#ff5b1e]">opportunity.</em></h2></div><p className="max-w-xs text-sm leading-6 text-[#b9a8a0]">{openings.length === 0 ? "We don’t have any open roles right now, but we’re always glad to hear from good people." : 'We’re hiring people who want to do solid work with a small, fast-moving team.'}</p></div>
 
           {openings.length === 0 ? (
             <div className="border border-white/10 bg-[#251a1c]/60 px-5 py-16 text-center"><BriefcaseBusiness className="mx-auto text-[#ff5b1e]" size={20} /><h3 className="mt-4 font-display text-xl">No open roles right now.</h3><p className="mx-auto mt-2 max-w-sm text-sm text-[#b9a8a0]">We don’t have anything open at the moment, but we’re always glad to hear from people who care about nightlife, technology, and building for Nigeria.</p><a href="mailto:careers@paddymeet.com" className="mt-5 inline-flex rounded-full border border-white/20 px-4 py-2 text-xs font-semibold hover:border-[#ff5b1e]">Send Us Your CV</a></div>
@@ -216,13 +179,13 @@ export default function CareersPageClient({ openings }: Props) {
         </section>
 
         <section className={`${sectionClass} grid gap-12 border-t border-white/10 py-24 md:grid-cols-[.8fr_1.2fr] md:gap-24 md:py-36`}>
-          <div><p className={eyebrowClass}>06 / How it works</p><h2 className={`${headingClass} text-5xl md:text-7xl`}>A straightforward <em className="font-serif font-normal not-italic text-[#ff5b1e]">process.</em></h2><p className="mt-8 max-w-xs text-sm leading-7 text-[#b9a8a0]">We’ll tell you what to expect, keep you updated, and leave room for your questions.</p></div>
+          <div><p className={eyebrowClass}>03 / How it works</p><h2 className={`${headingClass} text-5xl md:text-7xl`}>A straightforward <em className="font-serif font-normal not-italic text-[#ff5b1e]">process.</em></h2><p className="mt-8 max-w-xs text-sm leading-7 text-[#b9a8a0]">We’ll tell you what to expect, keep you updated, and leave room for your questions.</p></div>
           <div>{processSteps.map(([number, title, copy]) => <div key={number} className="grid min-h-24 grid-cols-[35px_1px_1fr_18px] gap-4"><span className="font-mono text-[10px] text-[#ff5b1e]">{number}</span><span className="bg-white/15" /><div><h3 className="font-display text-base font-semibold">{title}</h3><p className="mt-1 max-w-sm text-xs leading-5 text-[#b9a8a0]">{copy}</p></div><Check size={16} className="text-[#8c7c76]" /></div>)}</div>
         </section>
 
         <section className={`${sectionClass} max-w-4xl py-20 text-center md:py-32`}><div className="font-serif text-7xl leading-none text-[#ff5b1e]">&ldquo;</div><blockquote className="mt-6 font-display text-3xl font-medium leading-tight tracking-[-.06em] md:text-5xl">The best part of working here is being trusted to do ambitious work with people who genuinely care about the outcome.</blockquote><div className="mt-8 inline-flex items-center gap-3 text-left"><span className="grid size-10 place-items-center rounded-full bg-[#f2a93b] font-mono text-[9px] text-[#130c0f]">PM</span><span><strong className="block text-xs">The PaddyMeet team</strong></span></div></section>
 
-        <section className={`${sectionClass} relative overflow-hidden border border-white/10 bg-[#130c0f] px-6 py-24 text-center md:px-20 md:py-32`}><div className="pointer-events-none absolute -left-24 -top-24 size-72 rounded-full border border-[#ff5b1e]/20 shadow-[0_0_0_40px_rgba(255,91,30,.03),0_0_0_80px_rgba(255,91,30,.02)]" /><div className="pointer-events-none absolute -bottom-32 -right-24 size-72 rounded-full border border-[#f2a93b]/15" /><p className={`${eyebrowClass} relative justify-center`}>07 / Your move</p><h2 className={`${headingClass} relative text-5xl md:text-7xl`}>Your next chapter<br />could start <em className="font-serif font-normal not-italic text-[#ff5b1e]">here.</em></h2><p className="relative mx-auto mt-7 max-w-md text-sm leading-7 text-[#b9a8a0]">Tell us what you’ve been working on. We’ll tell you what we’re building.</p><button onClick={scrollToRoles} className="relative mt-8 inline-flex min-h-12 items-center gap-3 rounded-full bg-[#ff5b1e] px-5 text-xs font-bold text-[#130c0f] transition hover:-translate-y-0.5 hover:bg-[#ff8a52]">Explore open roles <ArrowRight size={16} /></button><span className="relative mt-5 block font-mono text-[9px] text-[#8c7c76]">No perfect CV required. Just a clear one.</span></section>
+        <section className={`${sectionClass} relative overflow-hidden border border-white/10 bg-[#130c0f] px-6 py-24 text-center md:px-20 md:py-32`}><div className="pointer-events-none absolute -left-24 -top-24 size-72 rounded-full border border-[#ff5b1e]/20 shadow-[0_0_0_40px_rgba(255,91,30,.03),0_0_0_80px_rgba(255,91,30,.02)]" /><div className="pointer-events-none absolute -bottom-32 -right-24 size-72 rounded-full border border-[#f2a93b]/15" /><p className={`${eyebrowClass} relative justify-center`}>04 / Your move</p><h2 className={`${headingClass} relative text-5xl md:text-7xl`}>Your next chapter<br />could start <em className="font-serif font-normal not-italic text-[#ff5b1e]">here.</em></h2><p className="relative mx-auto mt-7 max-w-md text-sm leading-7 text-[#b9a8a0]">Tell us what you’ve been working on. We’ll tell you what we’re building.</p><button onClick={scrollToRoles} className="relative mt-8 inline-flex min-h-12 items-center gap-3 rounded-full bg-[#ff5b1e] px-5 text-xs font-bold text-[#130c0f] transition hover:-translate-y-0.5 hover:bg-[#ff8a52]">Explore open roles <ArrowRight size={16} /></button><span className="relative mt-5 block font-mono text-[9px] text-[#8c7c76]">No perfect CV required. Just a clear one.</span></section>
       </main>
 
       <footer className={`${sectionClass} grid gap-12 py-20 md:grid-cols-2`}>
@@ -231,7 +194,7 @@ export default function CareersPageClient({ openings }: Props) {
           <p className="mt-6 font-display text-xl leading-tight tracking-tight text-[#b9a8a0]">Good nights.<br />Built together.</p>
         </div>
         <div className="flex gap-16 md:justify-end">
-          <div className="flex flex-col gap-3"><span className="font-mono text-[10px] uppercase tracking-wider text-[#ff8a52]">Explore</span><a href="#why" className="text-xs text-[#b9a8a0] hover:text-[#f7efe4]">Why us</a><a href="#culture" className="text-xs text-[#b9a8a0] hover:text-[#f7efe4]">Culture</a><a href="#roles" className="text-xs text-[#b9a8a0] hover:text-[#f7efe4]">Open roles</a></div>
+          <div className="flex flex-col gap-3"><span className="font-mono text-[10px] uppercase tracking-wider text-[#ff8a52]">Explore</span><a href="#roles" className="text-xs text-[#b9a8a0] hover:text-[#f7efe4]">Open roles</a></div>
           <div className="flex flex-col gap-3"><span className="font-mono text-[10px] uppercase tracking-wider text-[#ff8a52]">Say hello</span><a href="mailto:careers@paddymeet.com" className="text-xs text-[#b9a8a0] hover:text-[#f7efe4]">careers@paddymeet.com</a></div>
         </div>
         <div className="col-span-full flex flex-col gap-2 border-t border-white/10 pt-5 font-mono text-[9px] text-[#8c7c76] sm:flex-row sm:justify-between"><span>© {new Date().getFullYear()} Paddymeet</span><span>Built with care in Lagos <span className="text-[#ff5b1e]">✳</span></span></div>
