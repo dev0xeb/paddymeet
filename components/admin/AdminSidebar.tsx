@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   Users, Tag, Star, Calendar, Ticket, DollarSign, Shield, Bell,
   Settings, BarChart2, Flag, Menu,
-  Megaphone, Search, UserCheck, Database
+  Megaphone, Search, UserCheck, Database, Briefcase
 } from 'lucide-react'
 import LogoutButton from '@/components/LogoutButton'
 import Logo from '@/components/brand/Logo'
@@ -15,6 +15,7 @@ interface Props {
   department: string
   pendingEventsCount: number
   pendingOrganisersCount: number
+  pendingApplicationsCount: number
 }
 
 const navItems = [
@@ -33,14 +34,15 @@ const navItems = [
   { icon: DollarSign, label: 'Payouts', href: '/admin/dashboard/payouts', depts: ['super_admin', 'finance'] },
   { icon: Tag, label: 'Promo Codes', href: '/admin/dashboard/promo-codes', depts: ['super_admin', 'marketing'] },
   { icon: Star, label: 'Featured', href: '/admin/dashboard/featured', depts: ['super_admin', 'marketing'] },
+  { icon: Briefcase, label: 'Careers', href: '/admin/dashboard/careers', badgeKey: 'pendingApplicationsCount', depts: ['super_admin', 'operations'] },
   { icon: Settings, label: 'Platform Settings', href: '/admin/dashboard/platform-settings', depts: ['super_admin'] },
 ]
 
-export default function AdminSidebar({ fullName, department, pendingEventsCount, pendingOrganisersCount }: Props) {
+export default function AdminSidebar({ fullName, department, pendingEventsCount, pendingOrganisersCount, pendingApplicationsCount }: Props) {
   const pathname = usePathname()
   const isSuperAdmin = department === 'super_admin'
   const visibleNavItems = navItems.filter(item => item.depts.includes(department))
-  const badgeValues: Record<string, number> = { pendingEventsCount, pendingOrganisersCount }
+  const badgeValues: Record<string, number> = { pendingEventsCount, pendingOrganisersCount, pendingApplicationsCount }
   const totalPending = pendingEventsCount + pendingOrganisersCount
 
   return (

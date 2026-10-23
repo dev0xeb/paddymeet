@@ -271,3 +271,114 @@ export async function sendAnnouncementEmails(recipients: AnnouncementEmailRecipi
 
   return { sent, failed }
 }
+
+const CAREERS_RECIPIENT = 'careers@paddymeet.com'
+
+interface JobApplicationNotificationData {
+  jobTitle: string
+  applicantName: string
+  applicantEmail: string
+  applicationId: string
+}
+
+// Fired on every new submission to /api/careers/apply — the only heads-up
+// an admin gets that a review is waiting, since applications don't show up
+// anywhere else (no in-app notification bell entry for this, unlike most
+// other admin-facing events in this app).
+export async function sendJobApplicationNotification(data: JobApplicationNotificationData) {
+  const { jobTitle, applicantName, applicantEmail, applicationId } = data
+  const reviewUrl = `https://www.paddymeet.com/admin/dashboard/careers/applications/${applicationId}`
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: CAREERS_RECIPIENT,
+      subject: `New application: ${jobTitle}`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; background: #f9fafb; padding: 32px 0;">
+          <div style="background: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid #f0f0f0;">
+
+            <div style="background: linear-gradient(135deg, #ff5b1e, #ff8a52); padding: 32px 24px; text-align: center;">
+              <img src="https://www.paddymeet.com/brand/horizontal/paddymeet-horizontal-white.png" alt="PaddyMeet" width="160" height="40" style="width: 160px; height: auto;" />
+            </div>
+
+            <div style="padding: 32px 24px;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="width: 56px; height: 56px; background: #fff7ed; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 12px;">📋</div>
+                <h1 style="font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 4px;">New application received</h1>
+                <p style="font-size: 14px; color: #6b7280; margin: 0;">Ready for review on the admin panel</p>
+              </div>
+
+              <div style="background: #f9fafb; border: 1px solid #f0f0f0; border-radius: 16px; padding: 16px 20px; margin-bottom: 20px;">
+                <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Role</div>
+                <div style="font-size: 14px; font-weight: 800; color: #111827; margin-bottom: 10px;">${escapeHtml(jobTitle)}</div>
+                <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Applicant</div>
+                <div style="font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 10px;">${escapeHtml(applicantName)}</div>
+                <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Email</div>
+                <div style="font-size: 14px; font-weight: 700; color: #111827;">${escapeHtml(applicantEmail)}</div>
+              </div>
+
+              <a href="${reviewUrl}" style="display: block; text-align: center; background: #ff5b1e; color: white; font-size: 14px; font-weight: 800; padding: 14px; border-radius: 12px; text-decoration: none;">
+                Review Application
+              </a>
+            </div>
+          </div>
+
+          <p style="text-align: center; font-size: 11px; color: #9ca3af; margin-top: 16px;">
+            Paddymeet Inc
+          </p>
+        </div>
+      `,
+    })
+    return { success: true, result }
+  } catch (error) {
+    console.error('Job application notification email error:', error)
+    return { success: false, error }
+  }
+}
+
+interface ApplicationStatusEmailData {
+  to: string
+  subject: string
+  body: string
+}
+
+// Used for both the rejection and interview-request sends — by this point
+// the admin has already written (or edited) the actual subject/body
+// themselves, so this just delivers whatever they approved rather than
+// generating its own copy. `body` is plain text with line breaks, not
+// HTML, since it comes straight out of a textarea the admin typed into.
+export async function sendApplicationStatusEmail(data: ApplicationStatusEmailData) {
+  const { to, subject, body } = data
+  const safeBody = escapeHtml(body).replace(/\n/g, '<br />')
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; background: #f9fafb; padding: 32px 0;">
+          <div style="background: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid #f0f0f0;">
+
+            <div style="background: linear-gradient(135deg, #ff5b1e, #ff8a52); padding: 32px 24px; text-align: center;">
+              <img src="https://www.paddymeet.com/brand/horizontal/paddymeet-horizontal-white.png" alt="PaddyMeet" width="160" height="40" style="width: 160px; height: auto;" />
+            </div>
+
+            <div style="padding: 32px 24px;">
+              <p style="font-size: 14px; color: #111827; line-height: 1.6; margin: 0;">${safeBody}</p>
+            </div>
+          </div>
+
+          <p style="text-align: center; font-size: 11px; color: #9ca3af; margin-top: 16px;">
+            Paddymeet Inc
+          </p>
+        </div>
+      `,
+    })
+    return { success: true, result }
+  } catch (error) {
+    console.error('Application status email error:', error)
+    return { success: false, error }
+  }
+}

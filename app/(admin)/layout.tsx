@@ -42,9 +42,10 @@ export default async function AdminLayout({
   // need — fetched once here so every admin page gets a persistent,
   // consistently-populated sidebar instead of each page building (or, as
   // every page but the dashboard itself did, NOT building) its own.
-  const [{ count: pendingEventsCount }, { count: pendingOrganisersCount }] = await Promise.all([
+  const [{ count: pendingEventsCount }, { count: pendingOrganisersCount }, { count: pendingApplicationsCount }] = await Promise.all([
     adminClient.from('events').select('*', { count: 'exact', head: true }).eq('is_approved', false).eq('is_rejected', false),
     adminClient.from('organisers').select('*', { count: 'exact', head: true }).eq('is_verified', false),
+    adminClient.from('job_applications').select('*', { count: 'exact', head: true }).eq('status', 'new'),
   ])
 
   return (
@@ -54,6 +55,7 @@ export default async function AdminLayout({
         department={admin.department}
         pendingEventsCount={pendingEventsCount ?? 0}
         pendingOrganisersCount={pendingOrganisersCount ?? 0}
+        pendingApplicationsCount={pendingApplicationsCount ?? 0}
       />
       <div className="flex pt-16">
         <main className="md:ml-56 flex-1 min-w-0">
