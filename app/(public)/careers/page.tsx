@@ -12,7 +12,7 @@ export default async function CareersPage() {
 
   const { data: openings } = await supabase
     .from('job_openings')
-    .select('id, title, department, location, employment_type, summary')
+    .select('id, title, department, location, employment_type, pay, summary, description')
     .eq('is_published', true)
     .order('created_at', { ascending: false })
 

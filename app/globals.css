@@ -7,6 +7,12 @@
    stack the whole time. This makes DM Sans the site-wide default. */
 @theme inline {
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  /* Same Fraunces already loaded for the homepage's headings (there as
+     .pm-serif, a hand-written rule rather than a real Tailwind utility) —
+     registering it here makes `font-display` an actual utility class,
+     reusable anywhere a page wants that same heading treatment instead of
+     redefining its own one-off rule, with no new font request. */
+  --font-display: var(--font-display), Georgia, serif;
 }
 
 @keyframes float {
