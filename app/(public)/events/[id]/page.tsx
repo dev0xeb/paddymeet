@@ -408,7 +408,7 @@ export default async function EventDetailPage({
             {/* Hosted by Organiser Card */}
             {event.organisers && (
               <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
+                <Link href={`/organisers/${event.organiser_id}`} className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-extrabold text-sm flex-shrink-0">
                     {(Array.isArray(event.organisers) ? event.organisers[0]?.org_name : event.organisers?.org_name)?.charAt(0)?.toUpperCase() || 'O'}
                   </div>
@@ -418,7 +418,7 @@ export default async function EventDetailPage({
                       {Array.isArray(event.organisers) ? event.organisers[0]?.org_name : event.organisers?.org_name}
                     </div>
                   </div>
-                </div>
+                </Link>
                 {event.organiser_id && (
                   <FollowOrganiserButton
                     organiserId={event.organiser_id}

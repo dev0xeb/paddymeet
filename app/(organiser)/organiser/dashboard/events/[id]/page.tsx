@@ -333,6 +333,7 @@ export default async function OrganiserManageEventPage({
                   { label: 'View all ticket sales', href: '/organiser/dashboard/tickets' },
                   { label: 'View all attendees', href: '/organiser/dashboard/attendees' },
                   { label: 'Revenue breakdown', href: '/organiser/dashboard/revenue' },
+                  { label: 'Group chat uploads', href: `/organiser/dashboard/events/${id}/uploads` },
                 ].map(({ label, href }) => (
                   <Link key={label} href={href} className="block text-xs text-blue-500 hover:underline">{label} →</Link>
                 ))}
