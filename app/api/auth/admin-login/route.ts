@@ -1,9 +1,17 @@
 import { createClient } from '@/lib/supabase-server'
 import { createAdminClient } from '@/lib/supabase-admin'
+import { getClientIp } from '@/lib/turnstile'
+import { checkRateLimit } from '@/lib/rateLimit'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request) || 'unknown'
+    const allowed = await checkRateLimit({ key: `admin-login:${ip}`, limit: 10, windowSeconds: 900 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many login attempts. Please try again in a few minutes.' }, { status: 429 })
+    }
+
     const body = await request.json()
     const { email, password } = body
 

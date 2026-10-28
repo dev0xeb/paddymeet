@@ -1,9 +1,17 @@
 import { createAdminClient } from '@/lib/supabase-admin'
 import { verifyTurnstileToken, getClientIp } from '@/lib/turnstile'
+import { validateName, validatePhone } from '@/lib/validation'
+import { checkRateLimit } from '@/lib/rateLimit'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request) || 'unknown'
+    const allowed = await checkRateLimit({ key: `signup:${ip}`, limit: 5, windowSeconds: 900 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many signup attempts. Please try again in a few minutes.' }, { status: 429 })
+    }
+
     const adminClient = createAdminClient()
     const body = await request.json()
     const { type, turnstileToken, ...formData } = body
@@ -12,7 +20,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
-    const verified = await verifyTurnstileToken(turnstileToken, getClientIp(request))
+    if (formData.password.length < 8) {
+      return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 })
+    }
+
+    if (formData.phone && !validatePhone(formData.phone)) {
+      return NextResponse.json({ error: 'Enter a valid Nigerian phone number' }, { status: 400 })
+    }
+
+    const verified = await verifyTurnstileToken(turnstileToken, ip)
     if (!verified) {
       return NextResponse.json({ error: 'Verification failed. Please try again.' }, { status: 400 })
     }
@@ -21,6 +37,10 @@ export async function POST(request: NextRequest) {
     const password = formData.password
 
     if (type === 'explorer') {
+      if (!validateName(formData.firstName || '') || !validateName(formData.lastName || '')) {
+        return NextResponse.json({ error: 'First and last name can only contain letters' }, { status: 400 })
+      }
+
       const cleanUsername = (formData.username || '').replace('@', '').trim()
 
       if (!cleanUsername) {
@@ -149,6 +169,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === 'organiser') {
+      if (!validateName(formData.contactName || '')) {
+        return NextResponse.json({ error: 'Contact person name can only contain letters' }, { status: 400 })
+      }
+
       // Check if organiser email already exists
       const { data: existingOrg } = await adminClient
         .from('organisers')

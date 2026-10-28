@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { createAdminClient } from '@/lib/supabase-admin'
+import { checkRateLimit } from '@/lib/rateLimit'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -8,6 +9,13 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Reservations temporarily lock inventory away from other buyers, so a
+    // scripted flood here is a real abuse vector — not just a quota issue.
+    const allowed = await checkRateLimit({ key: `ticket-reserve:${user.id}`, limit: 15, windowSeconds: 300 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many reservation attempts. Please try again in a few minutes.' }, { status: 429 })
     }
 
     const body = await request.json()

@@ -5,6 +5,7 @@ import "./landing.css";
 import { fraunces, dmSans } from "./fonts";
 import { GroupChatProvider } from "@/context/GroupChatContext";
 import GroupChatBar from "@/components/GroupChatBar";
+import IdleLogout from "@/components/IdleLogout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -71,6 +72,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} ${dmSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <IdleLogout />
         <GroupChatProvider>
           {children}
           <GroupChatBar />

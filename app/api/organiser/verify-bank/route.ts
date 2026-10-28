@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
+import { checkRateLimit } from '@/lib/rateLimit'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -9,6 +10,11 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const allowed = await checkRateLimit({ key: `verify-bank:${user.id}`, limit: 10, windowSeconds: 600 })
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many verification attempts. Please try again in a few minutes.' }, { status: 429 })
+  }
 
   const { account_number, bank_code } = await request.json()
 
