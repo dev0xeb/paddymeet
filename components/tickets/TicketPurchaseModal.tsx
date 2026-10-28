@@ -7,6 +7,7 @@ import { X, Plus, Minus, Check, ArrowRight, Ticket, Download, FileText, User as 
 import { downloadTicketImage, downloadTicketPDF } from '@/lib/ticketImage'
 import { computeOrderTotal, DEFAULT_SERVICE_FEE_RATE, DEFAULT_SERVICE_FEE_FIXED } from '@/lib/pricing'
 import { createClient } from '@/lib/supabase'
+import { validateName, validatePhone, sanitizeNameInput, sanitizePhoneInput, PHONE_MAX_LENGTH } from '@/lib/validation'
 
 interface TicketType {
   id: string
@@ -203,10 +204,13 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
 
   const validateDetails = () => {
     if (!buyerName.trim()) { setDetailsError('Please enter your full name'); return false }
+    if (!validateName(buyerName)) { setDetailsError('Name can only contain letters'); return false }
     if (!buyerPhone.trim()) { setDetailsError('Please enter your phone number'); return false }
+    if (!validatePhone(buyerPhone)) { setDetailsError('Enter a valid Nigerian phone number e.g. 08012345678'); return false }
     if (!sendToMeOnly) {
       for (const a of attendees) {
         if (!a.name.trim()) { setDetailsError('Please fill in all attendee names, or choose to send all tickets to your email only'); return false }
+        if (!validateName(a.name)) { setDetailsError('Attendee names can only contain letters'); return false }
       }
     }
     setDetailsError('')
@@ -544,11 +548,11 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
               <div className="space-y-3 mb-5">
                 <div>
                   <label className={labelClass}>Full name</label>
-                  <input type="text" placeholder="Your full name" value={buyerName} onChange={e => setBuyerName(e.target.value)} className={inputClass} />
+                  <input type="text" placeholder="Your full name" value={buyerName} onChange={e => setBuyerName(sanitizeNameInput(e.target.value))} className={inputClass} />
                 </div>
                 <div>
                   <label className={labelClass}>Phone number</label>
-                  <input type="tel" placeholder="e.g. 080..." value={buyerPhone} onChange={e => setBuyerPhone(e.target.value)} className={inputClass} />
+                  <input type="tel" placeholder="e.g. 080..." maxLength={PHONE_MAX_LENGTH} value={buyerPhone} onChange={e => setBuyerPhone(sanitizePhoneInput(e.target.value))} className={inputClass} />
                 </div>
                 <div>
                   <label className={labelClass}>Email</label>
@@ -581,7 +585,7 @@ export default function TicketPurchaseModal({ event, ticketType, user, onClose }
                             type="text"
                             placeholder="Full name"
                             value={attendee.name}
-                            onChange={e => setAttendees(prev => prev.map((a, idx) => idx === i ? { ...a, name: e.target.value } : a))}
+                            onChange={e => setAttendees(prev => prev.map((a, idx) => idx === i ? { ...a, name: sanitizeNameInput(e.target.value) } : a))}
                             className={inputClass}
                           />
                           <input

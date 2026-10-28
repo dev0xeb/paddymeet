@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Users, Mic, ArrowRight, Check, X, Gift } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import Logo from '@/components/brand/Logo'
 import Turnstile from '@/components/Turnstile'
+import { validateName, validatePhone, sanitizeNameInput, sanitizePhoneInput, PHONE_MAX_LENGTH } from '@/lib/validation'
 
 export default function SignUpPage() {
   return (
@@ -100,13 +101,6 @@ function SignUpPageContent() {
 }
 
 // ── VALIDATION HELPERS ─────────────────────────────────────────
-function validatePhone(phone: string): boolean {
-  const cleaned = phone.replace(/\s/g, '')
-  const nigerianLocal = /^0[789][01]\d{8}$/
-  const nigerianIntl = /^\+234[789][01]\d{8}$/
-  return nigerianLocal.test(cleaned) || nigerianIntl.test(cleaned)
-}
-
 function validatePassword(password: string) {
   return {
     minLength: password.length >= 8,
@@ -156,23 +150,15 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
   const [turnstileToken, setTurnstileToken] = useState('')
   const [turnstileKey, setTurnstileKey] = useState(0)
   const turnstileRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
-  const [formData, setFormData] = useState({
+  const searchParams = useSearchParams()
+  const [formData, setFormData] = useState(() => ({
     firstName: '', lastName: '', email: '', phone: '',
     age: 0, username: '', password: '', confirmPassword: '', gender: '',
-    state: '', city: '', referralCode: '',
-  })
+    state: '', city: '', referralCode: (searchParams.get('ref') || '').toUpperCase(),
+  }))
 
   const update = (field: string, value: string | number) =>
     setFormData(prev => ({ ...prev, [field]: value }))
-
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    const ref = searchParams.get('ref')
-    if (ref) {
-      setFormData(prev => ({ ...prev, referralCode: ref.toUpperCase() }))
-    }
-  }, [searchParams])
 
   const interests = [
     'Afrobeats','Live Music','House Music','Hip Hop','Jazz & Soul',
@@ -204,8 +190,10 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
   const passwordValid = pwChecks.minLength && pwChecks.hasNumber && pwChecks.hasSpecial
   const passwordsMatch = formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword
   const phoneValid = validatePhone(formData.phone)
+  const firstNameValid = validateName(formData.firstName)
+  const lastNameValid = validateName(formData.lastName)
 
-  const step1Valid = !!(formData.firstName && formData.lastName && formData.email &&
+  const step1Valid = !!(formData.firstName && firstNameValid && formData.lastName && lastNameValid && formData.email &&
     formData.phone && phoneValid && formData.age > 0 && formData.username &&
     passwordValid && passwordsMatch && formData.gender)
 
@@ -310,11 +298,11 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">First name <span className="text-red-400">*</span></label>
-                  <input type="text" value={formData.firstName} onChange={e => update('firstName', e.target.value)} className={inputClass} />
+                  <input type="text" value={formData.firstName} onChange={e => update('firstName', sanitizeNameInput(e.target.value))} className={`${inputClass} ${formData.firstName && !firstNameValid ? 'border-red-300 focus:border-red-400' : ''}`} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Last name <span className="text-red-400">*</span></label>
-                  <input type="text" value={formData.lastName} onChange={e => update('lastName', e.target.value)} className={inputClass} />
+                  <input type="text" value={formData.lastName} onChange={e => update('lastName', sanitizeNameInput(e.target.value))} className={`${inputClass} ${formData.lastName && !lastNameValid ? 'border-red-300 focus:border-red-400' : ''}`} />
                 </div>
               </div>
 
@@ -326,7 +314,7 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Phone number <span className="text-red-400">*</span></label>
-                  <input type="tel" value={formData.phone} onChange={e => update('phone', e.target.value)} className={`${inputClass} ${formData.phone && !phoneValid ? 'border-red-300 focus:border-red-400' : ''}`} />
+                  <input type="tel" maxLength={PHONE_MAX_LENGTH} value={formData.phone} onChange={e => update('phone', sanitizePhoneInput(e.target.value))} className={`${inputClass} ${formData.phone && !phoneValid ? 'border-red-300 focus:border-red-400' : ''}`} />
                   {formData.phone && !phoneValid && (
                     <p className="text-xs text-red-400 mt-1">Enter a valid Nigerian number e.g. 08012345678</p>
                   )}
@@ -335,6 +323,16 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Age <span className="text-red-400">*</span></label>
                   <input type="number" min="16" max="99" value={formData.age || ''} onChange={e => update('age', parseInt(e.target.value) || 0)} className={inputClass} />
                 </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Gender <span className="text-red-400">*</span></label>
+                <select value={formData.gender} onChange={e => update('gender', e.target.value)} className={inputClass + ' appearance-none'}>
+                  <option value="" disabled>Select gender</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Prefer not to say</option>
+                </select>
               </div>
 
               <div className="mb-4">
@@ -362,16 +360,6 @@ function ExplorerForm({ onBack }: { onBack: () => void }) {
                     {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
                   </p>
                 )}
-              </div>
-
-              <div className="mb-8">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Gender <span className="text-red-400">*</span></label>
-                <select value={formData.gender} onChange={e => update('gender', e.target.value)} className={inputClass + ' appearance-none'}>
-                  <option value="" disabled>Select gender</option>
-                  <option>Male</option>
-                  <option>Female</option>
-                  <option>Prefer not to say</option>
-                </select>
               </div>
 
               {error && <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 mb-4">{error}</div>}
@@ -552,8 +540,9 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
   const passwordValid = pwChecks.minLength && pwChecks.hasNumber && pwChecks.hasSpecial
   const passwordsMatch = formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword
   const phoneValid = validatePhone(formData.phone)
+  const contactNameValid = validateName(formData.contactName)
 
-  const formValid = !!(formData.orgName && formData.contactName && formData.role &&
+  const formValid = !!(formData.orgName && formData.contactName && contactNameValid && formData.role &&
     formData.email && formData.phone && phoneValid && passwordValid && passwordsMatch &&
     formData.description && selected.length > 0 && termsChecked &&
     (!turnstileRequired || !!turnstileToken))
@@ -644,7 +633,7 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Contact person <span className="text-red-400">*</span></label>
-                  <input type="text" value={formData.contactName} onChange={e => update('contactName', e.target.value)} className={inputClass} />
+                  <input type="text" value={formData.contactName} onChange={e => update('contactName', sanitizeNameInput(e.target.value))} className={`${inputClass} ${formData.contactName && !contactNameValid ? 'border-red-300 focus:border-red-400' : ''}`} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Your role <span className="text-red-400">*</span></label>
@@ -659,7 +648,7 @@ function OrganiserForm({ onBack }: { onBack: () => void }) {
 
               <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Phone number <span className="text-red-400">*</span></label>
-                <input type="tel" value={formData.phone} onChange={e => update('phone', e.target.value)} className={`${inputClass} ${formData.phone && !phoneValid ? 'border-red-300 focus:border-red-400' : ''}`} />
+                <input type="tel" maxLength={PHONE_MAX_LENGTH} value={formData.phone} onChange={e => update('phone', sanitizePhoneInput(e.target.value))} className={`${inputClass} ${formData.phone && !phoneValid ? 'border-red-300 focus:border-red-400' : ''}`} />
                 {formData.phone && !phoneValid && (
                   <p className="text-xs text-red-400 mt-1">Enter a valid Nigerian number e.g. 08012345678</p>
                 )}
