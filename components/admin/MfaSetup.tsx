@@ -258,7 +258,7 @@ export default function MfaSetup() {
           <div className="p-3.5 bg-blue-50/60 border border-blue-100 rounded-xl text-[11px] text-slate-600 leading-relaxed">
             <p className="font-bold text-slate-700 mb-1.5">First time setting this up?</p>
             <ol className="list-decimal list-inside space-y-1">
-              <li>Install an authenticator app on your phone — Google Authenticator, Authy, and 1Password all work.</li>
+              <li>Install an authenticator app — Google Authenticator, Authy, and 1Password all work, on your phone, desktop, or as a browser extension.</li>
               <li>Tap &ldquo;Set Up&rdquo; above and scan the QR code it shows you with that app.</li>
               <li>Enter the 6-digit code the app generates to confirm, and you&apos;re done.</li>
             </ol>
