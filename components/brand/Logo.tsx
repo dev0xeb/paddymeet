@@ -20,9 +20,9 @@ interface LogoProps {
 // mark, regardless of what final size a className like "h-7 w-auto" renders
 // it at.
 const ASPECT_RATIO: Record<LogoVariant, number> = {
-  horizontal: 780.47 / 193,
+  horizontal: 1320 / 386,
   stacked: 632.5 / 458,
-  symbol: 160 / 219,
+  symbol: 890 / 833,
 }
 
 const BASE_HEIGHT = 200
