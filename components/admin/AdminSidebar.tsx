@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   Users, Tag, Star, Calendar, Ticket, DollarSign, Shield, Bell,
   Settings, BarChart2, Flag, Menu,
-  Megaphone, Search, UserCheck, Database, Briefcase
+  Megaphone, Search, UserCheck, Database, Briefcase, ShieldCheck
 } from 'lucide-react'
 import LogoutButton from '@/components/LogoutButton'
 import Logo from '@/components/brand/Logo'
@@ -132,6 +132,16 @@ export default function AdminSidebar({ fullName, department, pendingEventsCount,
         </div>
 
         <div className="border-t border-slate-800 pt-3 space-y-0.5">
+          <Link
+            href="/admin/dashboard/security"
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+              pathname.startsWith('/admin/dashboard/security')
+                ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20 font-semibold'
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" /> Account Security
+          </Link>
           {isSuperAdmin && (
             <Link
               href="/admin/dashboard/settings"

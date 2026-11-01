@@ -5,8 +5,6 @@ import {
   Plus, Trash2, Shield, Clock, Check, X, Eye, EyeOff,
   UserPlus, Sparkles, AlertCircle, Loader2, Users, Lock, ShieldCheck
 } from 'lucide-react'
-import MfaSetup from '@/components/admin/MfaSetup'
-
 interface AdminMember {
   id: string
   full_name: string
@@ -216,10 +214,6 @@ export default function AdminSettingsPage() {
             <span>{success}</span>
           </div>
         )}
-
-        {/* Your own account's 2FA — distinct from the team roster below,
-            this only ever affects the currently signed-in admin. */}
-        <MfaSetup />
 
         {/* Department Filter Chips */}
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 mb-6">
