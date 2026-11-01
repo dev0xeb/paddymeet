@@ -21,7 +21,7 @@ interface LogoProps {
 // it at.
 const ASPECT_RATIO: Record<LogoVariant, number> = {
   horizontal: 1320 / 386,
-  stacked: 632.5 / 458,
+  stacked: 740 / 770.6,
   symbol: 890 / 833,
 }
 
